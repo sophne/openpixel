@@ -75,6 +75,58 @@ enum SelfTest {
         check(ext == [32, 32, 4], "extrude_to_3d makes the sprite 4 voxels deep")
         try? FileManager.default.removeItem(at: tmp)
 
+        // Pixel-art craft: ramps, line cleanup, checks and review pictures.
+        let craft = Engine()
+        _ = try? craft.execute("new_sprite", ["width": 16, "height": 16])
+        let ramp = (try? craft.execute("make_color_ramp", ["base": "#c0503c"]))?.json["colors"] as? [String] ?? []
+        let lumas = ramp.compactMap(RGBA.parse).map { 0.299 * Double($0.r) + 0.587 * Double($0.g) + 0.114 * Double($0.b) }
+        check(ramp.count == 5 && lumas == lumas.sorted() && ramp[2] == "#c0503c", "make_color_ramp base: 5 colours, darkest first, base in the middle (\(ramp))")
+        if let dark = RGBA.parse(ramp.first ?? ""), let lit = RGBA.parse(ramp.last ?? "") {
+            check(Int(dark.b) - Int(dark.r) > Int(0x3c) - Int(0xc0) && Int(lit.g) > Int(lit.b), "ramp shadows lean cool, highlights warm")
+        }
+        // A 1:1 diagonal drawn with doubled corners, next to a box outline whose corners must stay.
+        _ = try? craft.execute("paint_slice", ["rows": [
+            "1...............", "11..............", ".11.............", "..11............", "...1............",
+            "................", "..........1111..", "..........1..1..", "..........1..1..", "..........1111..",
+        ], "legend": ["1": "#222034"]])
+        let lint = (try? craft.execute("analyze_model", [:]))?.json ?? [:]
+        let doubled = ((lint["pixel_art"] as? [String: Any])?["doubled_corners"] as? [String: Any])?["count"] as? Int ?? 0
+        check(doubled > 0, "analyze_model finds doubled corners in a staircase line (\(doubled))")
+        let pp = (try? craft.execute("pixel_perfect", [:]))?.json["changed"] as? Int ?? 0
+        let boxRow = ((try? craft.execute("get_slice", ["axis": "z", "index": 0]))?.json["rows"] as? [String] ?? [])
+            .map { String($0.map { (ch: Character) -> Character in ch == "." ? "." : "#" }) }
+        check(pp >= 2 && boxRow.count == 16 && boxRow[4] == "...#............" && boxRow[6].hasSuffix("####..") && boxRow[9].hasSuffix("####.."),
+              "pixel_perfect cleans the diagonal and keeps the box corners (\(pp) removed)")
+        let again = ((try? craft.execute("analyze_model", [:]))?.json["pixel_art"] as? [String: Any])?["doubled_corners"]
+        check(again == nil, "no doubled corners left after pixel_perfect")
+        // Pillow shading: a disc that gets lighter toward its middle in rings, versus one lit from the top-left.
+        func disc(_ lightFromTopLeft: Bool) -> [String] {
+            (0..<24).map { r in String((0..<24).map { c -> Character in
+                let dx = Double(c) - 11.5, dy = Double(r) - 11.5, d = (dx * dx + dy * dy).squareRoot()
+                if d > 10 { return "." }
+                if d > 9 { return "1" }
+                if lightFromTopLeft { let t = (dx + dy) / 20; return t < -0.3 ? "4" : t < 0.1 ? "3" : "2" }
+                return d < 4 ? "4" : d < 7 ? "3" : "2"
+            }) }
+        }
+        var pillow = false, lit = false
+        for (rows, isLit) in [(disc(false), false), (disc(true), true)] {
+            _ = try? craft.execute("new_sprite", ["width": 24, "height": 24])
+            _ = try? craft.execute("paint_slice", ["rows": rows, "legend": ["1": "#222034", "2": "#45283c", "3": "#ac3232", "4": "#d95763"]])
+            let issues = (try? craft.execute("analyze_model", [:]))?.json["issues"] as? [String] ?? []
+            let flagged = issues.contains { $0.contains("pillow") }
+            if isLit { lit = !flagged } else { pillow = flagged }
+        }
+        check(pillow && lit, "pillow shading is flagged, top-left lighting is not")
+        let ragged = (try? craft.execute("paint_slice", ["rows": ["111", "11", "1111"], "color": 1]))?.json["warnings"] as? [String] ?? []
+        check(ragged.contains { $0.contains("different lengths") }, "paint_slice warns about rows of different widths")
+        _ = try? craft.execute("add_frame", [:])
+        let rev = try? craft.execute("review_model", [:])
+        check(rev?.images.count == 3 && (rev?.json["pixel_art"] as? [String: Any]) != nil && rev?.json["tips"] != nil,
+              "sprite review: grid/value, silhouette/sizes and frame pictures, plus pixel-art report")
+        let guide = (try? craft.execute("pixel_art_guide", ["topic": "shading"]))?.json["guide"] as? String ?? ""
+        check(guide.contains("PILLOW"), "pixel_art_guide returns a section")
+
         let server = MCPServer { LocalBackend(engine: engine) }
         let initRes = server.handle(#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}"#) ?? ""
         check(initRes.contains("\"openpixel\""), "MCP initialize")
@@ -85,6 +137,9 @@ enum SelfTest {
         let bad = server.handle(#"{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"fill_box","arguments":{"from":[0,0,0]}}}"#) ?? ""
         check(bad.contains("\"isError\":true"), "MCP reports tool errors")
         check(server.handle(#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#) == nil, "MCP ignores notifications")
+        let prompts = server.handle(#"{"jsonrpc":"2.0","id":5,"method":"prompts/list"}"#) ?? ""
+        let spritePrompt = server.handle(#"{"jsonrpc":"2.0","id":6,"method":"prompts/get","params":{"name":"make_sprite","arguments":{"subject":"a fox"}}}"#) ?? ""
+        check(prompts.contains("make_sprite") && prompts.contains("animate_sprite") && spritePrompt.contains("a fox"), "MCP prompts for sprites and animation")
         // Damaged and hostile files must fail with an error, never crash or read past the data.
         func chunk(_ id: String, _ len: UInt32, _ body: [UInt8]) -> [UInt8] {
             Array(id.utf8) + withUnsafeBytes(of: len.littleEndian, Array.init) + [0, 0, 0, 0] + body

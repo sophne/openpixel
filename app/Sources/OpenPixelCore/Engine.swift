@@ -354,22 +354,45 @@ public final class Engine {
             }
 
         case "make_color_ramp":
-            guard let c0 = RGBA.parse(try a.reqString("from")), let c1 = RGBA.parse(try a.reqString("to")) else {
-                throw PCError.invalid("from/to must be hex colours")
-            }
-            let steps = max(2, min(16, a.int("steps", 4)))
-            return try edit("Colour ramp") { d in
-                var idx: [Int] = [], hex: [String] = []
-                for k in 0..<steps {
-                    let t = Double(k) / Double(steps - 1)
-                    // Pixel-art ramps shift hue a little: shadows lean cool, highlights warm.
-                    let mix: (UInt8, UInt8) -> Double = { Double($0) + (Double($1) - Double($0)) * t }
-                    let shift = (t - 0.5) * 10
-                    let c = RGBA(UInt8(max(0, min(255, mix(c0.r, c1.r) + shift))), UInt8(max(0, min(255, mix(c0.g, c1.g)))),
-                                 UInt8(max(0, min(255, mix(c0.b, c1.b) - shift))))
-                    idx.append(Int(Engine.addColor(c, &d))); hex.append(c.hex)
+            let steps = max(2, min(16, a.int("steps", a.has("base") ? 5 : 4)))
+            let colors: [RGBA]
+            if let b = a.string("base") {
+                guard let base = RGBA.parse(b) else { throw PCError.invalid("base must be a hex colour") }
+                colors = Craft.ramp(base: base, steps: steps, hueShift: a.double("hue_shift") ?? 12)
+            } else {
+                guard let f0 = a.string("from"), let t0 = a.string("to"), let c0 = RGBA.parse(f0), let c1 = RGBA.parse(t0) else {
+                    throw PCError.invalid("give base (one hex colour), or from and to (hex colours)")
                 }
-                return ["indexes": idx, "colors": hex]
+                colors = Craft.ramp(from: c0, to: c1, steps: steps, hueShift: a.double("hue_shift") ?? 8)
+            }
+            return try edit("Colour ramp") { d in
+                var idx: [Int] = []
+                for c in colors { idx.append(Int(Engine.addColor(c, &d))) }
+                return ["indexes": idx, "colors": colors.map { $0.hex }, "order": "darkest first"]
+            }
+
+        case "pixel_art_guide":
+            let topic = a.string("topic") ?? "all"
+            guard Craft.topics.contains(topic.lowercased()) else {
+                throw PCError.invalid("topic must be one of \(Craft.topics.joined(separator: ", "))")
+            }
+            return ToolOutput(["topic": topic, "guide": Craft.guideText(topic)])
+
+        case "pixel_perfect":
+            let l = try editableLayer(a)
+            let fs = try frames(a)
+            let depth = a.int("depth", 0)
+            guard depth >= 0 && depth < doc.sz else { throw PCError.invalid("depth must be 0-\(doc.sz - 1)") }
+            return try edit("Pixel-perfect lines") { d in
+                let only: UInt8? = a.has("color") ? try Engine.color(a.d["color"], &d) : nil
+                var cells: [[String: Any]] = []
+                for f in fs {
+                    for c in Craft.pixelPerfect(&d, layer: l, frame: f, depth: depth, only: only) {
+                        cells.append(["frame": f, "x": c[0], "row": c[1]])
+                    }
+                }
+                return ["changed": cells.count, "cells": Array(cells.prefix(60)),
+                        "note": cells.isEmpty ? "no doubled corners found" : "each removed pixel took the colour around it; review_model to check"]
             }
 
         // Layers & frames
@@ -601,14 +624,11 @@ public final class Engine {
         case "review_model":
             let f = try frameIndex(a)
             if isSprite {
-                // A 2D sprite: a big view for detail plus the real size.
-                let big = renderOptions(Args(["scale": a.int("scale") ?? max(2, min(16, 320 / max(doc.sx, doc.sy)))]), defaultScale: 4)
-                let one = renderOptions(Args(["scale": 1]), defaultScale: 1)
-                let (sheet, _) = Renderer.sheet([Renderer.render(doc, frame: f, big), Renderer.render(doc, frame: f, one)],
-                                                columns: 2, gap: 8, background: RGBA(44, 44, 48))
+                // A 2D sprite: enlarged with a pixel grid and as values, then silhouette and real sizes.
+                let (images, layout) = Craft.spriteReview(doc, frame: f, scale: a.int("scale"))
                 var json = Analysis.analyze(doc, frame: f)
-                json["picture_layout"] = "Left: the sprite enlarged. Right: actual size."
-                return ToolOutput(json, images: [ImageFiles.png(sheet)])
+                json["picture_layout"] = layout
+                return ToolOutput(json, images: images)
             }
             let scale = a.int("scale") ?? Renderer.autoScale(doc, target: 200)
             let views = ["iso", "iso-front-left", "iso-back-right", "iso-back-left", "front", "right", "top"]
@@ -804,6 +824,12 @@ public final class Engine {
             var warn: [String] = []
             if !unknown.isEmpty { warn.append("characters with no colour (add them to legend): \(String(unknown.sorted()))") }
             if clipped { warn.append("some text fell outside the model and was skipped") }
+            for (si, slice) in slices.enumerated() {
+                let lengths = Set(slice.map { $0.count })
+                if !merge, lengths.count > 1, let lo = lengths.min(), let hi = lengths.max() {
+                    warn.append("slice \(si): rows have different lengths (\(lo)-\(hi) characters), so columns may be misaligned; pad rows with '.' to the same width")
+                }
+            }
             if !warn.isEmpty { res["warnings"] = warn }
             return res
         }

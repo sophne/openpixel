@@ -1616,6 +1616,9 @@ async function showReview() {
     (r.issues && r.issues.length ? r.issues : ['No problems found.']).forEach((t) => {
       const li = document.createElement('li'); li.textContent = t; ul.appendChild(li);
     });
+    (r.tips || []).forEach((t) => {
+      const li = document.createElement('li'); li.textContent = 'Tip: ' + t; ul.appendChild(li);
+    });
     openModal('#review-dialog');
   } catch (e) { toast(errorText(e)); }
 }

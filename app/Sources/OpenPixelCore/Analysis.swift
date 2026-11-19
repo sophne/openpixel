@@ -73,7 +73,7 @@ public enum Analysis {
         } } }
         let sym = total == 0 ? 1.0 : Double(same) / Double(total)
         result["symmetry_x"] = (sym * 1000).rounded() / 1000
-        if sym > 0.85 && sym < 0.999 { issues.append("Almost symmetric left/right (\(Int(sym * 100))%): mirror_model can make it exact.") }
+        if sym > 0.85 && sym < 0.999 { issues.append("Almost symmetric left/right (\(Int(sym * 100))%): transform op=mirror can make it exact (if it should be symmetric).") }
 
         if flat {
             if lo.0 == 0 || lo.1 == 0 || hi.0 == doc.sx - 1 || hi.1 == doc.sy - 1 {
@@ -97,7 +97,15 @@ public enum Analysis {
             if n == 0 { lonely += 1 }
         } } }
         if lonely > 0 { issues.append("\(lonely) single \(flat ? "pixel" : "voxel")(s) with no neighbours (possible strays).") }
+        var tips: [String] = []
+        if flat {
+            let (more, t) = Craft.spriteChecks(doc, frame: frame, into: &result)
+            issues += more; tips += t
+        }
+        let (anim, animTips) = Craft.animationChecks(doc)
+        if !anim.isEmpty { result["animation"] = anim; tips += animTips }
         result["issues"] = issues
+        result["tips"] = tips
         return result
     }
 

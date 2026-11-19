@@ -31,12 +31,15 @@ public final class MCPServer {
     public static let instructions = """
     OpenPixel makes pixel art: flat 2D sprites and 3D voxel models that render to crisp sprites.
     \(ToolCatalog.conventions)
-    2D sprite workflow: new_sprite (e.g. 32×32) → paint_slice with rows of text (axis z, index 0; row 0 is the top)
-    or set_pixels → review_model → refine → add_frame for animation → export_png (scale 1) / export_sheet / export_gif.
+    \(Craft.rules)
+    2D sprite workflow: pixel_art_guide → new_sprite at the final size (16-64) → make_color_ramp per material →
+    paint_slice with rows of text (axis z, index 0; row 0 is the top; every row the same width) for the silhouette and flat colours →
+    shade and outline → review_model → fix every issue (pixel_perfect for doubled corners, set_pixels for single pixels) →
+    review again → add_frame for animation → export_png (scale 1) / export_sheet / export_gif.
     extrude_to_3d turns a finished sprite into a voxel model.
     3D workflow:
     1. get_model_info (or new_model with a size that fits the subject, e.g. 16-48 per side).
-    2. Pick colours: get_palette, or make_color_ramp for a shading ramp per material.
+    2. Pick colours: get_palette, or make_color_ramp base=… for a hue-shifted ramp per material.
     3. Block out big shapes with fill_box / draw_sphere / draw_cylinder, or draw slices with paint_slice
        (front views on axis z, top views on axis y; depth extrudes).
     4. Add details with set_voxels; shade with apply_gradient or paint mode.
@@ -46,6 +49,40 @@ public final class MCPServer {
     Use layers for parts (body, eyes, props) and frames for animation. If the OpenPixel window is open,
     edits appear there live and get_editor_screenshot shows what the person sees.
     """
+
+    /// Ready-made task prompts agents can offer (MCP prompts).
+    static let prompts: [(name: String, title: String, description: String, text: (String) -> String)] = [
+        ("make_sprite", "Make a 2D pixel-art sprite", "Plan, draw, review and clean up a sprite following pixel-art practice.", { subject in
+            """
+            Make a 2D pixel-art sprite of \(subject) with OpenPixel.
+
+            1. Call pixel_art_guide (topic all) and follow it.
+            2. Decide the size (16, 24, 32 or 48), the view (front, side or 3/4) and the light direction (top-left). Say them in one line.
+            3. Choose 2-4 materials and make one ramp each with make_color_ramp base=… (3-5 steps), plus a dark outline hue.
+            4. new_sprite, then paint_slice: first the silhouette in one colour, then flat colours, then shading, then outline and details.
+            5. After each step call review_model. Look at the silhouette, the grayscale values and the actual-size pictures, not only the enlarged one.
+               List what looks wrong (shape, readability, light, lines, colours) and every issue it reports, fix them, and review again.
+            6. Stop when the issues list is empty or every remaining item is deliberate, and the sprite reads at actual size.
+            \(MCPServer.instructions)
+            """
+        }),
+        ("animate_sprite", "Animate a pixel-art sprite", "Turn the open sprite into a looping animation with key poses and timing.", { subject in
+            """
+            Animate the open sprite: \(subject).
+
+            1. Call pixel_art_guide with topic animation.
+            2. Plan the key poses and the frame count in one line (idle 2-4, walk 4-8, attack 3-6), and which frames are holds.
+            3. For each frame: add_frame (copies the previous), change only what moves, keep the ground line and the volume steady.
+            4. Set durations with set_frame_duration: key poses longer, in-betweens shorter.
+            5. review_model shows every frame side by side and checks for identical frames and jumps in volume; fix them.
+            6. Export with export_gif and export_sheet.
+            """
+        }),
+        ("make_voxel_sprite", "Make a 3D pixel-art model", "Step-by-step guide to build, review and refine a voxel model.", { subject in
+            "Make a 3D pixel-art voxel model of \(subject) with OpenPixel.\n\n" + MCPServer.instructions +
+                "\nRead pixel_art_guide (topics voxel and color) first. After each major step call review_model, list what looks wrong, and fix it before moving on."
+        }),
+    ]
 
     /// Handles one JSON-RPC message; returns the response line, or nil for notifications.
     public func handle(_ line: String) -> String? {
@@ -92,14 +129,15 @@ public final class MCPServer {
                 return reply(["content": [["type": "text", "text": "Error: \(error)"]], "isError": true])
             }
         case "prompts/list":
-            return reply(["prompts": [["name": "make_voxel_sprite", "title": "Make a 3D pixel-art model",
-                                       "description": "Step-by-step guide to build, review and refine a voxel model.",
-                                       "arguments": [["name": "subject", "description": "What to make", "required": true]]]]])
+            return reply(["prompts": MCPServer.prompts.map { p -> [String: Any] in
+                ["name": p.name, "title": p.title, "description": p.description,
+                 "arguments": [["name": "subject", "description": "What to make", "required": true]]]
+            }])
         case "prompts/get":
+            let name = params["name"] as? String ?? "make_voxel_sprite"
+            guard let p = MCPServer.prompts.first(where: { $0.name == name }) else { return fail(-32602, "unknown prompt \(name)") }
             let subject = (params["arguments"] as? [String: Any])?["subject"] as? String ?? "a small object"
-            let text = "Make a 3D pixel-art voxel model of \(subject) with OpenPixel.\n\n" + MCPServer.instructions +
-                "\nAfter each major step call review_model, list what looks wrong, and fix it before moving on."
-            return reply(["description": "Voxel model workflow", "messages": [["role": "user", "content": ["type": "text", "text": text]]]])
+            return reply(["description": p.description, "messages": [["role": "user", "content": ["type": "text", "text": p.text(subject)]]]])
         case "resources/list":
             return reply(["resources": []])
         default:
