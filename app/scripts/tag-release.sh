@@ -4,6 +4,7 @@
 # Only repository admins can push v* tags (see RELEASING.md), so only maintainers can release.
 #
 #   scripts/tag-release.sh 1.2.0          (or: make release-tag VERSION=1.2.0)
+#   scripts/tag-release.sh 1.2.0 "Faster exports"   (release title "OpenPixel 1.2.0: Faster exports")
 #   scripts/tag-release.sh 1.3.0-beta.1   (prerelease: not offered to users or the website)
 set -eu
 VERSION="${1:?usage: scripts/tag-release.sh <version, e.g. 1.2.0>}"
@@ -30,6 +31,7 @@ printf "Push %s? [y/N] " "$TAG"
 read -r answer
 [ "$answer" = "y" ] || [ "$answer" = "Y" ] || { echo "Cancelled."; exit 1; }
 
-git tag -a "$TAG" -m "OpenPixel $VERSION"
+TITLE="${2:-}"
+git tag -a "$TAG" -m "${TITLE:-OpenPixel $VERSION}"
 git push origin "$TAG"
 echo "Pushed $TAG. Follow the build: gh run watch \$(gh run list --workflow release.yml --limit 1 --json databaseId --jq '.[0].databaseId')"

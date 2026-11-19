@@ -7,6 +7,8 @@ until a maintainer tags it.
 cd app && make release-tag VERSION=1.2.0
 ```
 
+Add `TITLE="Faster exports"` to name the release "OpenPixel 1.2.0: Faster exports" (the tag's message becomes the title).
+
 That checks you're on a clean, up-to-date `main` with green CI, shows what changed since the last release, and
 pushes the tag `v1.2.0`. The [release workflow](.github/workflows/release.yml) then:
 

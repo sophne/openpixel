@@ -5,6 +5,7 @@
 #   make dmg         installable disk image in dist/
 #   make release VERSION=1.2.0      signed + notarized dist/OpenPixel.dmg and dist/appcast.xml (CI runs this)
 #   make release-tag VERSION=1.2.0  tag main and push the tag: GitHub Actions builds and publishes the release
+#                                   (add TITLE="Faster exports" to name it "OpenPixel 1.2.0: Faster exports")
 .PHONY: all build app test ui-test screenshot dmg release release-tag clean
 
 all: app
@@ -35,7 +36,7 @@ release:
 	sh scripts/release.sh $(VERSION)
 
 release-tag:
-	sh scripts/tag-release.sh $(VERSION)
+	sh scripts/tag-release.sh $(VERSION) "$(TITLE)"
 
 clean:
 	rm -rf .build OpenPixel.app build dist
