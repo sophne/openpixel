@@ -44,6 +44,12 @@ const PARTS = [
     licence: "MIT",
     url: "https://github.com/remarkjs/react-markdown",
   },
+  {
+    name: "potion-base-4M by MinishLab (Model2Vec)",
+    what: "The embedding model behind the semantic search on the Explore page, © 2024 Thomas van Dongen",
+    licence: "MIT",
+    url: "https://huggingface.co/minishlab/potion-base-4M",
+  },
 ];
 
 const PALETTES = ["DawnBringer 16 and 32 by Richard Fhager", "PICO-8 by Lexaloffle", "Endesga 32 by Endesga"];
