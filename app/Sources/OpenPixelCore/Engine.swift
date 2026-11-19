@@ -35,9 +35,10 @@ public final class Engine {
 
     public func execute(_ name: String, _ raw: [String: Any], source: String = "agent") throws -> ToolOutput {
         let a = Args(raw)
-        let out: ToolOutput
+        var out: ToolOutput
         do {
             out = try run(name, a)
+            if source == "agent" { coach(name, &out) }
         } catch {
             log(name, source: source, ok: false, note: "\(error)")
             throw error
@@ -48,6 +49,58 @@ public final class Engine {
             log(name, source: source, ok: true, note: nil)
         }
         return out
+    }
+
+    // MARK: - coaching agents
+
+    /// What the agent's last review saw, so saves and exports can say when the work changed or still has open
+    /// issues. Agents tend to review once and stop; this keeps the draw → review → fix loop going to the end.
+    var reviewedRevision: Int?
+    var reviewIssues = 0
+    var reviews = 0
+    var rampsMade = 0
+    static let finishingTools: Set<String> = ["save_model", "export_png", "export_sheet", "export_gif", "export_svg",
+                                              "export_html", "export_vox", "export_obj"]
+
+    func coach(_ name: String, _ out: inout ToolOutput) {
+        switch name {
+        case "new_sprite", "new_model", "open_model":
+            reviewedRevision = nil; reviewIssues = 0; reviews = 0; rampsMade = 0
+            if name != "open_model" {
+                out.json["next_steps"] = [
+                    "pixel_art_guide once, if you have not read it",
+                    "make_color_ramp base=<the material's middle colour> for each material (3-5 steps), plus a dark outline hue",
+                    isSprite ? "paint_slice: silhouette, then flat colours" : "block out the big shapes",
+                    "review_model, fix what it lists",
+                    "shade, outline, details",
+                    "review_model again and fix every issue before saving or exporting",
+                ]
+            }
+        case "make_color_ramp":
+            rampsMade += 1
+        case "review_model", "analyze_model":
+            reviewedRevision = revision
+            reviews += 1
+            let issues = out.json["issues"] as? [String] ?? []
+            reviewIssues = issues.count
+            var next: [String] = []
+            if !issues.isEmpty { next.append("Fix the \(issues.count) issue(s) above, then call review_model again to confirm.") }
+            let colourTrouble = issues.contains { $0.contains("almost identical colours") || $0.contains("colours; a sprite this size") }
+            if colourTrouble && rampsMade == 0 {
+                next.append("make_color_ramp base=<colour> gives each material evenly spaced shades; replace_color merges the near-duplicates into them.")
+            }
+            if issues.isEmpty && reviews == 1 { next.append("No issues. After further changes, review again before exporting.") }
+            if !next.isEmpty { out.json["next"] = next }
+        default:
+            guard Engine.finishingTools.contains(name) else { return }
+            if reviewedRevision == nil {
+                out.json["review_reminder"] = "Saved without a review. Call review_model, fix what it lists, then save or export again."
+            } else if let r = reviewedRevision, r != revision {
+                out.json["review_reminder"] = "\(revision - r) edit(s) since the last review_model. Review again and fix what it lists before you finish."
+            } else if reviewIssues > 0 {
+                out.json["review_reminder"] = "The last review listed \(reviewIssues) issue(s). Fix them (or say why they are deliberate) and review again before you finish."
+            }
+        }
     }
 
     func log(_ name: String, source: String, ok: Bool, note: String?) {

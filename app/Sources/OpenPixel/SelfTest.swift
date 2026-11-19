@@ -159,6 +159,35 @@ enum SelfTest {
         check(stripeTip && !ditherTip, "stacked flat sky stripes get a tip; dithered transitions do not")
         check(quiet, "full-frame backgrounds skip the canvas-edge, outline and light checks")
 
+        // Coaching: next steps on a new sprite, and reminders when saving without (or after) a review.
+        let coach = Engine()
+        let started = (try? coach.execute("new_sprite", ["width": 16, "height": 16]))?.json["next_steps"] as? [String] ?? []
+        check(started.contains { $0.contains("make_color_ramp") } && started.last?.contains("review_model again") == true,
+              "a new sprite lists next steps with ramps and a second review")
+        let coachDir = FileManager.default.temporaryDirectory.appendingPathComponent("openpixel-coach-\(getpid())")
+        func reminder(_ tool: String) -> String? {
+            (try? coach.execute(tool, ["path": coachDir.appendingPathComponent("x.png").path]))?.json["review_reminder"] as? String
+        }
+        _ = try? coach.execute("paint_slice", ["rows": ["..11..", ".1221.", "112211"], "legend": ["1": "#222034", "2": "#df7126"]])
+        let unreviewed = reminder("export_png")
+        _ = try? coach.execute("add_colors", ["colors": ["#df7127"]])
+        _ = try? coach.execute("set_pixels", ["pixels": [[2, 4, "#df7127"]]])
+        let firstReview = (try? coach.execute("review_model", [:]))?.json ?? [:]
+        let openIssues = reminder("export_png")
+        _ = try? coach.execute("set_pixels", ["pixels": [[2, 4, "#df7126"]]])
+        let changed = reminder("export_png")
+        let second = ((try? coach.execute("review_model", [:]))?.json["issues"] as? [String] ?? []).count
+        let reReviewed = reminder("export_png")
+        let next = firstReview["next"] as? [String] ?? []
+        check(unreviewed?.contains("without a review") == true && openIssues?.contains("issue(s)") == true
+              && changed?.contains("since the last review") == true,
+              "exports remind: not reviewed, issues still open, changed since the review (\(unreviewed ?? "-") | \(openIssues ?? "-") | \(changed ?? "-"))")
+        check(next.contains { $0.contains("review_model again") } && next.contains { $0.contains("make_color_ramp") },
+              "a review with colour issues says to review again and points to make_color_ramp (\(next))")
+        check(second == 0 ? reReviewed == nil : reReviewed?.contains("listed \(second) issue(s)") == true,
+              "after a fresh review the reminder only reflects that review's open issues (\(reReviewed ?? "none"))")
+        try? FileManager.default.removeItem(at: coachDir)
+
         // A floating 3D scene: a grounded block, a big separate cloud (fine) and one broken-off voxel (a stray).
         let scene = Engine()
         _ = try? scene.execute("new_model", ["size_x": 24, "size_y": 24, "size_z": 24])

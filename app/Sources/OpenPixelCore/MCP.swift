@@ -37,6 +37,9 @@ public final class MCPServer {
     shade and outline → review_model → fix every issue (pixel_perfect for doubled corners, set_pixels for single pixels) →
     review again → add_frame for animation → export_png (scale 1) / export_sheet / export_gif.
     extrude_to_3d turns a finished sprite into a voxel model.
+    Review at least twice (after blocking in, and before exporting) and build colours with make_color_ramp rather than
+    picking hex values one by one. Saves and exports add a review_reminder when the work changed since the last
+    review or its issues are still open: act on it before you finish.
     3D workflow:
     1. get_model_info (or new_model with a size that fits the subject, e.g. 16-48 per side).
     2. Pick colours: get_palette, or make_color_ramp base=… for a hue-shifted ramp per material.
