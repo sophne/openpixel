@@ -45,6 +45,7 @@ public enum Craft {
         - Shade by form: think of the sprite as simple 3D shapes (spheres, cylinders, boxes). A sphere gets a highlight towards the light, a core shadow on the far side and a little reflected light at the very edge.
         - Avoid PILLOW SHADING: dark at every edge and light in the middle, in rings that follow the outline. It ignores the light and looks flat.
         - Avoid BANDING: steps of two shades that run exactly parallel and end at the same place look like stripes. Vary the lengths so the boundary staggers.
+        - Skies, water and other big gradients drawn as horizontal bands are a fine style, but perfectly straight, hard-edged stripes read flat. Stagger or dither a few pixels along each edge, make bands thinner toward the horizon, and let clouds, hills or light cross them.
         - Use 2-3 shades per material; more shades at small sizes become noise.
         - Dithering (checkerboard of two colours) only for large soft gradients or textures, used sparingly; never on small sprites.
         - Anti-aliasing: an in-between colour on a few step corners of a curve, inside the sprite only. Keep the outer edge hard so the sprite works on any background.
@@ -268,6 +269,27 @@ public enum Craft {
         return out
     }
 
+    /// The tallest stack of 3 or more flat, full-width bands (one colour across at least 92% of every row, each band
+    /// at least 2 rows) that follow each other with hard edges. A dithered or staggered transition row breaks the stack.
+    static func stripes(_ img: Image2D) -> (from: Int, to: Int, heights: [Int])? {
+        guard img.w >= 24, img.h >= 8 else { return nil }
+        var bands: [(start: Int, height: Int, color: UInt8)] = [] // color 0 = the row is not flat
+        for r in 0..<img.h {
+            var count: [UInt8: Int] = [:]
+            for c in 0..<img.w { count[img.px[r * img.w + c], default: 0] += 1 }
+            let top = count.max { $0.value < $1.value }!
+            let color: UInt8 = top.key != 0 && top.value * 100 >= img.w * 92 ? top.key : 0
+            if let last = bands.last, last.color == color { bands[bands.count - 1].height += 1 } else { bands.append((r, 1, color)) }
+        }
+        var best: [(start: Int, height: Int, color: UInt8)] = [], run: [(start: Int, height: Int, color: UInt8)] = []
+        for b in bands {
+            if b.color != 0 && b.height >= 2 { run.append(b) } else { run = [] }
+            if run.count >= 3 && run.reduce(0, { $0 + $1.height }) > best.reduce(0, { $0 + $1.height }) { best = run }
+        }
+        guard best.count >= 3, let first = best.first, let last = best.last else { return nil }
+        return (first.start, last.start + last.height - 1, best.map { $0.height })
+    }
+
     static func pearson(_ a: [Double], _ b: [Double]) -> Double {
         let n = Double(a.count)
         guard n > 2 else { return 0 }
@@ -280,7 +302,8 @@ public enum Craft {
     static func round2(_ x: Double) -> Double { (x * 100).rounded() / 100 }
 
     /// Pixel-art checks for a 2D sprite: adds to `result` and returns problems and gentler style tips.
-    static func spriteChecks(_ doc: Document, frame: Int, into result: inout [String: Any]) -> (issues: [String], tips: [String]) {
+    static func spriteChecks(_ doc: Document, frame: Int, fullFrame: Bool = false,
+                             into result: inout [String: Any]) -> (issues: [String], tips: [String]) {
         let img = Image2D(doc, frame: frame)
         var issues: [String] = [], tips: [String] = []
         var report: [String: Any] = [:]
@@ -318,8 +341,10 @@ public enum Craft {
         let st = strays(img)
         if st.count > max(3, filled / 40) {
             report["stray_pixels"] = ["count": st.count, "at_x_row": st.prefix(12).map { [$0.0, $0.1] }]
-            let text = "\(st.count) single pixels unlike all their neighbours. Keep deliberate ones (eye glints, highlights, small fruit) and merge the rest into clusters; too many read as noise."
-            if st.count > max(6, filled / 15) { issues.append(text) } else { tips.append(text) }
+            let text = fullFrame
+                ? "\(st.count) single pixels unlike all their neighbours. Stars, fireflies and sparkles are fine; scattered noise in large areas is not."
+                : "\(st.count) single pixels unlike all their neighbours. Keep deliberate ones (eye glints, highlights, small fruit) and merge the rest into clusters; too many read as noise."
+            if st.count > max(6, filled / 15) && !fullFrame { issues.append(text) } else { tips.append(text) }
         }
 
         // Edge and interior pixels; distance from the edge for the interior.
@@ -340,6 +365,23 @@ public enum Craft {
                 let j = nr * img.w + nc
                 if img.px[j] != 0 && dist[j] < 0 { dist[j] = dist[i] + 1; queue.append(j) }
             }
+        }
+
+        // Stacked flat stripes (skies, water, gradients drawn as bands).
+        if let band = stripes(img) {
+            report["stripes"] = ["rows": [band.from, band.to], "heights": band.heights]
+            let even = (band.heights.max() ?? 1) * 10 <= (band.heights.min() ?? 1) * 13
+            tips.append("Rows \(band.from)-\(band.to) are \(band.heights.count) flat full-width stripes with hard straight edges"
+                + (even ? ", all about the same height" : " (heights \(band.heights.map(String.init).joined(separator: ", ")))")
+                + ". A valid style, but it reads flat: stagger or dither a few pixels along each edge, vary the heights, or let clouds, hills or light cross the bands.")
+        }
+
+        // A full-frame background has no silhouette on empty canvas: outline, light direction and pillow shading
+        // are about sprites, so they are skipped.
+        if fullFrame {
+            report["note"] = "Full-frame background: outline, light-direction and pillow-shading checks are skipped."
+            result["pixel_art"] = report
+            return (issues, tips)
         }
 
         // Outline.

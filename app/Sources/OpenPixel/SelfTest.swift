@@ -127,6 +127,50 @@ enum SelfTest {
         let guide = (try? craft.execute("pixel_art_guide", ["topic": "shading"]))?.json["guide"] as? String ?? ""
         check(guide.contains("PILLOW"), "pixel_art_guide returns a section")
 
+        // A full-frame background: a sky of flat hard-edged stripes over a ground band.
+        func sky(dithered: Bool) -> [String] {
+            let bands: [(Character, Int)] = [("1", 7), ("2", 6), ("3", 5), ("4", 4)]
+            var rows: [String] = []
+            for (k, (ch, h)) in bands.enumerated() {
+                for r in 0..<h {
+                    if dithered && r == h - 1 && k < bands.count - 1 {
+                        // The last row of each band mixes with the next colour in a checkerboard.
+                        rows.append(String((0..<48).map { $0 % 2 == 0 ? ch : bands[k + 1].0 }))
+                    } else { rows.append(String(repeating: ch, count: 48)) }
+                }
+            }
+            while rows.count < 24 { rows.append(String(repeating: "5", count: 48)) }
+            return rows
+        }
+        var stripeTip = false, ditherTip = true, quiet = false
+        for dithered in [false, true] {
+            _ = try? craft.execute("new_sprite", ["width": 48, "height": 24])
+            _ = try? craft.execute("paint_slice", ["rows": sky(dithered: dithered),
+                                                    "legend": ["1": "#1e1a3f", "2": "#2e2459", "3": "#473575", "4": "#6e4585", "5": "#243b2c"]])
+            let r = (try? craft.execute("analyze_model", [:]))?.json ?? [:]
+            let tips = r["tips"] as? [String] ?? [], issues = r["issues"] as? [String] ?? []
+            let striped = tips.contains { $0.contains("flat full-width stripes") }
+            if dithered { ditherTip = striped } else {
+                stripeTip = striped
+                quiet = r["kind"] as? String == "full-frame background or scene"
+                    && !issues.contains { $0.contains("canvas edge") || $0.contains("pillow") } && !tips.contains { $0.contains("silhouette edge") || $0.contains("light direction") || $0.contains("brightest pixels") }
+            }
+        }
+        check(stripeTip && !ditherTip, "stacked flat sky stripes get a tip; dithered transitions do not")
+        check(quiet, "full-frame backgrounds skip the canvas-edge, outline and light checks")
+
+        // A floating 3D scene: a grounded block, a big separate cloud (fine) and one broken-off voxel (a stray).
+        let scene = Engine()
+        _ = try? scene.execute("new_model", ["size_x": 24, "size_y": 24, "size_z": 24])
+        _ = try? scene.execute("fill_box", ["from": [4, 0, 4], "to": [12, 6, 12], "color": 3])
+        _ = try? scene.execute("fill_box", ["from": [15, 16, 15], "to": [20, 18, 19], "color": 22])
+        _ = try? scene.execute("set_voxels", ["voxels": [[2, 10, 2]], "color": 5])
+        let sr = (try? scene.execute("analyze_model", [:]))?.json ?? [:]
+        let sIssues = sr["issues"] as? [String] ?? [], sTips = sr["tips"] as? [String] ?? []
+        check(sIssues.contains { $0.contains("1 tiny loose piece") } && sTips.contains { $0.contains("1 larger piece") }
+              && !sIssues.contains { $0.contains("float in the air") },
+              "3D: a broken-off voxel is an issue, a separate cloud only a tip (\(sIssues), \(sTips))")
+
         let server = MCPServer { LocalBackend(engine: engine) }
         let initRes = server.handle(#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}"#) ?? ""
         check(initRes.contains("\"openpixel\""), "MCP initialize")

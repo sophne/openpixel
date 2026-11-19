@@ -52,14 +52,28 @@ public enum Analysis {
         } } }
         let largest = parts.map { $0.size }.max() ?? 0
         let flat = doc.sz == 1
+        var tips: [String] = []
+        // A picture that fills (nearly) the whole canvas is a background or scene, not a sprite on empty canvas:
+        // margins, outlines and a single light direction don't apply to it.
+        let fullFrame = flat && count * 10 >= doc.sx * doc.sy * 9
+        result["kind"] = flat ? (fullFrame ? "full-frame background or scene" : "sprite") : "3d model"
         let floating = flat ? [] : parts.filter { !$0.grounded && $0.size < largest }
         result["parts"] = parts.count
-        if flat && parts.count > 1 {
+        if flat && parts.count > 1 && !fullFrame {
             issues.append("\(parts.count) separate shapes; small ones may be stray pixels (see find_voxels).")
         }
         if !floating.isEmpty {
+            // Tiny loose bits are almost always stray voxels; bigger separate pieces (clouds, a floating island's
+            // rocks, a hovering prop) are often meant to float, so they only get a tip.
+            let tiny = max(3, min(8, count / 2000)) // a few voxels: a stray click or a broken-off bit
+            let strays = floating.filter { $0.size <= tiny }, pieces = floating.filter { $0.size > tiny }
             result["floating_parts"] = floating.prefix(20).map { ["voxels": $0.size, "at": [$0.sample.0, $0.sample.1, $0.sample.2]] }
-            issues.append("\(floating.count) part(s) float in the air without touching the rest of the model.")
+            if !strays.isEmpty {
+                issues.append("\(strays.count) tiny loose piece(s) of \(tiny) voxels or fewer float apart from everything else: probably strays (see floating_parts).")
+            }
+            if !pieces.isEmpty {
+                tips.append("\(pieces.count) larger piece(s) are separate from the main body. Fine for clouds or a floating scene; otherwise connect them.")
+            }
         }
 
         // Left/right symmetry around the occupied bounds' centre.
@@ -73,17 +87,19 @@ public enum Analysis {
         } } }
         let sym = total == 0 ? 1.0 : Double(same) / Double(total)
         result["symmetry_x"] = (sym * 1000).rounded() / 1000
-        if sym > 0.85 && sym < 0.999 { issues.append("Almost symmetric left/right (\(Int(sym * 100))%): transform op=mirror can make it exact (if it should be symmetric).") }
+        if sym > 0.9 && sym < 0.999 && !fullFrame {
+            tips.append("Almost symmetric left/right (\(Int(sym * 100))%): if it should be symmetric, transform op=mirror makes it exact.")
+        }
 
         if flat {
-            if lo.0 == 0 || lo.1 == 0 || hi.0 == doc.sx - 1 || hi.1 == doc.sy - 1 {
+            if !fullFrame && (lo.0 == 0 || lo.1 == 0 || hi.0 == doc.sx - 1 || hi.1 == doc.sy - 1) {
                 issues.append("The sprite touches the canvas edge; leave a 1-pixel margin for outlines.")
             }
         } else {
             if lo.0 == 0 || lo.2 == 0 || hi.0 == doc.sx - 1 || hi.1 == doc.sy - 1 || hi.2 == doc.sz - 1 {
                 issues.append("The model touches the edge of the model space; resize_model gives it room.")
             }
-            if lo.1 > 0 { issues.append("The lowest voxel is at y=\(lo.1), not on the ground (y=0).") }
+            if lo.1 > 0 { tips.append("The lowest voxel is at y=\(lo.1); if the model should stand on the ground, move it down (transform op=move dy=-\(lo.1)).") }
         }
         if perColor.count == 1 && count > 8 {
             issues.append("Only one colour is used; shading with 2-4 tones of a ramp reads better as pixel art.")
@@ -97,9 +113,8 @@ public enum Analysis {
             if n == 0 { lonely += 1 }
         } } }
         if lonely > 0 { issues.append("\(lonely) single \(flat ? "pixel" : "voxel")(s) with no neighbours (possible strays).") }
-        var tips: [String] = []
         if flat {
-            let (more, t) = Craft.spriteChecks(doc, frame: frame, into: &result)
+            let (more, t) = Craft.spriteChecks(doc, frame: frame, fullFrame: fullFrame, into: &result)
             issues += more; tips += t
         }
         let (anim, animTips) = Craft.animationChecks(doc)
