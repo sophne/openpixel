@@ -6,7 +6,7 @@ import Sparkle
 
 /// The editor window: a native Mac window whose design canvas is HTML (WKWebView), backed by the
 /// Swift engine. The same engine answers agents through the local bridge (see `OpenPixel --mcp`).
-final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandlerWithReply, WKNavigationDelegate, NSWindowDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandlerWithReply, WKNavigationDelegate, NSWindowDelegate, SPUUpdaterDelegate {
     let engine = Engine()
     var window: NSWindow!
     var web: WKWebView!
@@ -55,7 +55,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         }
         // Automatic updates run only in the real app bundle (not in checks, tests or the bare program).
         if !headless && Bundle.main.bundleURL.pathExtension == "app" {
-            updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+            updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: self, userDriverDelegate: nil)
+            // Ask quietly on every open whether a newer version exists (no dialog, no download), so the Update
+            // button can appear in the home and editor sidebars. Installing still goes through Sparkle's dialog.
+            if let u = updater?.updater, u.canCheckForUpdates { u.checkForUpdateInformation() }
         }
         buildMenu()
         trace("menu ready")
@@ -337,7 +340,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         case "checkUpdates": checkForUpdates(nil); return true
         case "version":
             return ["version": MCPServer.version, "build": Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "",
-                    "updates": updater != nil, "automatic": updater?.updater.automaticallyChecksForUpdates ?? false]
+                    "updates": updater != nil, "automatic": updater?.updater.automaticallyChecksForUpdates ?? false,
+                    "available": (availableUpdate as Any?) ?? NSNull()]
         case "recents": return recents.listForPage()
         case "samples": return Recents.samplePreviews()
         case "removeRecent": recents.remove(body["path"] as? String ?? ""); return true
@@ -480,6 +484,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
     // MARK: - menu
 
     var updater: SPUStandardUpdaterController?
+    /// The newer version Sparkle found, shown as the Update button; nil when up to date or not checked yet.
+    var availableUpdate: String?
+
+    func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
+        availableUpdate = item.displayVersionString
+        showUpdateButton()
+    }
+
+    func updaterDidNotFindUpdate(_ updater: SPUUpdater) {
+        availableUpdate = nil
+        showUpdateButton()
+    }
+
+    /// Tells the page; it also asks for availableUpdate itself when it loads, in case this came first.
+    func showUpdateButton() {
+        let v = availableUpdate.map { Self.jsString($0) } ?? "null"
+        web?.evaluateJavaScript("window.PC && PC.updateAvailable && PC.updateAvailable(\(v))", completionHandler: nil)
+    }
 
     @objc func checkForUpdates(_ sender: Any?) {
         if let u = updater { u.checkForUpdates(sender); return }

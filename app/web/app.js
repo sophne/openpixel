@@ -2016,7 +2016,24 @@ function setNewKind(kind) {
 }
 function openNewDialog(kind = '2d') { setNewKind(kind); openModal('#new-dialog'); }
 
+/* ---------------------------------------------------------------- updates
+   The app asks Sparkle on every open whether a newer version exists (in the background, nothing is downloaded).
+   When there is one, an Update button shows at the bottom of the home and editor sidebars; it opens Sparkle's
+   install dialog. */
+function showUpdate(version) {
+  $$('.update-slot').forEach((slot) => {
+    slot.hidden = !version;
+    if (!version) return;
+    const b = slot.querySelector('.update-btn');
+    b.querySelector('.lbl').textContent = `Update to ${version}`;
+    b.title = `OpenPixel ${version} is available: install it`;
+  });
+}
+$$('.update-btn').forEach((b) => { b.onclick = () => nativeAction('checkUpdates'); });
+nativeAction('version').then((v) => { if (v && v.available) showUpdate(v.available); }).catch(() => {});
+
 window.PC = {
+  updateAvailable: (version) => showUpdate(version),
   refresh: (toolName) => {
     // Opening or starting a model from anywhere (menu, home, an agent) leaves the home screen.
     if (S.home && ['open_model', 'new_model', 'new_sprite'].includes(toolName)) hideHome();

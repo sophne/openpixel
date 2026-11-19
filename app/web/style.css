@@ -289,6 +289,12 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
 .home-nav { height: 32px; padding: 0 10px; border-radius: 6px; display: flex; align-items: center; gap: 9px; cursor: pointer; color: var(--text-2); }
 .home-nav:hover { background: var(--hover); color: var(--text); }
 .home-nav.on { background: var(--accent-soft); color: var(--accent); }
+/* Update button: at the bottom of the home and editor sidebars, only while a newer version is available. */
+.update-slot { flex: none; }
+#left .update-slot { padding: 10px 12px 12px; border-top: 1px solid var(--line); }
+.home-side .update-slot { padding-top: 8px; }
+.update-btn { width: 100%; height: 32px; justify-content: center; gap: 6px; }
+.update-btn .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .home-main { overflow-y: auto; padding: 0 32px 48px; min-width: 0; }
 .home-top { position: sticky; top: 0; z-index: 2; background: var(--canvas); display: flex; align-items: center; gap: 10px; height: 64px; }
 .home-top h1 { font-size: 17px; margin: 0; font-weight: 600; }

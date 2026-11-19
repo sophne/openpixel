@@ -570,6 +570,28 @@
       }
       $('#home-back').click();
     });
+    await test('update button: hidden when up to date, accent button at the bottom of both sidebars when an update is found', async () => {
+      const real = await nativeAction('version'); // restore whatever the real check found afterwards
+      PC.updateAvailable(null);
+      assert($$('.update-slot').every((s) => s.hidden), 'update button shows while up to date');
+      PC.updateAvailable('99.0.0');
+      const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+      const toRGB = (hex) => `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`;
+      const check = (slot, panel, where) => {
+        const b = slot.querySelector('.update-btn'), r = b.getBoundingClientRect(), p = panel.getBoundingClientRect();
+        assert(!slot.hidden && r.height > 20, `${where}: update button not shown`);
+        assert(b.textContent.includes('99.0.0'), `${where}: label is "${b.textContent}"`);
+        assert(getComputedStyle(b).backgroundColor === toRGB(accent), `${where}: not the accent colour (${getComputedStyle(b).backgroundColor})`);
+        assert(r.bottom <= p.bottom + 0.5 && p.bottom - r.bottom < 24 && r.left >= p.left && r.right <= p.right, `${where}: not at the bottom of the sidebar`);
+      };
+      check($('#editor-update'), $('#left'), 'editor');
+      noSpill($('#left'), 'left panel with the update button');
+      await PC.showHome();
+      await sleep(300);
+      check($('#home-update'), $('.home-side'), 'home');
+      $('#home-back').click();
+      PC.updateAvailable(real && real.available ? real.available : null);
+    });
     await test('file and export menus open and can be seen (own menus, SVG and HTML listed)', async () => {
       const visible = (list) => {
         const r = list.getBoundingClientRect();
