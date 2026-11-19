@@ -448,6 +448,50 @@ enum SelfTest {
               && (try? MCPServer.confinePaths("review_set", ["paths": ["a.openpixel", "/etc/hosts"]], policy)) == nil
               && (try? MCPServer.confinePaths("export_png", ["path": 5], policy)) == nil,
               "HTTP paths: batch calls, style files and review_set lists are confined like path")
+        // UPDATES: agents read the same appcast Sparkle uses (here a local file in release.sh's format).
+        check(Updates.compare("1.10.0", "1.9.2") == 1 && Updates.compare("1.0", "1.0.0") == 0 && Updates.compare("1.99.99", "2.0.0") == -1,
+              "updates: versions compare by number, not as text")
+        func appcast(_ versions: [String]) -> String {
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel><title>OpenPixel</title>
+            \(versions.map { v in """
+                <item><title>OpenPixel \(v)</title><sparkle:version>1</sparkle:version>
+                  <sparkle:shortVersionString>\(v)</sparkle:shortVersionString>
+                  <sparkle:fullReleaseNotesLink>https://github.com/sophne/openpixel/releases/tag/v\(v)</sparkle:fullReleaseNotesLink>
+                  <enclosure url="https://github.com/sophne/openpixel/releases/download/v\(v)/OpenPixel.dmg" sparkle:edSignature="x" length="1" type="application/octet-stream"/>
+                </item>
+                """ }.joined())
+            </channel></rss>
+            """
+        }
+        let feed = obsDir.appendingPathComponent("appcast.xml")
+        Updates.feedOverride = feed
+        try? appcast(["9.8.0", "9.10.1"]).write(to: feed, atomically: true, encoding: .utf8)
+        let upd = Engine()
+        let newer = (try? upd.execute("check_for_updates", ["refresh": true]))?.json ?? [:]
+        let installNote = (try? upd.execute("check_for_updates", ["install": true]))?.json["install"] as? String ?? ""
+        check(newer["latest_version"] as? String == "9.10.1" && newer["update_available"] as? Bool == true
+              && (newer["download"] as? String)?.hasSuffix("/v9.10.1/OpenPixel.dmg") == true && (newer["release_notes"] as? String)?.hasSuffix("v9.10.1") == true
+              && (newer["next"] as? String)?.contains("install=true") == true && installNote.contains("No OpenPixel window"),
+              "updates: the newest release in the feed is found, with its download and notes; without a window, install says what to do")
+        try? appcast(["0.0.1"]).write(to: feed, atomically: true, encoding: .utf8)
+        let cachedAnswer = (try? upd.execute("check_for_updates", [:]))?.json["latest_version"] as? String
+        let current = (try? upd.execute("check_for_updates", ["refresh": true]))?.json ?? [:]
+        check(cachedAnswer == "9.10.1" && current["update_available"] as? Bool == false && (current["next"] as? String)?.contains("up to date") == true,
+              "updates: answers are cached for a while, refresh asks again, and an older feed means up to date")
+        try? "<rss><channel></channel></rss>".write(to: feed, atomically: true, encoding: .utf8)
+        check((try? upd.execute("check_for_updates", ["refresh": true])) == nil, "updates: a feed without releases is an error, not \"up to date\"")
+        try? appcast(["0.0.1"]).write(to: feed, atomically: true, encoding: .utf8)
+        let mcpUpd = MCPServer { LocalBackend(engine: Engine()) }
+        let viaMCP = mcpUpd.handle(#"{"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"check_for_updates","arguments":{"refresh":true}}}"#) ?? ""
+        var behind: [String: Any] = ["running_version": "99.0.0"], same: [String: Any] = ["running_version": MCPServer.version]
+        MCPServer.addConnectionVersion(&behind, installed: nil)
+        MCPServer.addConnectionVersion(&same, installed: MCPServer.version)
+        check(viaMCP.contains("agent_connection_version") && !viaMCP.contains("\"isError\":true")
+              && (behind["reconnect_needed"] as? String)?.contains("99.0.0") == true && same["reconnect_needed"] == nil,
+              "updates: over MCP the agent hears its own connection's version, and to reconnect when the app is newer")
+        Updates.feedOverride = nil
         try? FileManager.default.removeItem(at: obsDir)
 
         let server = MCPServer { LocalBackend(engine: engine) }
@@ -457,7 +501,7 @@ enum SelfTest {
         check(list.contains("paint_slice") && !list.contains("ui_state"), "MCP tools/list hides editor-only tools")
         let listed = ((try? JSONSerialization.jsonObject(with: Data(list.utf8))) as? [String: Any]).flatMap { ($0["result"] as? [String: Any])?["tools"] as? [[String: Any]] } ?? []
         let readOnly = { (n: String) in (listed.first { $0["name"] as? String == n }?["annotations"] as? [String: Any])?["readOnlyHint"] as? Bool }
-        check(["view_as_text", "set_style", "get_style", "set_feedback", "batch", "review_set"].allSatisfy { n in listed.contains { $0["name"] as? String == n } }
+        check(["view_as_text", "set_style", "get_style", "set_feedback", "batch", "review_set", "check_for_updates"].allSatisfy { n in listed.contains { $0["name"] as? String == n } }
               && readOnly("view_as_text") == true && readOnly("review_set") == true && readOnly("batch") == false,
               "MCP lists the observation and pipeline tools with the right read-only hints")
         let call = server.handle(#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"render_view","arguments":{"view":"front"}}}"#) ?? ""

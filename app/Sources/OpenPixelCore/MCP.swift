@@ -47,6 +47,9 @@ public final class MCPServer {
     another frame): read exact x/row positions there before set_pixels, and check light and silhouette without pictures.
     For a set of assets: set_style locks the palette, size, light and outline for all of them (load or save a style
     file); batch runs many calls in one request; review_set reviews saved files side by side for consistency.
+    Updates: call check_for_updates once at the start of a session. If an update is out, tell the person (install=true
+    shows the update dialog in the OpenPixel window for them to confirm). If it says reconnect_needed, your connection
+    runs an older OpenPixel than the one installed: reconnect the OpenPixel MCP server before you continue.
     3D workflow:
     1. get_model_info (or new_model with a size that fits the subject, e.g. 16-48 per side).
     2. Pick colours: get_palette, or make_color_ramp base=… for a hue-shifted ramp per material.
@@ -95,6 +98,17 @@ public final class MCPServer {
                 "\nRead pixel_art_guide (topics voxel and color) first. After each major step call review_model, list what looks wrong, and fix it before moving on."
         }),
     ]
+
+    /// This MCP server is the agent's own process and keeps running across app updates. If the window or the
+    /// installed app is newer than it, the agent must reconnect to get the new version's tools.
+    public static func addConnectionVersion(_ json: inout [String: Any], installed: String? = Updates.installedVersion()) {
+        json["agent_connection_version"] = MCPServer.version
+        let newer = [json["running_version"] as? String, installed].compactMap { $0 }
+            .filter { Updates.compare($0, MCPServer.version) > 0 }.max { Updates.compare($0, $1) < 0 }
+        if let v = newer {
+            json["reconnect_needed"] = "Your OpenPixel MCP connection runs \(MCPServer.version), but OpenPixel \(v) is installed. Restart or reconnect the OpenPixel MCP server in your agent (for Claude Code: /mcp, then reconnect openpixel) to work on the new version."
+        }
+    }
 
     /// Runs every file argument of a call through `policy`: `path`, `save_path`, the `paths` list, and the
     /// same inside each call of a batch, so no tool or nesting reaches a file the policy refuses.
@@ -163,7 +177,9 @@ public final class MCPServer {
             do {
                 if let policy = pathPolicy { args = try MCPServer.confinePaths(name, args, policy) }
                 let out = try backend().call(name, args)
-                var content: [[String: Any]] = [["type": "text", "text": encode(out.json, pretty: true)]]
+                var json = out.json
+                if name == "check_for_updates" { MCPServer.addConnectionVersion(&json) }
+                var content: [[String: Any]] = [["type": "text", "text": encode(json, pretty: true)]]
                 for img in out.images { content.append(["type": "image", "data": img.base64EncodedString(), "mimeType": "image/png"]) }
                 return reply(["content": content, "isError": false])
             } catch {

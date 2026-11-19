@@ -696,6 +696,16 @@ public final class Engine {
         case "set_feedback":
             if a.has("auto_critique") { autoCritique = a.bool("auto_critique", true) }
             return ToolOutput(["auto_critique": autoCritique, "cell_limit": Engine.critiqueCellLimit])
+        case "check_for_updates":
+            // With the window open, the app answers this itself (it can show the update dialog).
+            if let h = hostTools[name] { return try h(a.d) }
+            var o = try Updates.report(refresh: a.bool("refresh", false))
+            if a.bool("install", false) {
+                o["install"] = (o["update_available"] as? Bool ?? false)
+                    ? "No OpenPixel window is open, so no dialog was shown. Ask the person to open OpenPixel and click Update at the bottom of the sidebar, or to download it from the link."
+                    : "Nothing to install."
+            }
+            return ToolOutput(o)
         case "batch":
             return try batch(a)
         case "review_set":

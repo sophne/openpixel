@@ -130,6 +130,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
                 self.agents.called(conn, "get_editor_screenshot")
                 return Bridge.response(for: line) { _, _ in try self.editorScreenshotBlocking() }
             }
+            // The update check reads the feed over the network, so it runs here, off the main thread.
+            if line.contains("\"check_for_updates\"") {
+                self.agents.called(conn, "check_for_updates")
+                return Bridge.response(for: line) { _, args in try self.checkForUpdatesForAgent(args) }
+            }
             var out = ""
             DispatchQueue.main.sync {
                 out = Bridge.response(for: line) { tool, args in
@@ -495,6 +500,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
     func updaterDidNotFindUpdate(_ updater: SPUUpdater) {
         availableUpdate = nil
         showUpdateButton()
+    }
+
+    /// check_for_updates from an agent (on the bridge's thread): the feed's answer, the Update button kept in step,
+    /// and with install=true Sparkle's dialog, where the person confirms. Nothing installs without them.
+    func checkForUpdatesForAgent(_ args: [String: Any]) throws -> ToolOutput {
+        let a = Args(args)
+        var o = try Updates.report(refresh: a.bool("refresh", false))
+        let available = o["update_available"] as? Bool ?? false, latest = o["latest_version"] as? String
+        let install = a.bool("install", false), canUpdate = updater != nil
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            if canUpdate { self.availableUpdate = available ? latest : nil; self.showUpdateButton() }
+            if install && available { self.checkForUpdates(nil) }
+        }
+        if install {
+            o["install"] = !available ? "Nothing to install."
+                : canUpdate ? "The update dialog is open in OpenPixel. The person confirms; OpenPixel then restarts with the new version. Reconnect the OpenPixel MCP server afterwards."
+                : "This copy of OpenPixel is not the installed app and cannot update itself; the person can download the new version from the link."
+        }
+        return ToolOutput(o)
     }
 
     /// Tells the page; it also asks for availableUpdate itself when it loads, in case this came first.
