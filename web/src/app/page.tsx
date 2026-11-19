@@ -12,6 +12,8 @@ import type { Metadata } from "next";
 import JsonLd from "@/components/JsonLd";
 import { NOTARIZED, REPO_URL, latestRelease } from "@/lib/github";
 import { homeJsonLd, pageMeta } from "@/lib/seo";
+import editorShot from "../../public/editor.png";
+import editor3dShot from "../../public/editor-3d.png";
 
 export const metadata: Metadata = pageMeta({
   path: "/",
@@ -46,9 +48,9 @@ const DRIFT = [
   { a: art.mushroom, scale: 1.5, y: 48 },
   { a: art.coin, scale: 5, y: 264 },
   { a: art.campfire, scale: 6, y: 108 },
-  { a: art.potion, scale: 5, y: 12 },
+  { a: art.oak, scale: 5, y: 12 },
   { a: art.tree, scale: 1.5, y: 144 },
-  { a: art.robot, scale: 5, y: 252 },
+  { a: art.human, scale: 5, y: 252 },
   { a: art.chest, scale: 3, y: 72 },
   { a: art.robot3d, scale: 1.6, y: 180 },
 ];
@@ -98,9 +100,9 @@ export default async function Home() {
           </div>
           <div className="wrap media">
             <AppWindow
-              src="/editor.png"
-              alt="The OpenPixel editor with a 32×32 pixel-art treasure chest on the canvas"
-              title="Pirate Treasure Chest"
+              src={editorShot}
+              alt="The OpenPixel editor with a 160×120 pixel-art scene: a ruined Greek temple above the sea, Athena with her owl, a hoplite and Pegasus"
+              title="Temple of Athena"
               priority
             />
           </div>
@@ -171,7 +173,7 @@ export default async function Home() {
           </div>
           <div className="wrap media">
             <AppWindow
-              src="/editor-3d.png"
+              src={editor3dShot}
               alt="The OpenPixel editor in 3D view with a voxel mushroom house"
               title="Mushroom house"
             />
@@ -266,7 +268,7 @@ export default async function Home() {
               <article className="card feature">
                 <h3>Native and fast</h3>
                 <div className="feature-art">
-                  <Sprite art={art.robot} scale={6} />
+                  <Sprite art={art.human} scale={6} />
                 </div>
                 <p>Built in Swift for the Mac. It opens in a blink and stays out of your way.</p>
               </article>
@@ -288,7 +290,7 @@ export default async function Home() {
               <article className="card feature">
                 <h3>Mirror drawing</h3>
                 <div className="feature-art mirror">
-                  <Sprite art={art.robot} scale={6} paused />
+                  <Sprite art={art.human} scale={6} paused />
                 </div>
                 <p>Draw one half and the other follows, across X, Y or Z.</p>
               </article>
@@ -326,14 +328,14 @@ export default async function Home() {
               <article className="card feature">
                 <h3>Animated GIFs</h3>
                 <div className="feature-art">
-                  <Sprite art={art.potion} scale={6} />
+                  <Sprite art={art.oak} scale={6} />
                 </div>
                 <p>Export animations and turntables to share anywhere.</p>
               </article>
               <article className="card feature">
                 <h3>MagicaVoxel and OBJ</h3>
                 <div className="feature-art">
-                  <Sprite art={art.robot3d} scale={1} />
+                  <Sprite art={art.tree} scale={1} />
                 </div>
                 <p>Open and save .vox, export OBJ for Blender, Unity and Godot.</p>
               </article>
@@ -353,7 +355,7 @@ export default async function Home() {
             <div className="closing-sprites" aria-hidden="true">
               <Sprite art={art.coin} scale={4} />
               <Sprite art={art.slime} scale={4} />
-              <Sprite art={art.potion} scale={4} />
+              <Sprite art={art.oak} scale={4} />
             </div>
             <Headline lead="Start drawing" rest="your ideas today." />
             <p className="lead-text">Draw with agents, refine every pixel, and ship it straight to your game.</p>

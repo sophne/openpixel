@@ -8,9 +8,10 @@ const google = {
   img: "https://*.google-analytics.com https://*.googletagmanager.com",
   connect: "https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com",
 };
+const dev = process.env.NODE_ENV === "development";
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' ${google.script}` + (process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""),
+  `script-src 'self' 'unsafe-inline' ${google.script}` + (dev ? " 'unsafe-eval'" : ""),
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: ${google.img}`,
   "font-src 'self'",
@@ -19,7 +20,8 @@ const csp = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  "upgrade-insecure-requests",
+  // Not in development: Safari would upgrade http://localhost requests to https and load no CSS, JS or images.
+  ...(dev ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");
 
 const nextConfig: NextConfig = {

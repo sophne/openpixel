@@ -11,12 +11,15 @@ Writes web/public/art/*.png and web/src/lib/art.ts (frame counts and sizes for t
 """
 import json
 import math
+import re
 import os
 import subprocess
 import sys
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 APP = os.path.join(ROOT, "app", "OpenPixel.app", "Contents", "MacOS", "OpenPixel")
+if not os.path.exists(APP):
+    APP = "/Applications/OpenPixel.app/Contents/MacOS/OpenPixel"
 OUT = os.path.join(ROOT, "web", "public", "art")
 MANIFEST = os.path.join(ROOT, "web", "src", "lib", "art.ts")
 CHEST = os.path.join(ROOT, "web", "scripts", "treasure-chest.openpixel")
@@ -207,7 +210,7 @@ ROBOT = [
 
 
 def robot_frames():
-    """The agent: a little robot that blinks and pings its antenna."""
+    """The agent: a little robot that blinks and pings its antenna. Only its 3D version is on the site."""
     legend = {"o": C["navy"], "l": C["mist"], "d": C["fog"], "s": C["ink"], "e": C["cyan"], "m": C["sky"], "a": C["accent"], "q": C["bark"]}
     frames = []
     for lift, antenna, blink in [(0, "a", False), (1, "q", False), (1, "a", False), (0, "q", True)]:
@@ -223,34 +226,136 @@ def robot_frames():
     return 18, 18, legend, frames, 180
 
 
-def potion_frames():
-    legend = {"o": C["plum"], "c": C["wood"], "k": C["bark"], "g": C["mist"], "p": C["red"], "d": C["wine"], "b": C["pink"], "w": C["white"]}
-    bubbles = [[(6, 13), (9, 11)], [(6, 12), (9, 10), (8, 14)], [(7, 11), (8, 13)], [(7, 10), (9, 12), (6, 14)]]
+# A person, drawn as a left half and mirrored so both sides match. Columns 0-8 are the left half; x = 8.5 is the middle.
+HUMAN_HALF = [
+    ".....oooo",
+    "....oHHhh",
+    "...oHhhhh",
+    "...ohhhss",
+    "...ohssss",
+    "...ossess",
+    "...oscess",
+    "...ossssm",
+    "....ossss",
+    "..ottttss",
+    ".ottttttt",
+    ".otottttt",
+    ".otottttt",
+    ".osoppppp",
+    "...oppppo",
+    "...oppppo",
+    "...obbbbo",
+    "...oooooo",
+]
+
+
+def ring(g, cells):
+    """Outlines a shape drawn on top: every empty neighbour of its cells becomes outline."""
+    h, w = len(g), len(g[0])
+    for x, y in cells:
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < w and 0 <= ny < h and g[ny][nx] == ".":
+                g[ny][nx] = "o"
+
+
+def human_frames():
+    """A person in an orange shirt who raises a hand and waves."""
+    legend = {"o": C["ink"], "h": C["bark"], "H": C["wood"], "s": C["sand"], "e": C["ink"], "c": C["pink"],
+              "m": C["wine"], "t": C["accent"], "T": C["rust"], "p": C["slate"], "b": C["plum"]}
+    base = []
+    for half in HUMAN_HALF:
+        line = list(half + half[::-1].replace("H", "h"))
+        # Shade the shirt's right edge: light comes from the top left.
+        for x in range(len(line) - 1, 8, -1):
+            if line[x] not in ".o":
+                if line[x] == "t":
+                    line[x] = "T"
+                break
+        base.append("".join(line))
+    ox, oy = 3, 1  # the 18×18 figure is centred on the 24×20 canvas, with room on the right for the waving hand
+
+    def figure(blink=False):
+        g = grid(24, 20)
+        for y, line in enumerate(base):
+            for x, ch in enumerate(line):
+                if ch != ".":
+                    g[y + oy][x + ox] = ch
+        if blink:  # eyes are two pixels tall; closing them leaves the lower one
+            g[5 + oy][6 + ox] = g[5 + oy][11 + ox] = "s"
+        return g
+
+    def raise_arm(g, hand_x):
+        """Lifts the right arm (seen from the front): the hanging arm goes, a two-pixel arm up to the hand appears."""
+        for y in (11, 12, 13):
+            g[y + oy][15 + ox] = g[y + oy][16 + ox] = "."
+            g[y + oy][14 + ox] = "o"
+        g[14 + oy][15 + ox] = g[14 + oy][16 + ox] = "."
+        sleeve = [(16, 10), (16, 9), (17, 9), (17, 8), (18, 8), (17, 7), (18, 7), (17, 6), (18, 6)]
+        hand = [(hand_x, 4), (hand_x + 1, 4), (hand_x, 5), (hand_x + 1, 5)]
+        cells = []
+        for (x, y), ch in [(c, "t") for c in sleeve] + [(c, "s") for c in hand]:
+            g[y + oy][x + ox] = ch
+            cells.append((x + ox, y + oy))
+        g[6 + oy][18 + ox] = g[7 + oy][18 + ox] = "T"
+        ring(g, cells)
+        return g
+
+    frames = [
+        figure(),
+        raise_arm(figure(), 17),
+        raise_arm(figure(), 18),
+        raise_arm(figure(blink=True), 17),
+    ]
+    return 24, 20, legend, [rows(g) for g in frames], 200
+
+
+def tree_frames():
+    """A round tree whose crown sways in the wind while a leaf drifts down."""
+    legend = {"o": C["pine"], "k": C["ink"], "d": C["forest"], "g": C["leaf"], "l": C["grass"], "h": "#a6e15a",
+              "b": C["bark"], "w": C["wood"], "f": C["red"], "y": C["sun"]}
+    W, H = 20, 22
+    blobs = [(10, 8, 7.2), (5.5, 10.5, 4.2), (14.5, 10.5, 4.2), (7.5, 5, 4.3), (12.5, 5.5, 4.3), (10, 3.2, 3.6)]
+    sway = [0, 1, 0, -1]
+    leaf = [(15, 13), (16, 15), (15, 17), (16, 19)]
     frames = []
     for f in range(4):
-        g = grid(16, 18)
-        for y in range(1, 4):
-            for x in range(6, 10):
-                g[y][x] = "c" if y < 3 else "g"
-        g[1][6] = g[1][9] = "k"
-        for y in range(4, 6):
-            for x in range(6, 10):
-                g[y][x] = "g"
-        cx, cy, r = 7.5, 11, 5.6
-        for y in range(5, 17):
-            for x in range(16):
-                if (x + 0.5 - cx) ** 2 + (y + 0.5 - cy) ** 2 <= r * r:
-                    g[y][x] = "p" if y >= 9 else "g"
-                    if y >= 9 and x + 0.5 > cx + 2.5:
-                        g[y][x] = "d"
+        g = grid(W, H)
+        # Crown: overlapping circles; the top leans further than the bottom.
+        crown = {}
+        for y in range(H):
+            lean = sway[f] * max(0.0, (11 - y) / 9)
+            for x in range(W):
+                for cx, cy, r in blobs:
+                    d = math.hypot(x + 0.5 - (cx + lean), y + 0.5 - cy)
+                    if d <= r:
+                        # Light from the top left: brighter where the blob faces up-left.
+                        nx, ny = (x + 0.5 - (cx + lean)) / r, (y + 0.5 - cy) / r
+                        light = -0.7 * nx - 0.7 * ny
+                        tone = "h" if light > 0.62 and d > r * 0.45 else "l" if light > 0.2 else "g" if light > -0.35 else "d"
+                        crown[(x, y)] = tone  # blobs are listed back to front, so later ones cover earlier ones
+        for (x, y), tone in crown.items():
+            if y < 15:
+                g[y][x] = tone
+        # Two apples and the outline.
+        for ax, ay in ((6, 11), (13, 8)):
+            ax += round(sway[f] * max(0.0, (11 - ay) / 9))
+            if g[ay][ax] != ".":
+                g[ay][ax] = "f"
         outline(g)
-        g[10][4] = g[11][4] = g[12][4] = "w"  # glass shine
-        g[9][5] = "b"
-        for bx, by in bubbles[f]:
-            if g[by][bx] in "pd":
-                g[by][bx] = "b"
+        # Trunk and roots, then a strip of grass; drawn after the outline so they keep their colours.
+        for y in range(15, 20):
+            g[y][8], g[y][9], g[y][10], g[y][11] = "o", "w", "b", "o"
+        g[19][7] = g[19][12] = "o"
+        for x in range(4, 16):
+            g[20][x] = "l" if x in (6, 9, 13) else "g"
+            g[21][x] = "o"
+        g[20][4] = g[20][15] = "o"
+        lx, ly = leaf[f]
+        if g[ly][lx] == ".":
+            g[ly][lx] = "l"
         frames.append(rows(g))
-    return 16, 18, legend, frames, 160
+    return W, H, legend, frames, 220
 
 
 def draw_sprite(agent, name, spec):
@@ -317,15 +422,83 @@ def turntable(agent, name, scale=4):
     return {"src": f"/art/{name}.png", "still": f"/art/{name}-iso.png", "frames": 8, "ms": 220, "axis": "x", "sheet": sheet}
 
 
+SPRITES = {"slime": slime_frames, "coin": coin_frames, "campfire": campfire_frames, "human": human_frames,
+           "oak": tree_frames}
+
+
+def read_manifest():
+    text = open(MANIFEST).read()
+    body = text.split("export const art = ", 1)[1].rsplit(" satisfies", 1)[0]
+    return json.loads(body)
+
+
+def add_boxes(art):
+    """Records where each picture's pixels are, so pages can size art by what is drawn rather than by its canvas:
+    `box` is [x, y, width, height] within one cell across all frames, and `boxes` the same for each frame."""
+    from PIL import Image
+    for a in art.values():
+        im = Image.open(os.path.join(ROOT, "web", "public", a["src"].lstrip("/"))).convert("RGBA")
+        boxes = []
+        for f in range(a["frames"]):
+            x, y = (f * a["w"], 0) if a["axis"] == "x" else (0, f * a["h"])
+            b = im.crop((x, y, x + a["w"], y + a["h"])).getbbox()
+            if b:
+                boxes.append(b)
+        x0, y0 = min(b[0] for b in boxes), min(b[1] for b in boxes)
+        x1, y1 = max(b[2] for b in boxes), max(b[3] for b in boxes)
+        a["box"] = [x0, y0, x1 - x0, y1 - y0]
+        if len(boxes) > 1:  # each frame on its own too, for pages that show one frame as a still
+            a["boxes"] = [[b[0], b[1], b[2] - b[0], b[3] - b[1]] for b in boxes]
+
+
+ART_TYPE = """export type Art = {
+  src: string;
+  still?: string;
+  w: number;
+  h: number;
+  frames: number;
+  ms: number;
+  axis: "x" | "y";
+  /** Where the drawn pixels are within one cell, across all frames: [x, y, width, height]. */
+  box: [number, number, number, number];
+  /** The same for each frame, when there is more than one. */
+  boxes?: [number, number, number, number][];
+};
+"""
+
+
+def write_manifest(art):
+    add_boxes(art)
+    with open(MANIFEST, "w") as f:
+        f.write("// Generated by web/scripts/make-art.py: every picture was drawn and exported by OpenPixel.\n")
+        f.write(ART_TYPE + "\n")
+        body = json.dumps(art, indent=2)
+        body = re.sub(r"\[\s+([\d,\s]+?)\s+\]", lambda m: "[" + ", ".join(m.group(1).split()).replace(",,", ",") + "]", body)
+        body = re.sub(r"\[\s+((?:\[[\d, ]+\],?\s*)+)\]", lambda m: "[" + ", ".join(re.findall(r"\[[\d, ]+\]", m.group(1))) + "]", body)
+        f.write("export const art = " + body + " satisfies Record<string, Art>;\n")
+    print("wrote", MANIFEST)
+
+
 def main():
     if not os.path.exists(APP):
         sys.exit("Build the app first: cd app && make")
     os.makedirs(OUT, exist_ok=True)
+    only = sys.argv[1:]
+    if only:
+        # `make-art.py human oak` redraws just those sprites and keeps every other entry as it is.
+        art = read_manifest()
+        agent = Agent()
+        for name in only:
+            art[name] = draw_sprite(agent, name, SPRITES[name]())
+            art[name].pop("sheet", None)
+            print("drew", name)
+        agent.close()
+        write_manifest(art)
+        return
     agent = Agent()
     art = {}
-    for name, spec in [("slime", slime_frames()), ("coin", coin_frames()), ("campfire", campfire_frames()),
-                       ("robot", robot_frames()), ("potion", potion_frames())]:
-        art[name] = draw_sprite(agent, name, spec)
+    for name, make in SPRITES.items():
+        art[name] = draw_sprite(agent, name, make())
         print("drew", name)
 
     # The treasure chest: the 2D sprite, then Make 3D.
@@ -366,11 +539,7 @@ def main():
                 a["w"], a["h"] = iw, ih // a["frames"]
         a.pop("sheet", None)
 
-    with open(MANIFEST, "w") as f:
-        f.write("// Generated by web/scripts/make-art.py: every picture was drawn and exported by OpenPixel.\n")
-        f.write("export type Art = { src: string; still?: string; w: number; h: number; frames: number; ms: number; axis: \"x\" | \"y\" };\n\n")
-        f.write("export const art = " + json.dumps(art, indent=2) + " satisfies Record<string, Art>;\n")
-    print("wrote", MANIFEST)
+    write_manifest(art)
 
 
 if __name__ == "__main__":

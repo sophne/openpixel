@@ -606,11 +606,11 @@ html[data-scrolled="true"] .site-header {
   color: var(--text);
 }
 
-/* A steady height for every tab (the tallest is a voxel model), so switching tabs never moves the page. */
+/* A steady height for every tab, so switching tabs never moves the page. Each example is a square a third of the
+   row (minus gaps), and the row is at most 640px wide. */
 .stage {
   margin-top: 40px;
-  /* The tallest example (the voxel chest) is about 0.37× the row's width; the row is at most 640px. */
-  min-height: calc(min(640px, 100vw - 40px) * 0.39);
+  min-height: calc(min(640px, 100vw - 40px) * 0.34);
   display: grid;
   align-items: center;
 }
@@ -637,9 +637,18 @@ html[data-scrolled="true"] .site-header {
   height: auto;
 }
 
+/* Every example gets the same square; Showcase places the picture inside it by what's drawn (see fit()). */
 .stage-item {
+  position: relative;
   display: block;
   min-width: 0;
+  aspect-ratio: 1;
+  overflow: hidden; /* only empty canvas sticks out of the square, and it must not widen the page */
+}
+
+.stage-fit {
+  position: absolute;
+  display: block;
 }
 
 /* Always in colour and moving, at a calmer pace than the sprites' own frame timing. */

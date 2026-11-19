@@ -9,6 +9,8 @@ import { CHECKED, COMPETITORS, bySlug, type Cell, type Visual } from "@/lib/comp
 import { REPO_URL } from "@/lib/github";
 import JsonLd from "@/components/JsonLd";
 import { breadcrumbJsonLd, pageMeta } from "@/lib/seo";
+import editorShot from "../../../../public/editor.png";
+import editor3dShot from "../../../../public/editor-3d.png";
 
 export function generateStaticParams() {
   return COMPETITORS.map((c) => ({ slug: c.slug }));
@@ -71,7 +73,7 @@ function CardVisual({ v }: { v: Visual }) {
     case "animate":
       return <Sprite art={art.campfire} scale={9} />;
     case "agent":
-      return <Sprite art={art.robot} scale={10} />;
+      return <Sprite art={art.human} scale={9} />;
     case "vox":
       return <Sprite art={art.mushroom} scale={2} />;
     case "iso":
@@ -122,9 +124,9 @@ export default async function CompareDetail({ params }: { params: Promise<{ slug
 
         <div className="cmp-wide">
           <AppWindow
-            src="/editor.png"
-            alt="The OpenPixel editor with a pixel-art treasure chest"
-            title="Pirate Treasure Chest"
+            src={editorShot}
+            alt="The OpenPixel editor with a pixel-art scene of a Greek temple ruin"
+            title="Temple of Athena"
           />
         </div>
 
@@ -207,7 +209,7 @@ export default async function CompareDetail({ params }: { params: Promise<{ slug
             <span>With agents, by hand, or both.</span>
           </h2>
           <AppWindow
-            src="/editor-3d.png"
+            src={editor3dShot}
             alt="The OpenPixel editor in 3D with a voxel mushroom house"
             title="Mushroom house"
           />
@@ -218,9 +220,9 @@ export default async function CompareDetail({ params }: { params: Promise<{ slug
             Native and fast. <span>See an agent draw it live.</span>
           </h2>
           <AppWindow
-            src="/editor.png"
+            src={editorShot}
             alt="The OpenPixel editor with a pixel-art sprite an agent drew"
-            title="Pirate Treasure Chest"
+            title="Temple of Athena"
           />
         </section>
 
