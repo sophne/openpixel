@@ -15,6 +15,8 @@
   --ok: #3ecf6e;
   --danger: #ff5c5c;
   --radius: 6px;
+  /* Strong ease-out: popups and presses respond at once and settle softly. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --left-w: 240px;
   --right-w: 264px;
   --bottom-h: 104px;
@@ -139,9 +141,10 @@ select.field { height: 26px; background: var(--panel-2); border: 1px solid trans
 .tool svg.i { width: 18px; height: 18px; }
 .tb-sep { width: 1px; height: 20px; background: var(--line); margin: 0 4px; }
 #tb-color { width: 22px; height: 22px; border-radius: 5px; margin: 0 6px 0 4px; border: 2px solid #fff; box-shadow: 0 0 0 1px #000; cursor: pointer; }
-#toast { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); background: #1f1f1f; border: 1px solid var(--line); padding: 7px 12px;
-  border-radius: 8px; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 70%; box-shadow: 0 6px 20px rgba(0,0,0,.4); }
-#toast.show { opacity: 1; }
+#toast { position: absolute; left: 50%; top: 12px; transform: translate(-50%, -4px); background: #1f1f1f; border: 1px solid var(--line); padding: 7px 12px;
+  border-radius: 8px; opacity: 0; transition: opacity 150ms ease, transform 150ms var(--ease-out); pointer-events: none; max-width: 70%; box-shadow: 0 6px 20px rgba(0,0,0,.4); }
+/* Drops in from the top edge it lives on; leaves faster than it arrives. */
+#toast.show { opacity: 1; transform: translate(-50%, 0); transition-duration: 220ms; }
 #toast.agent { border-color: var(--accent); }
 
 /* ---------- frames strip */
@@ -163,7 +166,7 @@ select.field { height: 26px; background: var(--panel-2); border: 1px solid trans
 #fg { width: 28px; height: 28px; border-radius: 6px; border: 1px solid rgba(255,255,255,.18); cursor: pointer; flex: none; }
 #fg-hex { flex: 1; text-transform: lowercase; }
 #palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(18px, 1fr)); gap: 3px; margin-top: 10px; }
-#palette .sw { aspect-ratio: 1; border-radius: 4px; cursor: pointer; position: relative; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
+#palette .sw { aspect-ratio: 1; border-radius: 4px; cursor: pointer; position: relative; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); transition: transform 100ms var(--ease-out); }
 #palette .sw:hover { transform: scale(1.12); z-index: 1; }
 #palette .sw.on { box-shadow: 0 0 0 2px var(--panel), 0 0 0 3.5px var(--accent); z-index: 1; }
 #palette .sw.add { display: grid; place-items: center; color: var(--text-2); background: var(--panel-2); box-shadow: inset 0 0 0 1px var(--line); }
@@ -173,13 +176,24 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
 #preview-wrap { display: grid; place-items: center; min-height: 140px; background: repeating-conic-gradient(#333 0 25%, #2e2e2e 0 50%) 0 0/12px 12px; border-radius: 6px; overflow: hidden; }
 #preview { image-rendering: pixelated; max-width: 100%; max-height: 200px; }
 
-/* ---------- resizers */
-.resizer { position: absolute; z-index: 20; }
-.resizer.v { top: 0; bottom: 0; width: 6px; cursor: col-resize; }
-#left > .resizer { right: -3px; }
-#right > .resizer { left: 0; }
-.resizer.h { left: 0; right: 0; height: 6px; top: -3px; cursor: row-resize; }
-.resizer:hover, .resizer.active { background: var(--accent); opacity: .6; }
+/* ---------- resizers
+   All three handles straddle their border with the same 8px grab area (4px each side) and show the same 2px accent
+   line, after a short pause so moving across a border doesn't flash it. The side handles sit on the app grid, not
+   inside the panels, so the panels can't clip or scroll them. */
+#app { position: relative; }
+.resizer { position: absolute; z-index: 30; }
+.resizer.v { top: 44px; bottom: 0; width: 8px; cursor: col-resize; }
+.resizer[data-resize="left"] { left: calc(var(--left-w) - 4px); }
+.resizer[data-resize="right"] { right: calc(var(--right-w) - 4px); }
+.resizer.h { left: 0; right: 0; height: 8px; top: -4px; cursor: row-resize; }
+.resizer::after { content: ""; position: absolute; background: var(--accent); opacity: 0; transition: opacity 120ms ease; }
+.resizer.v::after { top: 0; bottom: 0; left: 3px; width: 2px; }
+.resizer.h::after { left: 0; right: 0; top: 3px; height: 2px; }
+.resizer:hover::after { opacity: .8; transition-delay: 150ms; }
+.resizer.active::after { opacity: 1; transition-delay: 0s; }
+/* While dragging, the resize cursor stays put over the canvas and panels. */
+body.resizing-col, body.resizing-col * { cursor: col-resize !important; }
+body.resizing-row, body.resizing-row * { cursor: row-resize !important; }
 
 /* ---------- colour picker */
 .popover { position: fixed; z-index: 60; width: 240px; background: #1f1f1f; border: 1px solid var(--line); border-radius: 10px; padding: 12px;
@@ -239,12 +253,15 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
 .row > label { width: 58px; }
 #color-row { min-width: 0; }
 #fg-hex { min-width: 0; width: 0; }
-@container (max-width: 300px) {
-  #right .btn .lbl, #right .chip .lbl { display: none; }
-  #right .row > label { width: 52px; }
-}
+/* Labels sit in a left column at every width; controls that wrap start under the controls, not under the label.
+   Button labels only give way below 250px (the panel opens at 264px, where they fit). */
+#right .row { --lw: 58px; }
+#right .row:has(> label) { padding-left: calc(var(--lw) + 6px); }
+#right .row > label { width: var(--lw); margin-left: calc(-1 * (var(--lw) + 6px)); flex: none; }
+@container (max-width: 300px) { #right .row { --lw: 52px; } }
 @container (max-width: 250px) {
-  #right .row > label { width: 100%; }
+  #right .row { --lw: 44px; }
+  #right .btn .lbl, #right .chip .lbl { display: none; }
 }
 /* top bar: shorter labels on narrow windows */
 @media (max-width: 1240px) { #doc-kind { display: none; } #top .right .btn:not(.primary) .lbl { display: none; } }
@@ -340,7 +357,8 @@ table.agents { width: 100%; border-collapse: separate; border-spacing: 0; backgr
 .pill { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 9px; border-radius: 11px; font-size: 11px; font-weight: 500; white-space: nowrap; max-width: 100%; overflow: hidden; }
 .pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
 .pill.connected { background: rgba(62, 207, 110, .14); color: #3ecf6e; }
-.pill.connected::before { animation: pulse 1.6s ease-in-out infinite; }
+.pill.connected.live::before { animation: pulse 1.6s ease-in-out infinite; } /* pulses only while talking to this window */
+.pill.disconnected { background: #383838; color: var(--text-2); } /* a step brighter than Not found: the app is here */
 .pill.ready { background: rgba(120, 140, 255, .14); color: #9aa8ff; }
 .pill.setup { background: var(--accent-soft); color: var(--accent); }
 .pill.missing { background: #353535; color: var(--text-3); }
@@ -373,3 +391,93 @@ ol.steps li::marker { color: var(--accent); font-weight: 600; }
 .codebox pre.code { white-space: pre-wrap; word-break: break-all; padding-right: 84px; }
 /* controls that belong together wrap as one piece */
 .keep { display: inline-flex; align-items: center; gap: 4px; flex: none; margin-left: auto; }
+/* Zoom starts right after its label, like the other rows' controls. */
+.keep.start { margin-left: 0; }
+
+/* ======================================================= motion and interaction states
+   Presses answer at once with a small squeeze. Hover colours stay instant (they happen constantly).
+   Popups grow out of their trigger and dialogs out of the centre; app.js animates them (popIn) only when a
+   pointer opened them, so keyboard use is never slowed down. */
+.btn, .tool, .chip, .seg button, .dd-btn, .stepper button, .action-tile, .home-nav, .tog { transition: transform 120ms var(--ease-out); }
+.btn:active:not(:disabled), .tool:active, .chip:active, .seg button:active, .dd-btn:active, .action-tile:active, .home-nav:active { transform: scale(0.97); }
+.stepper button:active, .tog:active { transform: scale(0.9); }
+
+/* Keyboard focus: a clear ring, never shown for mouse clicks. */
+button:focus-visible, .dd-btn:focus-visible, [tabindex]:focus-visible, .action-tile:focus-visible, .card:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 1px; }
+/* The item the arrow keys are on in an open menu looks like the hovered one. */
+.menu-list > div.kb, .dd-list .opt.kb { background: var(--accent); color: #fff; }
+.menu-list > div.kb .k { color: #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pill.connected.live::before { animation: none; }
+  #toast, #toast.show { transform: translate(-50%, 0); }
+  .btn:active:not(:disabled), .tool:active, .chip:active, .seg button:active, .dd-btn:active, .action-tile:active, .home-nav:active,
+  .stepper button:active, .tog:active, #palette .sw:hover { transform: none; }
+}
+
+/* Copy buttons (copyButton in app.js): "Copy" and "Copied" share one cell and cross-fade with a touch of blur, as on
+   the website; the check is green so the result reads at a glance. */
+.btn.swapper { display: inline-grid; place-items: center; }
+.btn.swapper > .swap { grid-area: 1 / 1; display: inline-flex; align-items: center; gap: 6px; filter: blur(0);
+  transition: opacity 180ms ease, filter 180ms ease, transform 180ms var(--ease-out); }
+.btn.swapper > .swap.out { opacity: 0; filter: blur(2px); transform: scale(0.95); }
+.btn.swapper > .swap:last-child svg { color: var(--ok); }
+@media (prefers-reduced-motion: reduce) {
+  .btn.swapper > .swap { transition: opacity 150ms ease; }
+  .btn.swapper > .swap.out { filter: none; transform: none; }
+}
+
+/* Collapsible sections: the chevron points down when open and turns to point right when folded. It turns quickly with
+   the strong ease-out; the content itself folds at once (it is used constantly, and height animations cost layout). */
+.chev { width: 14px; height: 14px; color: var(--text-2); transition: transform 150ms var(--ease-out); }
+#activity-sec.closed .chev, #app.frames-closed #frames-toggle .chev { transform: rotate(-90deg); }
+.collapse-btn { display: inline-flex; align-items: center; gap: 4px; height: 24px; margin: 0 6px 0 -4px; padding: 0 6px 0 4px; border: 0;
+  border-radius: 5px; background: transparent; color: var(--text); cursor: pointer; transition: transform 120ms var(--ease-out); }
+.collapse-btn:hover { background: var(--hover); }
+.collapse-btn:active { transform: scale(0.97); }
+.collapse-btn .title { font-weight: 600; }
+#frames-bar .collapse-btn .title { margin-right: 0; }
+/* Folded: only the bar stays, so play, onion skin and duration remain at hand. */
+#app.frames-closed { grid-template-rows: 44px 1fr 36px; }
+#app.frames-closed #strip, #app.frames-closed #frames > .resizer { display: none; }
+#app.frames-closed #frames-bar { padding-bottom: 6px; height: 100%; }
+@media (prefers-reduced-motion: reduce) { .chev, .collapse-btn { transition: none; } }
+
+/* ======================================================= right panel rhythm
+   One spacing scale: 8px between a section's head and its first row and between rows, 12px around a section.
+   Every control in the panel is 26px tall, so rows line up whatever they hold. */
+#right .sec { padding: 12px 12px 14px; }
+#right .sec-head { margin-bottom: 8px; }
+#right .sec-head + .row, #right .sec-head + div > .row:first-child, #right .sec-head + div[hidden] + div > .row:first-child { margin-top: 0; }
+#right #palette { margin-top: 8px; }
+#right .chip, #right .btn.small, #right .dd-btn, #right .stepper { height: 26px; }
+#right .seg { padding: 2px; }
+#right .seg button { height: 22px; }
+#right #preview-wrap + .row { margin-top: 8px; }
+
+/* Keyboard shortcuts dialog: groups in columns, keys as small caps-free key caps. */
+#shortcuts-dialog .modal { width: min(760px, 92vw); }
+.shortcuts { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); column-gap: 28px; align-items: start; }
+.shortcuts section { margin-bottom: 12px; }
+.shortcuts h3 { margin: 0 0 4px; font-size: 11.5px; font-weight: 600; color: var(--text-2); }
+.shortcuts .sc { display: flex; align-items: center; gap: 12px; min-height: 24px; padding: 1px 0; border-bottom: 1px solid var(--line-soft); }
+.shortcuts .sc span:first-child { flex: 1; }
+kbd { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 3px; border-radius: 4px;
+  background: var(--panel-2); border: 1px solid var(--line); border-bottom-width: 2px; font: 11px/1 -apple-system, BlinkMacSystemFont, sans-serif; color: var(--text); }
+
+/* Tooltips (app.js): the website's dock label, solid instead of glass. Short name, shortcut as key caps, an arrow
+   that points at the control. */
+.tip { position: fixed; z-index: 200; left: 0; top: 0; display: none; align-items: center; gap: 8px; max-width: 280px;
+  padding: 4px 10px 5px; border-radius: 8px; background: #242424; border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45); color: #f2f2f2; font-size: 12.5px; line-height: 1.3; white-space: pre-line;
+  pointer-events: none; }
+.tip.on { display: flex; }
+.tip::after { content: ""; position: absolute; left: var(--ax, 50%); width: 9px; height: 9px; margin-left: -4.5px; background: #242424;
+  transform: rotate(45deg); }
+.tip[data-side="top"]::after { top: 100%; margin-top: -4.5px; border-right: 1px solid rgba(255, 255, 255, 0.16);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16); border-bottom-right-radius: 2px; }
+.tip[data-side="bottom"]::after { bottom: 100%; margin-bottom: -4.5px; border-left: 1px solid rgba(255, 255, 255, 0.16);
+  border-top: 1px solid rgba(255, 255, 255, 0.16); border-top-left-radius: 2px; }
+.tip .keys { display: inline-flex; gap: 2px; margin-right: -4px; }
+.tip kbd { min-width: 17px; height: 17px; margin: 0; padding: 0 4px; font-size: 10.5px; background: #303030; border-color: #444; color: #ddd; }

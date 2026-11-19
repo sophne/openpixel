@@ -19,14 +19,33 @@ enum MCPMode {
             r.hello(info)
             return r.broken ? nil : r
         }
+        // The link to the window is shared by tool calls and the watcher below, so it is guarded by a lock.
+        let linkLock = NSLock()
+        func liveRemote() -> RemoteBackend? { // hold linkLock
+            if let r = remote, r.isAlive() { return r }
+            remote = connect()
+            return remote
+        }
         server = MCPServer {
             if headless { return local }
-            if let r = remote, !r.broken { return r }
-            remote = connect()
-            if let r = remote { return r }
-            return local
+            linkLock.lock(); defer { linkLock.unlock() }
+            return liveRemote() ?? local
         }
-        server.onInitialize = { _ in if remote == nil || remote!.broken { remote = connect() } }
+        var watching = false
+        server.onInitialize = { _ in
+            guard !headless else { return }
+            linkLock.lock(); _ = liveRemote(); linkLock.unlock()
+            // Keep looking for the window, so the agent shows as connected as soon as the window opens (and again after
+            // it restarts), not only after the agent's next tool call.
+            if watching { return }
+            watching = true
+            Thread {
+                while true {
+                    Thread.sleep(forTimeInterval: 2)
+                    linkLock.lock(); _ = liveRemote(); linkLock.unlock()
+                }
+            }.start()
+        }
         if let port = httpPort {
             let http = MCPHTTPServer(server: server, port: port, token: httpToken)
             // A tunnel can make this reachable from anywhere: keep file access to OpenPixel's own folder.

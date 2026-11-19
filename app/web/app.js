@@ -31,6 +31,8 @@ const S = {
   fg: 1, tool: 'pencil', brush: 1, mirror: { x: false, y: false, z: false },
   mode: '3d', axis: 'z', slice: 0, ghost: true, onionOn: false,
   edges: true, grid: true, ortho: false,
+  // Lines between pixels on the 2D canvas; remembered between launches.
+  pixelGrid: (() => { try { return localStorage.getItem('openpixel.pixelGrid') !== 'off'; } catch (e) { return true; } })(),
   previewYaw: 45, previewPitch: 30, previewScale: 3,
   playing: false, lastActivity: 0, hover: null,
 };
@@ -48,6 +50,123 @@ function toast(msg, agent = false) {
 }
 const errorText = (e) => String(e && e.message ? e.message : e).replace(/^Error: /, '');
 
+/* ---------------------------------------------------------------- tooltips
+   The app draws its own tooltips, like the dock labels on the website (solid, not glass): a short name and the
+   shortcut as key caps, above the control (below it when there is no room), the arrow pointing at the control.
+   The first one waits a moment so moving across the toolbar doesn't flash labels; while one is showing, the next
+   control's label appears at once and without animation. Leaving hides it at once. Titles in the markup feed it. */
+const tipEl = document.createElement('div');
+tipEl.className = 'tip'; tipEl.setAttribute('role', 'tooltip');
+let tipFor = null, tipTimer = 0, tipShownAt = 0, tipHiddenAt = 0;
+function tipParts(text) {
+  const m = text.match(/^([\s\S]*?)\s*\(([^()]{1,14})\)$/);
+  const shortcut = m && /^[⌘⇧⌥⌃]*(\w|[[\]'+=,./↩⌫−←→↑↓-]|PgUp|PgDn|Tab|Space)$/.test(m[2]);
+  if (!shortcut) return { label: text, keys: [] };
+  const mods = m[2].match(/^[⌘⇧⌥⌃]*/)[0];
+  return { label: m[1], keys: [...mods, m[2].slice(mods.length)] };
+}
+/** Moves an element's title into data-tip (no system tooltip), keeping an accessible name for icon buttons. */
+function adoptTitle(el) {
+  const t = el.getAttribute('title');
+  el.removeAttribute('title');
+  if (!t) return;
+  el.dataset.tip = t;
+  if (!el.getAttribute('aria-label') && !el.textContent.trim()) el.setAttribute('aria-label', tipParts(t).label);
+}
+function showTip(el, instant) {
+  const { label, keys } = tipParts(el.dataset.tip || '');
+  if (!label) return;
+  tipEl.replaceChildren();
+  const l = document.createElement('span'); l.textContent = label; tipEl.appendChild(l);
+  if (keys.length) {
+    const k = document.createElement('span'); k.className = 'keys';
+    for (const key of keys) { const c = document.createElement('kbd'); c.textContent = key; k.appendChild(c); }
+    tipEl.appendChild(k);
+  }
+  if (!tipEl.isConnected) document.body.appendChild(tipEl);
+  tipEl.classList.add('on');
+  const r = el.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+  const above = r.top - h - 10 >= 4;
+  const cx = r.left + r.width / 2;
+  const x = Math.max(6, Math.min(window.innerWidth - w - 6, cx - w / 2));
+  const ax = Math.max(10, Math.min(w - 10, cx - x));
+  tipEl.style.left = `${Math.round(x)}px`;
+  tipEl.style.top = `${Math.round(above ? r.top - h - 9 : r.bottom + 9)}px`;
+  tipEl.style.setProperty('--ax', `${Math.round(ax)}px`);
+  tipEl.dataset.side = above ? 'top' : 'bottom';
+  tipShownAt = Date.now();
+  if (!instant && tipEl.animate && !reducedMotion.matches) {
+    tipEl.style.transformOrigin = `${Math.round(ax)}px ${above ? '100%' : '0%'}`;
+    tipEl.animate([{ opacity: 0, transform: 'scale(0.97)' }, { opacity: 1, transform: 'none' }], { duration: 120, easing: EASE_OUT });
+  }
+}
+function hideTip() {
+  clearTimeout(tipTimer);
+  if (tipEl.classList.contains('on')) tipHiddenAt = Date.now();
+  tipEl.classList.remove('on');
+  tipFor = null;
+}
+document.addEventListener('pointerover', (e) => {
+  if (e.pointerType === 'touch') return;
+  const el = e.target.closest('[title], [data-tip]');
+  if (el && el.hasAttribute('title')) adoptTitle(el);
+  if (!el || !el.dataset.tip || el === tipFor) return;
+  const warm = tipEl.classList.contains('on') || Date.now() - tipHiddenAt < 400;
+  hideTip();
+  tipFor = el;
+  tipTimer = setTimeout(() => { if (tipFor === el && el.isConnected) showTip(el, warm); }, warm ? 0 : 500);
+});
+document.addEventListener('pointerout', (e) => { if (tipFor && !tipFor.contains(e.relatedTarget)) hideTip(); });
+for (const type of ['pointerdown', 'keydown', 'wheel']) window.addEventListener(type, () => { clearTimeout(tipTimer); if (tipFor) { tipEl.classList.remove('on'); tipFor = null; } }, true);
+window.addEventListener('blur', hideTip);
+// Give icon-only buttons their accessible names right away (titles move to data-tip on first hover anyway).
+document.querySelectorAll('[title]').forEach(adoptTitle);
+
+/* Copy buttons answer in place, like the website's: "Copy" cross-fades (with a touch of blur) to a check and "Copied",
+   and back after a moment. Both labels share one grid cell, so the button keeps its width. */
+function copyButton(btn, text) {
+  btn.classList.add('swapper');
+  btn.innerHTML = `<span class="swap">${icon('copy', 13)}Copy</span><span class="swap out">${icon('check', 13)}Copied</span>`;
+  const [idle, done] = btn.children;
+  const show = (copied) => {
+    idle.classList.toggle('out', copied); done.classList.toggle('out', !copied);
+    if (copied) btn.setAttribute('aria-label', 'Copied'); else btn.removeAttribute('aria-label');
+  };
+  btn.onclick = () => {
+    nativeAction('copyText', { text: typeof text === 'function' ? text() : text });
+    show(true);
+    clearTimeout(btn.copyTimer);
+    btn.copyTimer = setTimeout(() => show(false), 1500);
+  };
+}
+
+/* ---------------------------------------------------------------- motion
+   Popups grow out of whatever opened them: the point of the popup nearest the trigger is the transform origin,
+   so a menu under a button grows down from the button, one that flips upward grows up, and the colour picker grows
+   sideways from its swatch. Dialogs are not anchored to anything, so they grow from the centre. Only popups a pointer
+   opened animate (keyboard use is constant and must feel instant), exits are instant, and reduced motion fades only. */
+const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)';
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+let lastInput = 'pointer';
+window.addEventListener('pointerdown', () => { lastInput = 'pointer'; }, true);
+window.addEventListener('keydown', (e) => { if (!['Shift', 'Alt', 'Control', 'Meta'].includes(e.key)) lastInput = 'key'; }, true);
+
+function originFrom(trigger, box) {
+  box.getAnimations().forEach((a) => a.cancel()); // measure at full size, not mid-animation
+  const t = trigger.getBoundingClientRect(), b = box.getBoundingClientRect();
+  const x = Math.max(0, Math.min(b.width, t.left + t.width / 2 - b.left));
+  const y = Math.max(0, Math.min(b.height, t.top + t.height / 2 - b.top));
+  return `${Math.round(x)}px ${Math.round(y)}px`;
+}
+function popIn(el, origin = '50% 50%', { scale = 0.96, duration = 150 } = {}) {
+  if (!el || !el.animate || lastInput !== 'pointer') return;
+  el.getAnimations().forEach((a) => a.cancel());
+  el.style.transformOrigin = origin;
+  const still = reducedMotion.matches;
+  el.animate(still ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: `scale(${scale})` }, { opacity: 1, transform: 'none' }],
+    { duration: still ? 120 : duration, easing: EASE_OUT });
+}
+
 /* ---------------------------------------------------------------- icons (Lucide, ISC licence: web/LUCIDE-LICENSE.txt) */
 function icon(name, size = 16) {
   const nodes = (window.LUCIDE || {})[name];
@@ -62,6 +181,7 @@ function fillIcons(root = document) {
     t.innerHTML = icon(el.dataset.icon);
     const svg = t.content.firstChild;
     if (svg && el.id) svg.id = el.id;
+    if (svg && el.classList.length) svg.classList.add(...el.classList);
     if (svg) el.replaceWith(svg);
   });
 }
@@ -163,7 +283,7 @@ function renderPalette() {
     const d = document.createElement('div');
     d.className = 'sw' + (i === S.fg ? ' on' : '');
     d.style.background = hex;
-    d.title = `${i}  ${hex} — double-click to edit`;
+    d.title = hex;
     d.onclick = () => setFg(i);
     d.ondblclick = () => editColor(i, d);
     pal.appendChild(d);
@@ -243,11 +363,27 @@ function updateInfoChip() {
   else t = `${names[S.axis]} slice ${S.slice}/${sliceSize().depth - 1} · ${sv.zoom * 100}%`;
   $('#info-chip').textContent = t;
 }
+/* The Frames strip folds down to its bar (play, onion and duration stay at hand) to give the canvas more room. */
+function setFramesOpen(open) {
+  $('#app').classList.toggle('frames-closed', !open);
+  const b = $('#frames-toggle');
+  b.setAttribute('aria-expanded', String(open));
+  b.title = open ? 'Hide frames (F)' : 'Show frames (F)';
+  try { localStorage.setItem('openpixel.framesClosed', open ? '0' : '1'); } catch (e) { /* not remembered */ }
+  render3dDirty = true; sliceDirty = true;
+}
+function setPixelGrid(on) {
+  S.pixelGrid = on;
+  $('#pixel-grid-btn').classList.toggle('on', on);
+  try { localStorage.setItem('openpixel.pixelGrid', on ? 'on' : 'off'); } catch (e) { /* not remembered */ }
+  sliceDirty = true;
+}
 function updateViewPanel() {
   const slice = S.mode === 'slice';
   $('#view-slice').hidden = !slice || S.isSprite;
   $('#view-sprite').hidden = !S.isSprite;
   $('#view-2d').hidden = !slice;
+  $('#ghost-btn').hidden = S.isSprite; // a sprite has no slice behind it
   $('#view-3d').hidden = slice;
   $$('[data-axis]').forEach((b) => b.classList.toggle('on', b.dataset.axis === S.axis));
   $('#slice-index').textContent = `${S.slice}/${sliceSize().depth - 1}`;
@@ -352,6 +488,8 @@ function openPicker(anchor, hex, okLabel, onOk) {
   if (left < 8) left = Math.min(window.innerWidth - pw - 8, r.right + 10);
   top = Math.max(8, Math.min(window.innerHeight - ph - 8, top));
   p.style.left = left + 'px'; p.style.top = top + 'px';
+  popIn(p, originFrom(anchor, p), { duration: 170 });
+  if (lastInput === 'key') $('#pk-hex').focus();
 }
 function closePicker() { $('#picker').hidden = true; pk.onOk = null; }
 function wirePicker() {
@@ -855,8 +993,8 @@ function drawSlice() {
   ig.putImageData(data, 0, 0);
   g.imageSmoothingEnabled = false;
   g.drawImage(sliceImage, ox, oy, cols * z, rows * z);
-  // pixel grid, fading in as you zoom in
-  if (z >= 6) {
+  // pixel grid, fading in as you zoom in (the Grid button in the View panel turns it off)
+  if (S.pixelGrid && z >= 6) {
     const a = Math.min(160, (z - 4) * 14) / 255;
     g.strokeStyle = PIXEL_GRID + a + ')'; g.lineWidth = 1 / dpr;
     g.beginPath();
@@ -1186,6 +1324,7 @@ function dropdown(el, options, { value = null, placeholder = '', onChange = null
     list.style.left = Math.max(8, Math.min(r.left, window.innerWidth - list.offsetWidth - 8)) + 'px';
     const below = r.bottom + 4, h = list.offsetHeight;
     list.style.top = (below + h > window.innerHeight - 8 ? Math.max(8, r.top - h - 4) : below) + 'px';
+    openedMenu(list, btn);
   };
   api.set(value);
   return api;
@@ -1324,6 +1463,7 @@ function openCardMenu(anchor, r) {
   const a = anchor.getBoundingClientRect();
   m.style.left = Math.max(8, Math.min(a.left, window.innerWidth - m.offsetWidth - 8)) + 'px';
   m.style.top = Math.min(a.bottom + 4, window.innerHeight - m.offsetHeight - 8) + 'px';
+  openedMenu(m, anchor);
 }
 function wireHome() {
   $('#home-btn').onclick = () => showHome('recents');
@@ -1413,6 +1553,7 @@ function agentSteps(id) {
 }
 
 function agentStatus(a) {
+  // Two states: Connected (OpenPixel is in the app's settings, or it is talking to this window now) and Disconnected.
   const d = agentsState.data || {};
   const live = (d.sessions || []).filter((s) => s.open && s.agent === a.id);
   const setup = (d.setup || {})[a.id] || {};
@@ -1421,14 +1562,14 @@ function agentStatus(a) {
     const calls = live.reduce((n, s) => n + s.calls, 0);
     const last = Math.max(...live.map((s) => s.last_call || s.connected));
     const tool = live.map((s) => s.last_tool).find(Boolean);
-    return { cls: 'connected', label: live.length > 1 ? `Connected ×${live.length}` : 'Connected',
-      act: `<b>${calls} call${calls === 1 ? '' : 's'}</b> · ${timeAgo(last)}${tool ? `<span class="mono">last: ${escapeHtml(tool)}</span>` : ''}` };
+    return { cls: 'connected live', label: live.length > 1 ? `Connected ×${live.length}` : 'Connected',
+      act: calls ? `<b>${calls} call${calls === 1 ? '' : 's'}</b> · ${timeAgo(last)}${tool ? `<span class="mono">last: ${escapeHtml(tool)}</span>` : ''}`
+        : `Ready, no calls yet · connected ${timeAgo(Math.min(...live.map((s) => s.connected)))}` };
   }
-  const seenText = seen ? `Last connected ${timeAgo(seen)}` : 'Never connected';
-  if (setup.configured) return { cls: 'ready', label: 'Set up', act: `${seenText}<span class="mono">${escapeHtml(setup.config_file || '')}</span>` };
-  if (a.id === 'chatgpt') return { cls: 'setup', label: 'Needs a tunnel', act: seen ? seenText : 'Connects over HTTPS (see how)' };
-  if (setup.installed) return { cls: 'setup', label: 'Not set up', act: seen ? seenText : 'Installed on this Mac' };
-  return { cls: 'missing', label: 'Not installed', act: seen ? seenText : 'Not found on this Mac' };
+  if (setup.configured) return { cls: 'connected', label: 'Connected', act: seen ? `Last used ${timeAgo(seen)}` : 'Not used yet' };
+  if (a.id === 'chatgpt') return { cls: 'disconnected', label: 'Disconnected', act: 'Needs a tunnel (see How to connect)' };
+  if (setup.installed) return { cls: 'disconnected', label: 'Disconnected', act: 'Installed, not set up yet' };
+  return { cls: 'missing', label: 'Not found', act: '' }; // the status says it all
 }
 
 async function loadAgents() {
@@ -1444,18 +1585,17 @@ function renderAgents() {
   // Clients OpenPixel doesn't know by name still show up while connected.
   for (const s of (d.sessions || []).filter((x) => x.open && !x.agent)) {
     rows.push({ a: { id: 'other', name: s.client === 'unknown' ? 'Unknown agent' : s.client, by: `MCP client ${s.version || ''} · ${s.transport}`, logo: null },
-      st: { cls: 'connected', label: 'Connected', act: `<b>${s.calls} call${s.calls === 1 ? '' : 's'}</b> · ${timeAgo(s.last_call || s.connected)}` } });
+      st: { cls: 'connected live', label: 'Connected', act: s.calls ? `<b>${s.calls} call${s.calls === 1 ? '' : 's'}</b> · ${timeAgo(s.last_call || s.connected)}` : 'Ready, no calls yet' } });
   }
   for (const { a, st } of rows) {
     const tr = document.createElement('tr');
     tr.dataset.agent = a.id;
     tr.innerHTML = `<td class="c-agent"><div class="agent-cell">${a.logo ? agentLogo(a) : `<div class="alogo">${icon('bot', 18)}</div>`}` +
-      `<div><div class="aname"></div><div class="asub"></div></div></div></td>` +
+      `<div class="aname"></div></div></td>` +
       `<td class="c-status"><span class="pill ${st.cls}">${st.label}</span></td>` +
       `<td class="c-act"><div class="act-cell">${st.act}</div></td>` +
       `<td class="c-info">${a.id === 'other' ? '' : `<button class="btn small outline info-btn" title="How to connect ${escapeHtml(a.name)}">${icon('info', 14)}<span class="lbl">How to connect</span></button>`}</td>`;
     tr.querySelector('.aname').textContent = a.name;
-    tr.querySelector('.asub').textContent = a.by;
     const b = tr.querySelector('.info-btn');
     if (b) b.onclick = () => showAgentInfo(a);
     body.appendChild(tr);
@@ -1483,9 +1623,9 @@ function showAgentInfo(a) {
     if (step.code) {
       const box = document.createElement('div');
       box.className = 'codebox';
-      box.innerHTML = `<pre class="code"></pre><button class="btn small copy">${icon('copy', 13)}Copy</button>`;
+      box.innerHTML = '<pre class="code"></pre><button class="btn small copy"></button>';
       box.querySelector('pre').textContent = step.code;
-      box.querySelector('.copy').onclick = () => { nativeAction('copyText', { text: step.code }); toast('Copied'); };
+      copyButton(box.querySelector('.copy'), step.code);
       li.appendChild(box);
     }
     ol.appendChild(li);
@@ -1520,7 +1660,7 @@ async function pollAgentDot() {
     const live = ((d && d.sessions) || []).filter((s) => s.open);
     const dot = $('#agent-btn .dot');
     if (dot) dot.style.background = live.length ? 'var(--ok)' : '#777';
-    $('#agent-btn').title = live.length ? `${live.length} agent${live.length > 1 ? 's' : ''} connected: ${[...new Set(live.map((s) => s.client))].join(', ')}` : 'Connect an AI agent';
+    $('#agent-btn').title = live.length ? `Agents: ${[...new Set(live.map((s) => s.client))].join(', ')} working` : 'Agents';
     $('#nav-agent-dot').hidden = !live.length;
   } catch (e) { /* not available */ }
 }
@@ -1531,14 +1671,14 @@ function buildTools() {
   for (const t of TOOLS) {
     if (t.sep) { bar.appendChild(Object.assign(document.createElement('div'), { className: 'tb-sep' })); continue; }
     const d = document.createElement('div');
-    d.className = 'tool'; d.dataset.tool = t.id; d.title = `${t.name} (${t.key}) — ${t.tip}`;
+    d.className = 'tool'; d.dataset.tool = t.id; d.title = `${t.name} (${t.key})`;
     d.innerHTML = icon(t.icon, 18);
     d.onclick = () => setTool(t.id);
     bar.appendChild(d);
   }
   bar.appendChild(Object.assign(document.createElement('div'), { className: 'tb-sep' }));
   const c = document.createElement('div');
-  c.id = 'tb-color'; c.title = 'Current colour — click to add a new one';
+  c.id = 'tb-color'; c.title = 'Current colour';
   c.onclick = () => addColor(c);
   bar.appendChild(c);
   setTool('pencil');
@@ -1620,9 +1760,63 @@ async function showReview() {
   } catch (e) { toast(errorText(e)); }
 }
 
-function openModal(id) { closeMenus(); $(id).classList.add('open'); }
-function closeModals() { $$('.modal-bg').forEach((m) => m.classList.remove('open')); }
-function closeMenus() { $$('.menu').forEach((m) => m.classList.remove('open')); }
+let modalReturnFocus = null;
+function openModal(id) {
+  closeMenus();
+  const bg = $(id);
+  if (!bg.classList.contains('open')) modalReturnFocus = document.activeElement;
+  bg.classList.add('open');
+  popIn(bg, '50% 50%', { scale: 1, duration: 160 }); // the dimmed backdrop only fades
+  popIn(bg.querySelector('.modal'), '50% 50%', { scale: 0.96, duration: 200 });
+  // Keyboard users land inside the dialog; pointer users keep their place.
+  if (lastInput === 'key') {
+    const first = bg.querySelector('.modal input:not([type=hidden]), .modal .btn.primary, .modal button');
+    if (first) first.focus();
+  }
+}
+function closeModals() {
+  const wasOpen = $$('.modal-bg.open').length > 0;
+  $$('.modal-bg').forEach((m) => m.classList.toggle('open', false));
+  if (wasOpen && modalReturnFocus && document.contains(modalReturnFocus) && modalReturnFocus.focus) modalReturnFocus.focus();
+  modalReturnFocus = null;
+}
+
+/* Menus: the arrow keys move through the items of the open menu, Return chooses, Escape closes and returns focus. */
+let menuTrigger = null;
+function openedMenu(list, trigger) {
+  menuTrigger = trigger;
+  popIn(list, originFrom(trigger, list), { duration: 140, scale: 0.97 });
+  list.querySelectorAll('.kb').forEach((d) => d.classList.toggle('kb', false));
+  if (lastInput === 'key') moveMenu(list, 1);
+}
+function openMenuList() { return $('.menu.open > .menu-list') || $('.card-menu.open'); }
+function menuItems(list) { return [...list.children].filter((d) => d.tagName === 'DIV' && !d.hidden && d.offsetParent !== null); }
+function moveMenu(list, step, to) {
+  const items = menuItems(list);
+  if (!items.length) return;
+  const cur = items.findIndex((d) => d.classList.contains('kb'));
+  const next = to === 'first' ? 0 : to === 'last' ? items.length - 1 : (cur + step + items.length) % items.length;
+  items.forEach((d, i) => d.classList.toggle('kb', i === next));
+  items[next].scrollIntoView({ block: 'nearest' });
+}
+window.addEventListener('keydown', (e) => {
+  const list = openMenuList();
+  if (!list) return;
+  const k = e.key;
+  if (k === 'ArrowDown' || k === 'ArrowUp' || k === 'Home' || k === 'End') {
+    moveMenu(list, k === 'ArrowUp' ? -1 : 1, k === 'Home' ? 'first' : k === 'End' ? 'last' : null);
+  } else if (k === 'Enter' || k === ' ') {
+    const d = list.querySelector('.kb');
+    if (!d) return;
+    d.click();
+    if (menuTrigger && menuTrigger.focus) menuTrigger.focus();
+  } else if (k === 'Escape' || k === 'Tab') {
+    closeMenus();
+    if (menuTrigger && menuTrigger.focus) menuTrigger.focus();
+  } else return;
+  e.preventDefault(); e.stopImmediatePropagation();
+}, true);
+function closeMenus() { $$('.menu, .card-menu').forEach((m) => m.classList.remove('open')); }
 
 
 /* Panels resize by dragging their edges; sizes are remembered. */
@@ -1643,12 +1837,14 @@ function initResizers() {
       e.preventDefault(); e.stopPropagation();
       const which = r.dataset.resize;
       r.classList.add('active');
+      document.body.classList.add(which === 'bottom' ? 'resizing-row' : 'resizing-col');
       const move = (ev) => {
         const px = which === 'left' ? ev.clientX : which === 'right' ? window.innerWidth - ev.clientX : window.innerHeight - ev.clientY;
         saved[which] = setSize(which, px);
       };
       const up = () => {
         r.classList.remove('active');
+        document.body.classList.remove('resizing-row', 'resizing-col');
         window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up);
         try { localStorage.setItem('openpixel.panels', JSON.stringify(saved)); } catch (e) { /* not saved */ }
         if (S.mode === 'slice') updateSliceLabel();
@@ -1661,7 +1857,13 @@ function initResizers() {
 
 function wire() {
   $$('[data-menu]').forEach((b) => {
-    b.onclick = (e) => { e.stopPropagation(); const m = $('#' + b.dataset.menu); const open = !m.classList.contains('open'); closeMenus(); m.classList.toggle('open', open); };
+    b.onclick = (e) => {
+      e.stopPropagation();
+      const m = $('#' + b.dataset.menu), open = !m.classList.contains('open');
+      closeMenus();
+      m.classList.toggle('open', open);
+      if (open) openedMenu(m.querySelector('.menu-list'), b);
+    };
   });
   document.addEventListener('click', closeMenus);
   $$('[data-action]').forEach((d) => {
@@ -1678,7 +1880,7 @@ function wire() {
   $('#redo').onclick = () => tool('redo');
   $('#review-btn').onclick = showReview;
   $('#agent-btn').onclick = showAgentHelp;
-  $('#agent-cmd-copy').onclick = () => { nativeAction('copyText', { text: $('#agent-cmd').textContent }); toast('Copied'); };
+  copyButton($('#agent-cmd-copy'), () => $('#agent-cmd').textContent);
   $$('[data-close]').forEach((b) => { b.onclick = closeModals; });
   $$('.modal-bg').forEach((m) => m.addEventListener('mousedown', (e) => { if (e.target === m) closeModals(); }));
   $$('[data-mode]').forEach((b) => { b.onclick = () => setMode(b.dataset.mode); });
@@ -1686,6 +1888,8 @@ function wire() {
   $('#slice-down').onclick = () => stepSlice(-1);
   $('#slice-up').onclick = () => stepSlice(1);
   $('#ghost-btn').onclick = () => { S.ghost = !S.ghost; $('#ghost-btn').classList.toggle('on', S.ghost); sliceDirty = true; };
+  $('#pixel-grid-btn').onclick = () => setPixelGrid(!S.pixelGrid);
+  setPixelGrid(S.pixelGrid);
   $('#zoom-in').onclick = () => zoomStep(1);
   $('#zoom-out').onclick = () => zoomStep(-1);
   $('#zoom-fit').onclick = fitSlice;
@@ -1707,7 +1911,6 @@ function wire() {
   });
   dropdown($('#preset'), PRESETS, { placeholder: 'Palette preset…', keepLabel: true, onChange: (v) => tool('set_palette', { preset: v }) });
   newPalette = dropdown($('#new-palette'), PRESETS, { value: 'db32' });
-  $('#prev-left').onclick = () => { S.previewYaw = (S.previewYaw + 90) % 360; schedulePreview(); };
   $$('[data-pview]').forEach((b) => {
     b.onclick = () => {
       if (b.dataset.pview === 'front') { S.previewYaw = 0; S.previewPitch = 0; } else { S.previewYaw = 45; S.previewPitch = 30; }
@@ -1715,7 +1918,6 @@ function wire() {
     };
   });
   $$('[data-pscale]').forEach((b) => {
-    b.title = 'Preview size (pixels per voxel)';
     b.classList.toggle('on', Number(b.dataset.pscale) === S.previewScale);
     b.onclick = () => { S.previewScale = Number(b.dataset.pscale); $$('[data-pscale]').forEach((x) => x.classList.toggle('on', x === b)); schedulePreview(); };
   });
@@ -1728,6 +1930,8 @@ function wire() {
   $('#play').onclick = togglePlay;
   $('#onion').onclick = () => { S.onionOn = !S.onionOn; refresh(); };
   $('#activity-head').onclick = () => $('#activity-sec').classList.toggle('closed');
+  $('#frames-toggle').onclick = () => setFramesOpen($('#app').classList.contains('frames-closed'));
+  setFramesOpen(!(() => { try { return localStorage.getItem('openpixel.framesClosed') === '1'; } catch (e) { return false; } })());
   $('#duration').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') e.target.blur(); });
   $('#duration').onchange = () => { const v = parseInt($('#duration').value, 10); if (v > 0) tool('set_frame_duration', { frame: S.frame, duration_ms: v }); };
   $$('.presets [data-size]').forEach((b) => { b.onclick = () => { ['#new-x', '#new-y', '#new-z'].forEach((s) => { $(s).value = b.dataset.size; }); }; });
@@ -1751,6 +1955,7 @@ function wire() {
   window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
     if (e.metaKey) return; // menu shortcuts are handled by the Mac menu bar
+    if (e.key === 'Enter' && e.target.tagName === 'BUTTON') return; // the focused button handles Return itself
     if (e.key === ' ') { spaceDown = true; e.preventDefault(); return; }
     if (e.key === 'Escape') { if (S.home && !$$('.modal-bg.open').length) hideHome(); closeModals(); closeMenus(); closePicker(); return; }
     if (S.home) return;
@@ -1763,6 +1968,16 @@ function wire() {
     else if (e.key === ',') setActive({ frame: (S.frame - 1 + S.frames.length) % S.frames.length });
     else if (e.key === '.') setActive({ frame: (S.frame + 1) % S.frames.length });
     else if (e.key === 'Enter') togglePlay();
+    else if (e.key === "'") setPixelGrid(!S.pixelGrid);
+    else if (e.key === 'f' || e.key === 'F') $('#frames-toggle').click();
+    else if (e.key === 'o' || e.key === 'O') $('#onion').click();
+    else if (e.key === '?') showShortcuts();
+    else if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      // Layer above / below (the list shows the top layer first).
+      e.preventDefault();
+      const next = S.layer + (e.key === 'ArrowUp' ? 1 : -1);
+      if (next >= 0 && next < S.layers.length) setActive({ layer: next });
+    }
     else if (e.key === 'PageUp') stepSlice(1);
     else if (e.key === 'PageDown') stepSlice(-1);
     else if (e.key === '+' || e.key === '=') { if (S.mode === 'slice') zoomStep(1); }
@@ -1808,12 +2023,59 @@ window.PC = {
   showHome,
   showAgentHelp,
   command(cmd) {
+    if (cmd === 'shortcuts') { showShortcuts(); return; }
+    if (S.home) return; // editor commands do nothing over the home screen
+    // While typing in a field, ⌘⌫ and friends belong to the field, not to the document.
+    const typing = document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName);
+    if (typing && ['deleteLayer', 'deleteFrame', 'duplicateLayer'].includes(cmd)) return;
     if (cmd === 'view3d') setMode('3d');
     else if (cmd === 'viewSlice') setMode('slice');
     else if (cmd === 'resetCamera') { resetCamera(); fitSlice(); }
     else if (cmd === 'review') showReview();
+    else if (cmd === 'newLayer') press('#layer-add');
+    else if (cmd === 'duplicateLayer') press('#layer-dup');
+    else if (cmd === 'mergeDown') press('#layer-merge', 'The bottom layer has nothing to merge into');
+    else if (cmd === 'deleteLayer') press('#layer-del', 'A model keeps at least one layer');
+    else if (cmd === 'newFrame') press('#frame-add');
+    else if (cmd === 'deleteFrame') press('#frame-del', 'An animation keeps at least one frame');
+    else if (cmd === 'playStop') togglePlay();
+    else if (cmd === 'onion') press('#onion');
+    else if (cmd === 'pixelGrid') setPixelGrid(!S.pixelGrid);
+    else if (cmd === 'frames') press('#frames-toggle');
+    else if (cmd === 'zoomIn') zoomStep(1);
+    else if (cmd === 'zoomOut') zoomStep(-1);
   },
 };
+
+/** Clicks a panel button for a shortcut, or says why it can't be used right now. */
+function press(sel, whyDisabled) {
+  const b = $(sel);
+  if (b.disabled) { if (whyDisabled) toast(whyDisabled); return; }
+  b.click();
+}
+
+/* ---------------------------------------------------------------- keyboard shortcuts (Help ▸ Keyboard Shortcuts, ⌘/ or ?) */
+const SHORTCUTS = [
+  ['Tools', TOOLS.filter((t) => t.key).map((t) => [t.name, [t.key]]).concat([['Eyedropper while drawing', ['⌥', 'click']], ['Pan the canvas', ['Space', 'drag']]])],
+  ['Drawing', [['Smaller / larger brush', ['[', ']']], ['Mirror left/right', ['⇧', 'X']], ['Mirror up/down', ['⇧', 'Y']], ['Mirror front/back', ['⇧', 'Z']],
+    ['Move the layer (Move tool)', ['←', '→', '↑', '↓']], ['Undo', ['⌘', 'Z']], ['Redo', ['⇧', '⌘', 'Z']]]],
+  ['Layers', [['New layer', ['⇧', '⌘', 'N']], ['Duplicate layer', ['⌘', 'D']], ['Merge down', ['⌘', 'E']], ['Delete layer', ['⌘', '⌫']],
+    ['Layer above / below', ['⌥', '↑', '⌥', '↓']]]],
+  ['Frames', [['New frame', ['⌥', '⌘', 'N']], ['Delete frame', ['⌥', '⌘', '⌫']], ['Previous / next frame', [',', '.']], ['Play / stop', ['↩']],
+    ['Onion skin', ['O']], ['Show / hide the frames', ['F']]]],
+  ['View', [['2D canvas / 3D view', ['⌘', '1', '⌘', '2']], ['Switch 2D and 3D', ['Tab']], ['Zoom in / out', ['⌘', '+', '⌘', '−']], ['Fit / reset view', ['⌘', '0']],
+    ['Pixel grid', ['⌘', "'"]], ['Previous / next slice', ['PgDn', 'PgUp']], ['Review the model', ['⌘', 'R']]]],
+  ['File', [['New', ['⌘', 'N']], ['Open', ['⌘', 'O']], ['Save', ['⌘', 'S']], ['Save as', ['⇧', '⌘', 'S']], ['Export PNG', ['⇧', '⌘', 'E']],
+    ['Keyboard shortcuts', ['⌘', '/']]]],
+];
+function showShortcuts() {
+  const esc = (t) => t.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  const group = ([name, rows]) => `<section><h3>${name}</h3>${rows.map(([what, keys]) =>
+    `<div class="sc"><span>${esc(what)}</span><span>${keys.map((k) => ['click', 'drag'].includes(k) ? `<span class="muted"> ${k}</span>` : `<kbd>${esc(k)}</kbd>`).join('')}</span></div>`).join('')}</section>`;
+  // Two columns with their headings on one line: drawing on the left, document and view on the right.
+  $('#shortcuts-body').innerHTML = `<div>${SHORTCUTS.slice(0, 3).map(group).join('')}</div><div>${SHORTCUTS.slice(3).map(group).join('')}</div>`;
+  openModal('#shortcuts-dialog');
+}
 
 fillIcons();
 initGL();

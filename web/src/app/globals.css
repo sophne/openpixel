@@ -15,6 +15,7 @@
   --accent: #ff4a1c;
   --accent-hover: #ff6a42;
   --accent-soft: rgba(255, 74, 28, 0.16);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1); /* strong ease-out for presses and entrances */
   --r: 6px;
   --r-card: 16px;
   --wrap: 1120px;
@@ -152,7 +153,11 @@ h1.headline {
   font-weight: 500;
   font-size: 14px;
   white-space: nowrap;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 160ms var(--ease-out);
+}
+
+.button:active {
+  transform: scale(0.97);
 }
 
 .button:hover {
@@ -249,7 +254,11 @@ html[data-scrolled="true"] .site-header {
   height: 36px;
   border-radius: 999px;
   color: var(--text-2);
-  transition: color 0.15s ease, background-color 0.15s ease;
+  transition: color 0.15s ease, background-color 0.15s ease, transform 160ms var(--ease-out);
+}
+
+.icon-link:active {
+  transform: scale(0.94);
 }
 
 .icon-link:hover {
@@ -595,6 +604,11 @@ html[data-scrolled="true"] .site-header {
   font: inherit;
   font-size: 13.5px;
   cursor: pointer;
+  transition: color 150ms ease, background-color 150ms ease, transform 160ms var(--ease-out);
+}
+
+.seg button:active {
+  transform: scale(0.97);
 }
 
 .seg button:hover {
@@ -621,7 +635,7 @@ html[data-scrolled="true"] .site-header {
   width: 100%; /* inside the grid stage, auto margins would otherwise shrink the row to nothing */
   max-width: 640px;
   margin-inline: auto;
-  animation: fade-in 0.35s ease;
+  animation: fade-in 220ms var(--ease-out);
 }
 
 .stage-row {

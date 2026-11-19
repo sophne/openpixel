@@ -150,6 +150,15 @@ public final class RemoteBackend: ToolBackend {
     }
     public private(set) var broken = false
 
+    /// False once the window has closed its end (it quit or restarted). Doesn't read anything: it only peeks.
+    public func isAlive() -> Bool {
+        if broken { return false }
+        var byte: UInt8 = 0
+        let n = recv(fd, &byte, 1, MSG_PEEK | MSG_DONTWAIT)
+        if n == 0 || (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK) { broken = true; return false }
+        return true
+    }
+
     public func call(_ tool: String, _ args: [String: Any]) throws -> ToolOutput {
         guard Bridge.writeAll(fd, Bridge.encode(["tool": tool, "args": args])), let line = Bridge.readLine(fd, &pending),
               let d = line.data(using: .utf8), let res = try? JSONSerialization.jsonObject(with: d) as? [String: Any] else {

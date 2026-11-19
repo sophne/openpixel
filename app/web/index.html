@@ -11,7 +11,7 @@
 <div id="app">
   <header id="top">
     <div class="left">
-      <button class="btn icon" id="home-btn" title="Home: recent files"><img id="logo" src="logo.svg" alt=""></button>
+      <button class="btn icon" id="home-btn" title="Home"><img id="logo" src="logo.svg" alt=""></button>
       <div class="menu" id="file-menu">
         <button class="btn small" data-menu="file-menu">File <i data-icon="chevron-down"></i></button>
         <div class="menu-list">
@@ -29,14 +29,14 @@
       <span id="doc-name"></span><span id="doc-kind"></span>
     </div>
     <div class="seg" id="mode-seg">
-      <button data-mode="slice" title="2D pixel canvas (⌘1, Tab)">2D</button>
-      <button data-mode="3d" title="3D voxel view (⌘2, Tab)">3D</button>
+      <button data-mode="slice" title="2D canvas (⌘1)">2D</button>
+      <button data-mode="3d" title="3D view (⌘2)">3D</button>
     </div>
     <div class="right">
       <button class="btn icon" id="undo" title="Undo (⌘Z)"><i data-icon="undo-2"></i></button>
       <button class="btn icon" id="redo" title="Redo (⇧⌘Z)"><i data-icon="redo-2"></i></button>
-      <button class="btn" id="review-btn" title="Pictures and automatic checks (⌘R)"><i data-icon="scan-eye"></i><span class="lbl">Review</span></button>
-      <button class="btn" id="agent-btn" title="Connect an AI agent"><i data-icon="bot"></i><span class="dot"></span><span class="lbl">Agents</span></button>
+      <button class="btn" id="review-btn" title="Review (⌘R)"><i data-icon="scan-eye"></i><span class="lbl">Review</span></button>
+      <button class="btn" id="agent-btn" title="Connect an agent"><i data-icon="bot"></i><span class="dot"></span><span class="lbl">Agents</span></button>
       <div class="menu right" id="export-menu">
         <button class="btn primary" data-menu="export-menu"><i data-icon="download"></i><span class="lbl">Export</span></button>
         <div class="menu-list">
@@ -56,18 +56,17 @@
   <aside id="left">
     <section class="sec grow">
       <div class="sec-head">Layers<span class="spacer"></span>
-        <button class="btn small icon" id="layer-add" title="New layer"><i data-icon="plus"></i></button>
-        <button class="btn small icon" id="layer-dup" title="Duplicate layer"><i data-icon="copy"></i></button>
-        <button class="btn small icon" id="layer-merge" title="Merge down"><i data-icon="merge"></i></button>
-        <button class="btn small icon" id="layer-del" title="Delete layer"><i data-icon="trash"></i></button>
+        <button class="btn small icon" id="layer-add" title="New layer (⇧⌘N)"><i data-icon="plus"></i></button>
+        <button class="btn small icon" id="layer-dup" title="Duplicate layer (⌘D)"><i data-icon="copy"></i></button>
+        <button class="btn small icon" id="layer-merge" title="Merge down (⌘E)"><i data-icon="merge"></i></button>
+        <button class="btn small icon" id="layer-del" title="Delete layer (⌘⌫)"><i data-icon="trash"></i></button>
       </div>
       <div id="layers"></div>
     </section>
     <section class="sec" id="activity-sec">
-      <div class="sec-head" id="activity-head"><i data-icon="bot"></i>Activity<span class="spacer"></span><span class="muted" id="activity-count"></span><i data-icon="chevron-down" id="activity-chev"></i></div>
+      <div class="sec-head" id="activity-head"><i data-icon="bot"></i>Activity<span class="spacer"></span><span class="muted" id="activity-count"></span><i data-icon="chevron-down" id="activity-chev" class="chev"></i></div>
       <div id="activity"></div>
     </section>
-    <div class="resizer v" data-resize="left" title="Drag to resize"></div>
   </aside>
 
   <main id="stage">
@@ -81,44 +80,43 @@
   </main>
 
   <section id="frames">
-    <div class="resizer h" data-resize="bottom" title="Drag to resize"></div>
+    <div class="resizer h" data-resize="bottom"></div>
     <div id="frames-bar">
-      <span class="title">Frames</span>
-      <button class="btn small icon" id="play" title="Play / stop (Return)"><i data-icon="play"></i></button>
-      <button class="chip" id="onion" title="Onion skin: see the frames before and after"><i data-icon="ghost"></i><span class="lbl">Onion</span></button>
+      <button type="button" class="collapse-btn" id="frames-toggle" aria-expanded="true" aria-controls="strip" title="Hide frames (F)"><i data-icon="chevron-down" class="chev"></i><span class="title">Frames</span></button>
+      <button class="btn small icon" id="play" title="Play (↩)"><i data-icon="play"></i></button>
+      <button class="chip" id="onion" title="Onion skin (O)"><i data-icon="ghost"></i><span class="lbl">Onion</span></button>
       <span class="spacer"></span>
       <span class="muted lbl">Duration</span>
-      <div class="stepper" data-min="1" data-max="65535" data-step-size="10" title="Frame duration in milliseconds"><button type="button" data-step="-1">−</button><input id="duration" class="mono" inputmode="numeric"><button type="button" data-step="1">+</button></div>
+      <div class="stepper" data-min="1" data-max="65535" data-step-size="10" title="Frame duration"><button type="button" data-step="-1">−</button><input id="duration" class="mono" inputmode="numeric"><button type="button" data-step="1">+</button></div>
       <span class="muted">ms</span>
-      <button class="btn small icon" id="frame-add" title="New frame (copy of this one)"><i data-icon="plus"></i></button>
-      <button class="btn small icon" id="frame-del" title="Delete frame"><i data-icon="trash"></i></button>
+      <button class="btn small icon" id="frame-add" title="New frame (⌥⌘N)"><i data-icon="plus"></i></button>
+      <button class="btn small icon" id="frame-del" title="Delete frame (⌥⌘⌫)"><i data-icon="trash"></i></button>
     </div>
     <div id="strip"></div>
   </section>
 
   <aside id="right">
-    <div class="resizer v" data-resize="right" title="Drag to resize"></div>
     <section class="sec">
       <div class="sec-head">Colour<span class="spacer"></span>
         <button class="btn small icon" id="add-color" title="Add a colour"><i data-icon="plus"></i></button>
       </div>
       <div id="color-row">
-        <div id="fg" title="Edit this colour"></div>
-        <input id="fg-hex" class="field mono" spellcheck="false" title="Type a hex colour and press Return to add it">
+        <div id="fg" title="Edit colour"></div>
+        <input id="fg-hex" class="field mono" spellcheck="false" title="Hex colour">
         <span class="muted mono" id="fg-index"></span>
       </div>
       <div id="palette"></div>
       <div class="row">
-        <div id="preset" style="flex:1" title="Replace the palette (voxels keep their indexes)"></div>
+        <div id="preset" style="flex:1" title="Palette preset"></div>
       </div>
     </section>
     <section class="sec">
       <div class="sec-head">Brush</div>
       <div class="row"><label>Size</label><input type="range" id="brush" min="1" max="16" value="1"><span class="mono" id="brush-size" style="width:18px;text-align:right">1</span></div>
       <div class="row"><label>Mirror</label>
-        <button class="chip" data-mirror="x" title="Mirror left/right (Shift+X)"><i data-icon="square-split-horizontal"></i>X</button>
-        <button class="chip" data-mirror="y" title="Mirror up/down (Shift+Y)"><i data-icon="square-split-vertical"></i>Y</button>
-        <button class="chip" data-mirror="z" title="Mirror front/back (Shift+Z)">Z</button>
+        <button class="chip" data-mirror="x" title="Mirror left–right (⇧X)"><i data-icon="square-split-horizontal"></i>X</button>
+        <button class="chip" data-mirror="y" title="Mirror up–down (⇧Y)"><i data-icon="square-split-vertical"></i>Y</button>
+        <button class="chip" data-mirror="z" title="Mirror front–back (⇧Z)">Z</button>
       </div>
     </section>
     <section class="sec" id="view-sec">
@@ -128,52 +126,54 @@
           <div class="seg">
             <button data-axis="x" title="Side view">X</button><button data-axis="y" title="Top view">Y</button><button data-axis="z" title="Front view">Z</button>
           </div>
-          <span class="keep">
-            <button class="btn small icon" id="slice-down" title="Previous slice (PageDown)"><i data-icon="minus"></i></button>
+          <span class="keep start">
+            <button class="btn small icon" id="slice-down" title="Previous slice (PgDn)"><i data-icon="minus"></i></button>
             <span class="mono" id="slice-index">0</span>
-            <button class="btn small icon" id="slice-up" title="Next slice (PageUp)"><i data-icon="plus"></i></button>
+            <button class="btn small icon" id="slice-up" title="Next slice (PgUp)"><i data-icon="plus"></i></button>
           </span>
         </div>
-        <div class="row"><label>Show</label><button class="chip on" id="ghost-btn" title="Show the slice behind faintly"><i data-icon="ghost"></i><span class="lbl">Ghost</span></button></div>
       </div>
       <div id="view-sprite">
         <div class="row"><label>Make 3D</label>
-          <div class="stepper" data-min="1" data-max="256" title="Depth in voxels"><button type="button" data-step="-1">−</button><input id="extrude-depth" class="mono" value="4" inputmode="numeric"><button type="button" data-step="1">+</button></div>
-          <button class="btn small outline" id="extrude-btn" title="Turn this sprite into a 3D voxel model this many voxels deep"><i data-icon="cuboid"></i><span class="lbl">Extrude</span></button>
+          <div class="stepper" data-min="1" data-max="256" title="Depth"><button type="button" data-step="-1">−</button><input id="extrude-depth" class="mono" value="4" inputmode="numeric"><button type="button" data-step="1">+</button></div>
+          <button class="btn small outline" id="extrude-btn" title="Make 3D"><i data-icon="cuboid"></i><span class="lbl">Extrude</span></button>
         </div>
       </div>
       <div id="view-2d">
         <div class="row"><label>Zoom</label>
-          <span class="keep">
-            <button class="btn small icon" id="zoom-out" title="Zoom out"><i data-icon="zoom-out"></i></button>
+          <span class="keep start">
+            <button class="btn small icon" id="zoom-out" title="Zoom out (⌘−)"><i data-icon="zoom-out"></i></button>
             <span class="mono" id="zoom-label" style="min-width:44px;text-align:center"></span>
-            <button class="btn small icon" id="zoom-in" title="Zoom in"><i data-icon="zoom-in"></i></button>
+            <button class="btn small icon" id="zoom-in" title="Zoom in (⌘+)"><i data-icon="zoom-in"></i></button>
           </span>
-          <button class="btn small outline" id="zoom-fit" title="Fit to screen"><i data-icon="focus"></i><span class="lbl">Fit</span></button>
+          <button class="btn small outline" id="zoom-fit" title="Fit (⌘0)"><i data-icon="focus"></i><span class="lbl">Fit</span></button>
         </div>
+        <div class="row"><label>Show</label><button class="chip on" id="pixel-grid-btn" title="Pixel grid (⌘')"><i data-icon="grid-3x3"></i><span class="lbl">Grid</span></button><button class="chip on" id="ghost-btn" title="Ghost slice"><i data-icon="ghost"></i><span class="lbl">Ghost</span></button></div>
       </div>
       <div id="view-3d">
         <div class="row"><label>Camera</label>
           <div class="seg"><button data-proj="persp">Perspective</button><button data-proj="ortho">Ortho</button></div>
         </div>
         <div class="row"><label>Show</label>
-          <button class="chip on" id="edges-btn" title="Outline every voxel"><i data-icon="grid-3x3"></i><span class="lbl">Edges</span></button>
-          <button class="chip on" id="grid-btn" title="Ground grid and model box"><i data-icon="square-dashed"></i><span class="lbl">Bounds</span></button>
+          <button class="chip on" id="edges-btn" title="Voxel edges"><i data-icon="grid-3x3"></i><span class="lbl">Edges</span></button>
+          <button class="chip on" id="grid-btn" title="Ground and bounds"><i data-icon="square-dashed"></i><span class="lbl">Bounds</span></button>
         </div>
-        <div class="row"><label></label><button class="btn small outline" id="reset-cam" title="Reset camera (⌘0)"><i data-icon="focus"></i><span class="lbl">Reset view</span></button></div>
+        <div class="row"><label></label><button class="btn small outline" id="reset-cam" title="Reset view (⌘0)"><i data-icon="focus"></i><span class="lbl">Reset view</span></button></div>
       </div>
     </section>
     <section class="sec">
       <div class="sec-head">Preview<span class="spacer"></span><span class="muted" id="preview-angle">iso</span></div>
       <div id="preview-wrap"><img id="preview" alt=""></div>
       <div class="row">
-        <button class="btn small icon" id="prev-left" title="Turn left"><i data-icon="rotate-3d"></i></button>
         <div class="seg"><button data-pview="front">Front</button><button data-pview="iso">Iso</button></div>
         <span class="spacer"></span>
-        <div class="seg"><button data-pscale="2">S</button><button data-pscale="3">M</button><button data-pscale="4">L</button></div>
+        <div class="seg"><button data-pscale="2" title="Small preview">S</button><button data-pscale="3" title="Medium preview">M</button><button data-pscale="4" title="Large preview">L</button></div>
       </div>
     </section>
   </aside>
+  <!-- Side panel handles live on the app grid (not inside the panels) so nothing clips or scrolls them. -->
+  <div class="resizer v" data-resize="left"></div>
+  <div class="resizer v" data-resize="right"></div>
 </div>
 
 <div id="home" hidden>
@@ -207,7 +207,7 @@
           <b>Let an AI agent draw with you</b>
           OpenPixel has a built-in MCP server. Connect an agent once and it can create, review and refine sprites and models.
           While this window is open its edits appear live, show up under Activity, and can be undone.
-          <div class="cmd" title="The command agents run to start OpenPixel's MCP server"><code id="agent-cmd"></code>
+          <div class="cmd"><code id="agent-cmd"></code>
             <button class="btn small" id="agent-cmd-copy"><i data-icon="copy"></i>Copy</button></div>
         </div>
       </div>
@@ -215,8 +215,8 @@
         <thead><tr><th class="c-agent">Agent</th><th class="c-status">Status</th><th class="c-act">Activity</th><th class="c-info"></th></tr></thead>
         <tbody id="agents-body"></tbody>
       </table>
-      <div class="agents-foot">Status updates every few seconds. <b>Connected</b>: talking to this window now. <b>Set up</b>: OpenPixel is in that app's
-        settings. <b>Not set up</b>: the app is on this Mac but doesn't know OpenPixel yet. Settings files are only read, never changed.</div>
+      <div class="agents-foot">Status updates every few seconds. <b>Connected</b>: OpenPixel is in that app's settings; the dot pulses while it is
+        talking to this window. <b>Disconnected</b>: not set up yet, How to connect shows the steps. <b>Not found</b>: the app isn't on this Mac. Settings files are only read, never changed.</div>
     </div>
     <div id="home-samples-wrap">
       <div class="home-h2">Samples</div>
@@ -291,6 +291,13 @@
   </div>
 </div>
 
+<div class="modal-bg" id="shortcuts-dialog">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title">
+    <header id="shortcuts-title">Keyboard shortcuts</header>
+    <div class="content"><div id="shortcuts-body" class="shortcuts"></div></div>
+    <footer><button class="btn primary" data-close>Done</button></footer>
+  </div>
+</div>
 <div class="modal-bg" id="review-dialog">
   <div class="modal">
     <header>Review</header>

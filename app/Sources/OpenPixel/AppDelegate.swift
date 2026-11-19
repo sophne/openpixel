@@ -276,11 +276,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
             do { try p.run() } catch { replyHandler(nil, "\(error)"); return }
             testAgents.append((p, input))
             let client = body["client"] as? String ?? "test-agent"
-            let lines = [
+            var lines = [
                 #"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","clientInfo":{"name":"\#(client)","version":"1.0"}}}"#,
                 #"{"jsonrpc":"2.0","method":"notifications/initialized"}"#,
-                #"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"get_model_info","arguments":{}}}"#,
             ]
+            // `call: false` starts an agent that connects but hasn't done anything yet.
+            if body["call"] as? Bool ?? true {
+                lines.append(#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"get_model_info","arguments":{}}}"#)
+            }
             input.fileHandleForWriting.write((lines.joined(separator: "\n") + "\n").data(using: .utf8)!)
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { replyHandler(true, nil) }
         case "stopAgents" where uiTestFolder != nil:
@@ -535,17 +538,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
             item("Paste", #selector(NSText.paste(_:)), "v"),
             item("Select All", #selector(NSText.selectAll(_:)), "a"),
         ])
+        // ⌫ as a key equivalent shows as ⌘⌫ in the menu.
+        let backspace = String(UnicodeScalar(UInt8(8)))
         submenu("View", [
             item("2D Canvas", #selector(jsCommand(_:)), "1", object: "viewSlice"),
             item("3D View", #selector(jsCommand(_:)), "2", object: "view3d"),
-            item("Reset Camera", #selector(jsCommand(_:)), "0", object: "resetCamera"),
+            .separator(),
+            item("Zoom In", #selector(jsCommand(_:)), "=", object: "zoomIn"),
+            item("Zoom Out", #selector(jsCommand(_:)), "-", object: "zoomOut"),
+            item("Fit / Reset View", #selector(jsCommand(_:)), "0", object: "resetCamera"),
+            .separator(),
+            item("Pixel Grid", #selector(jsCommand(_:)), "'", object: "pixelGrid"),
+            item("Show or Hide Frames", #selector(jsCommand(_:)), "", object: "frames"),
             .separator(),
             item("Review Model", #selector(jsCommand(_:)), "r", object: "review"),
+        ])
+        submenu("Layer", [
+            item("New Layer", #selector(jsCommand(_:)), "n", [.command, .shift], object: "newLayer"),
+            item("Duplicate Layer", #selector(jsCommand(_:)), "d", object: "duplicateLayer"),
+            item("Merge Down", #selector(jsCommand(_:)), "e", object: "mergeDown"),
+            .separator(),
+            item("Delete Layer", #selector(jsCommand(_:)), backspace, object: "deleteLayer"),
+        ])
+        submenu("Frame", [
+            item("New Frame", #selector(jsCommand(_:)), "n", [.command, .option], object: "newFrame"),
+            item("Delete Frame", #selector(jsCommand(_:)), backspace, [.command, .option], object: "deleteFrame"),
+            .separator(),
+            item("Play / Stop", #selector(jsCommand(_:)), "", object: "playStop"),
+            item("Onion Skin", #selector(jsCommand(_:)), "", object: "onion"),
         ])
         submenu("Window", [
             item("Minimize", #selector(NSWindow.performMiniaturize(_:)), "m"),
         ])
         submenu("Help", [
+            item("Keyboard Shortcuts", #selector(jsCommand(_:)), "/", object: "shortcuts"),
             item("Connect an AI Agent…", #selector(agentHelp(_:)), ""),
             .separator(),
             item("Open the 2D Sample Sprite", #selector(open2DSample(_:)), ""),

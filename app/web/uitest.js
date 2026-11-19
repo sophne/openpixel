@@ -288,6 +288,77 @@
       assert(S.palette[2] === '#1d2b53', 'PICO-8 not applied');
       assert(!$('#preset').classList.contains('open'), 'dropdown stayed open');
     });
+    await test('shortcuts: layer and frame commands from the menu bar, ⌥↑/↓, O, and not while typing', async () => {
+      const key = (k, o = {}) => window.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...o }));
+      let rev = S.revision;
+      PC.command('newLayer'); await edited(rev);
+      assert(S.layers.length === 2, 'new layer (⇧⌘N)');
+      rev = S.revision; PC.command('duplicateLayer'); await edited(rev);
+      assert(S.layers.length === 3, 'duplicate layer (⌘D)');
+      const top = S.layer;
+      key('ArrowDown', { altKey: true }); await settle();
+      assert(S.layer === top - 1, `⌥↓ should select the layer below (${top} → ${S.layer})`);
+      key('ArrowUp', { altKey: true }); await settle();
+      assert(S.layer === top, '⌥↑ should select the layer above');
+      // ⌘⌫ while typing a hex colour edits the text, not the document.
+      $('#fg-hex').focus();
+      PC.command('deleteLayer'); await sleep(150);
+      assert(S.layers.length === 3, '⌘⌫ deleted a layer while typing');
+      $('#fg-hex').blur();
+      rev = S.revision; PC.command('deleteLayer'); await edited(rev);
+      rev = S.revision; PC.command('deleteLayer'); await edited(rev);
+      assert(S.layers.length === 1, 'delete layer (⌘⌫)');
+      PC.command('deleteLayer'); await sleep(100);
+      assert(S.layers.length === 1 && $('#toast').textContent.includes('at least one layer'), 'deleting the last layer should explain why not');
+      rev = S.revision; PC.command('newFrame'); await edited(rev);
+      assert(S.frames.length === 2, 'new frame (⌥⌘N)');
+      rev = S.revision; PC.command('deleteFrame'); await edited(rev);
+      assert(S.frames.length === 1, 'delete frame (⌥⌘⌫)');
+      const onion = S.onionOn;
+      key('o'); await settle();
+      assert(S.onionOn !== onion, 'O toggles onion skin');
+      key('o'); await settle();
+    });
+    await test('tooltips: own label with key caps above the control, after a pause, then instantly for the next one', async () => {
+      const over = (el) => el.dispatchEvent(new PointerEvent('pointerover', { bubbles: true, pointerType: 'mouse' }));
+      const out = (el, to) => el.dispatchEvent(new PointerEvent('pointerout', { bubbles: true, pointerType: 'mouse', relatedTarget: to }));
+      const tipBox = () => document.querySelector('.tip');
+      const picker = $('.tool[data-tool="picker"]'), line = $('.tool[data-tool="line"]');
+      over(picker);
+      assert(!tipBox() || !tipBox().classList.contains('on'), 'the first tooltip should wait');
+      await sleep(650);
+      const t = tipBox();
+      assert(t && t.classList.contains('on'), 'no tooltip');
+      assert(t.textContent.startsWith('Eyedropper') && t.querySelector('kbd').textContent === 'I', `content: ${t.textContent}`);
+      assert(!picker.hasAttribute('title') && picker.getAttribute('aria-label') === 'Eyedropper', 'the system tooltip should be gone and the name kept');
+      const tr = t.getBoundingClientRect(), pr = picker.getBoundingClientRect();
+      assert(t.dataset.side === 'top' && tr.bottom <= pr.top, 'should sit above the toolbar button');
+      await snap('18-tooltip');
+      out(picker, line); over(line);
+      await sleep(30);
+      assert(t.classList.contains('on') && t.textContent.startsWith('Line'), 'the next tooltip should show at once');
+      out(line, document.body);
+      assert(!t.classList.contains('on'), 'leaving should hide it');
+      // Near the top edge it flips below.
+      over($('#undo')); await sleep(30);
+      assert(t.classList.contains('on') && t.dataset.side === 'bottom', 'top bar tooltip should sit below');
+      out($('#undo'), document.body);
+    });
+    await test('Help ▸ Keyboard Shortcuts (⌘/ or ?) lists every group with key caps', async () => {
+      PC.command('shortcuts');
+      assert($('#shortcuts-dialog').classList.contains('open'), 'did not open');
+      const groups = [...$$('#shortcuts-body h3')].map((h) => h.textContent);
+      for (const g of ['Tools', 'Drawing', 'Layers', 'Frames', 'View', 'File']) assert(groups.includes(g), `${g} missing`);
+      assert($$('#shortcuts-body kbd').length > 60, 'too few keys listed');
+      assert($('#shortcuts-body').textContent.includes('Delete layer'), 'delete layer missing');
+      noSpill($('#shortcuts-dialog .modal'), 'shortcuts dialog');
+      await sleep(220);
+      await snap('17-shortcuts');
+      closeModals();
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: '?', shiftKey: true, bubbles: true }));
+      assert($('#shortcuts-dialog').classList.contains('open'), '? did not open the shortcuts');
+      closeModals();
+    });
     await test('layers: add, rename, hide, lock, duplicate, merge, delete', async () => {
       let rev = S.revision;
       $('#layer-add').click(); await edited(rev);
@@ -345,6 +416,29 @@
       $('#zoom-out').click(); $('#zoom-out').click(); assert(sv.zoom < z, 'zoom out');
       $('#zoom-fit').click(); assert(sv.zoom === z, 'fit');
     });
+    await test('2D grid button hides and shows the lines between pixels (and is remembered)', async () => {
+      const dpr = window.devicePixelRatio || 1, rect = sliceCanvas.getBoundingClientRect();
+      // Pixels along the line between columns 7 and 8.
+      const line = () => {
+        const x = Math.round((cellXY(8, 0)[0] - sv.zoom / 2 - rect.left) * dpr);
+        const top = Math.round((cellXY(0, 0)[1] - rect.top) * dpr), h = Math.round(S.sy * sv.zoom * dpr * 0.8);
+        return Array.from(sctx.getImageData(x, top, 1, h).data).join(',');
+      };
+      const saved = localStorage.getItem('openpixel.pixelGrid'); // the person's own choice, put back afterwards
+      setPixelGrid(true); await sleep(120);
+      assert(S.pixelGrid && $('#pixel-grid-btn').classList.contains('on'), 'grid should be on');
+      const on = line();
+      $('#pixel-grid-btn').click();
+      await sleep(120);
+      assert(!S.pixelGrid && !$('#pixel-grid-btn').classList.contains('on') && localStorage.getItem('openpixel.pixelGrid') === 'off', 'grid button did not turn off');
+      const off = line();
+      assert(on !== off, 'the canvas still shows the grid lines');
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: "'", bubbles: true }));
+      await sleep(120);
+      assert(S.pixelGrid && line() === on, "' did not turn the grid back on");
+      await snap('05b-grid-on');
+      if (saved === 'off') setPixelGrid(false);
+    });
     await test('make 3D with the depth stepper', async () => {
       $('#view-sprite .stepper button[data-step="1"]').click();
       $('#view-sprite .stepper button[data-step="1"]').click();
@@ -396,7 +490,7 @@
     await test('preview panel buttons', async () => {
       $('[data-pview="front"]').click(); assert(S.previewPitch === 0, 'front');
       $('[data-pview="iso"]').click(); assert(S.previewPitch === 30, 'iso');
-      $('#prev-left').click(); assert(S.previewYaw === 135, 'turn');
+      assert(!$('#prev-left'), 'the turn button is gone (Front / Iso only)');
       $('[data-pscale="4"]').click(); assert(S.previewScale === 4, 'size');
       await until(() => $('#preview').src.startsWith('data:'), 'a preview picture');
     });
@@ -419,16 +513,43 @@
         assert($('#agent-info').classList.contains('open'), `${id} info popup did not open`);
         assert($$('#ai-body ol.steps li').length >= 2, `${id} has no steps`);
         if (id === 'cursor') assert($('#ai-extra').textContent.includes('Add to Cursor'), 'no Add to Cursor button');
-        if (id === 'claude-code') await snap('14-agent-info');
+        if (id === 'claude-code') {
+          // Copy answers in the button: "Copy" swaps to "Copied" without changing the button's width, then back.
+          const c = $('#ai-body .codebox .copy');
+          assert(c, 'no copy button in the steps');
+          const real = nativeAction;
+          nativeAction = async () => true; // keep the person's clipboard untouched
+          try {
+            const w = c.getBoundingClientRect().width;
+            c.click();
+            const [idle, done] = c.children;
+            assert(idle.classList.contains('out') && !done.classList.contains('out') && done.textContent.includes('Copied'), 'copy button did not show Copied');
+            assert(Math.abs(c.getBoundingClientRect().width - w) < 1, 'copy button changed width');
+            await sleep(260);
+            const cs = getComputedStyle(done);
+            assert(cs.opacity === '1' && !/blur\((?!0)/.test(cs.filter), `"Copied" did not settle sharp (opacity ${cs.opacity}, filter ${cs.filter})`);
+            await snap('14-agent-info');
+            await until(() => !idle.classList.contains('out'), 'the copy button to turn back', 3000);
+          } finally { nativeAction = real; }
+        }
         closeModals();
       }
       noSpill($('.home-main'), 'Agents page');
       await snap('15-agents');
     });
+    await test('Agents page: an agent that has connected but made no call yet shows as Connected', async () => {
+      $('#agent-btn').click();
+      await until(() => S.home && home.view === 'agents', 'the Agents page');
+      await post({ kind: 'spawnAgent', client: 'claude-code', call: false });
+      await until(async () => { await loadAgents(); return $('#agents-body tr[data-agent="claude-code"] .pill').classList.contains('live'); }, 'Claude Code to show as connected and live without a call', 8000);
+      assert($('#agents-body tr[data-agent="claude-code"] .act-cell').textContent.includes('no calls yet'), 'should say no calls yet');
+      await post({ kind: 'stopAgents' });
+      await until(async () => { await loadAgents(); return !$('#agents-body tr[data-agent="claude-code"] .pill').classList.contains('live'); }, 'the connection to close', 8000);
+    });
     await test('Agents page: a real agent connection shows as Connected, then as last connected', async () => {
       await post({ kind: 'spawnAgent', client: 'claude-code' });
       await loadAgents();
-      await until(async () => { await loadAgents(); return $('#agents-body tr[data-agent="claude-code"] .pill').classList.contains('connected'); }, 'Claude Code to show as connected', 8000);
+      await until(async () => { await loadAgents(); return $('#agents-body tr[data-agent="claude-code"] .pill').classList.contains('live'); }, 'Claude Code to show as connected and live', 8000);
       assert($('#agents-body tr[data-agent="claude-code"] .act-cell').textContent.includes('1 call'), 'call not counted');
       await post({ kind: 'spawnAgent', client: 'my-custom-agent' });
       await until(async () => { await loadAgents(); return $$('#agents-body tr[data-agent="other"]').length === 1; }, 'the unknown agent row', 8000);
@@ -436,8 +557,17 @@
       await pollAgentDot();
       assert($('#agent-btn .dot').style.background.includes('ok'), 'top bar dot not green');
       await post({ kind: 'stopAgents' });
-      await until(async () => { await loadAgents(); return !$('#agents-body tr[data-agent="claude-code"] .pill').classList.contains('connected'); }, 'the connection to close', 8000);
-      assert($('#agents-body tr[data-agent="claude-code"] .act-cell').textContent.includes('Last connected'), 'last connected not shown');
+      await until(async () => { await loadAgents(); return !$('#agents-body tr[data-agent="claude-code"] .pill').classList.contains('live'); }, 'the connection to close', 8000);
+      const after = $('#agents-body tr[data-agent="claude-code"] .act-cell').textContent;
+      assert(['Last used', 'Not used yet', 'not set up', 'Not installed'].some((t) => after.includes(t)), `activity after closing: ${after}`);
+      // Only two statuses, and no settings-file paths in the activity column.
+      for (const tr of $$('#agents-body tr')) {
+        const label = tr.querySelector('.pill').textContent.trim();
+        assert(['Connected', 'Disconnected', 'Not found'].includes(label) || label.startsWith('Connected ×'), `unexpected status "${label}"`);
+        assert(!tr.querySelector('.asub'), 'agent description should be gone');
+        const act = tr.querySelector('.act-cell').textContent;
+        assert(!act.includes('.json') && !act.includes('.toml') && !act.includes('Library'), `path in activity: ${act}`);
+      }
       $('#home-back').click();
     });
     await test('file and export menus open and can be seen (own menus, SVG and HTML listed)', async () => {
@@ -457,7 +587,50 @@
       assert($('#export-menu').classList.contains('open'), 'export menu');
       assert($('[data-export="svg"]') && $('[data-export="html"]'), 'SVG/HTML missing');
       assert(visible($('#export-menu .menu-list')), 'export menu is open but cannot be seen');
+      await sleep(200); // let the opening animation finish before the picture
       await snap('06-export-menu');
+    });
+    await test('popups grow from what opened them; from the keyboard they appear at once and arrow keys move through items', async () => {
+      const press = (el) => { el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); el.click(); };
+      const key = (k) => window.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+      // Pointer: the menu animates, growing from the point of the menu under the middle of its button.
+      const b = $('[data-menu="export-menu"]'), list = $('#export-menu .menu-list');
+      closeMenus();
+      press(b);
+      assert(list.getAnimations().length === 1, 'the export menu did not animate when clicked');
+      await sleep(200); // measure the menu at its full size
+      const [ox, oy] = list.style.transformOrigin.split(' ').map(parseFloat);
+      const lr = list.getBoundingClientRect(), br = b.getBoundingClientRect();
+      assert(oy === 0 && Math.abs(lr.left + ox - (br.left + br.width / 2)) < 2, `origin ${list.style.transformOrigin} is not under the button`);
+      closeMenus();
+      // The dropdown in the right panel too.
+      const dd = $('#preset .dd-btn'), ddl = $('#preset .dd-list');
+      press(dd);
+      const ddAnimated = ddl.getAnimations().length === 1;
+      await sleep(200);
+      const [, dy] = ddl.style.transformOrigin.split(' ').map(parseFloat);
+      const flipped = ddl.getBoundingClientRect().top < dd.getBoundingClientRect().top;
+      const edge = flipped ? ddl.getBoundingClientRect().height : 0; // grows down from its top, or up from its bottom when flipped
+      assert(ddAnimated && Math.abs(dy - edge) < 1, `dropdown origin ${ddl.style.transformOrigin} (flipped: ${flipped}, animated: ${ddAnimated})`);
+      closeMenus();
+      // Keyboard: no animation, the first item is highlighted, arrows move, Escape closes and returns focus.
+      key('Shift'); key('ArrowLeft'); // a key press (not a modifier) marks keyboard use
+      b.focus(); b.click();
+      assert(list.getAnimations().length === 0, 'a keyboard-opened menu should not animate');
+      const items = [...list.children].filter((d) => d.tagName === 'DIV' && d.offsetParent !== null);
+      assert(items[0].classList.contains('kb'), 'first item not highlighted');
+      key('ArrowDown');
+      assert(items[1].classList.contains('kb') && !items[0].classList.contains('kb'), 'ArrowDown did not move');
+      key('End');
+      assert(items[items.length - 1].classList.contains('kb'), 'End did not go to the last item');
+      key('Escape');
+      assert(!$('#export-menu').classList.contains('open') && document.activeElement === b, 'Escape should close and focus the button');
+      // Dialogs grow from the centre.
+      press($('#review-btn'));
+      await until(() => $('#review-dialog').classList.contains('open'), 'the review dialog');
+      assert($('#review-dialog .modal').style.transformOrigin.replace(/ 50%$/, '') === '50%', 'dialog should grow from the centre, not ' + $('#review-dialog .modal').style.transformOrigin);
+      await sleep(220);
+      await snap('06b-review-dialog');
     });
     await test('every export writes a file', async () => {
       for (const [t, ext] of [['export_png', 'png'], ['export_svg', 'svg'], ['export_html', 'html'], ['export_gif', 'gif'],
@@ -492,6 +665,49 @@
     });
 
     // ---- layout: every panel at its smallest and largest, in both modes, and the window at its smallest
+    await test('Frames fold down to their bar and open again (button and F), remembered, canvas grows', async () => {
+      const saved = localStorage.getItem('openpixel.framesClosed'); // the person's own choice, put back afterwards
+      setFramesOpen(true); await sleep(120);
+      const stage = () => $('#stage').getBoundingClientRect().height;
+      const open = stage();
+      $('#frames-toggle').click();
+      await sleep(120);
+      assert($('#app').classList.contains('frames-closed') && $('#frames-toggle').getAttribute('aria-expanded') === 'false', 'did not fold');
+      assert(getComputedStyle($('#strip')).display === 'none', 'thumbnails still showing');
+      assert(stage() > open + 40, `canvas did not grow (${open} → ${stage()})`);
+      assert(localStorage.getItem('openpixel.framesClosed') === '1', 'not remembered');
+      assert($('#play').getBoundingClientRect().height > 0 && $('#frame-add').getBoundingClientRect().height > 0, 'bar controls hidden');
+      noSpill($('#frames'), 'folded frames bar');
+      await snap('16-frames-folded');
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'f', bubbles: true }));
+      await sleep(120);
+      assert(!$('#app').classList.contains('frames-closed') && Math.abs(stage() - open) < 2, 'F did not open the frames again');
+      if (saved === '1') setFramesOpen(false);
+    });
+    await test('panel borders are easy to grab: left, right and bottom handles straddle their border the same way', async () => {
+      const probes = {
+        left: () => { const b = $('#left').getBoundingClientRect(); return [[b.right - 3, b.top + 200], [b.right + 3, b.top + 200]]; },
+        right: () => { const b = $('#right').getBoundingClientRect(); return [[b.left - 3, b.top + 200], [b.left + 3, b.top + 200]]; },
+        bottom: () => { const b = $('#frames').getBoundingClientRect(); return [[b.left + 200, b.top - 3], [b.left + 200, b.top + 3]]; },
+      };
+      for (const [which, pts] of Object.entries(probes)) {
+        const handle = $(`.resizer[data-resize="${which}"]`);
+        const hr = handle.getBoundingClientRect();
+        assert(Math.round(which === 'bottom' ? hr.height : hr.width) === 8, `${which} handle is ${which === 'bottom' ? hr.height : hr.width}px`);
+        for (const [x, y] of pts()) {
+          const hit = document.elementFromPoint(x, y);
+          assert(hit === handle, `${which}: the point ${Math.round(x)},${Math.round(y)} next to the border hits ${hit && (hit.id || hit.className)}, not the handle`);
+        }
+        assert(getComputedStyle(handle).cursor === (which === 'bottom' ? 'row-resize' : 'col-resize'), `${which} cursor`);
+      }
+    });
+    await test('right panel at every width: pictures for review (panel-<mode>-<width>.png)', async () => {
+      for (const w of [230, 264, 300, 360, 460]) {
+        setSize('right', w);
+        await bothModes(async (m) => { await sleep(80); await snap(`panel-${m}-${w}`); });
+      }
+      setSize('right', 264);
+    });
     await test('right panel resizes without cutting anything off', async () => {
       for (const [x, label] of [[window.innerWidth - 230, 'min'], [window.innerWidth - 460, 'max'], [window.innerWidth - 300, 'mid']]) {
         await drag('right', x, 300);

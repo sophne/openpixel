@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useState, type CSSProperties, type KeyboardEvent } from "react";
 import Sprite from "@/components/Sprite";
 import { art, type Art } from "@/lib/art";
 
@@ -68,9 +68,19 @@ function fit(a: Art, still: boolean, frame: number): CSSProperties {
 export default function Showcase() {
   const [tab, setTab] = useState(TABS[0].id);
   const current = TABS.find((t) => t.id === tab)!;
+  // Tabs as the keyboard expects them: one stop in the Tab order, arrow keys (and Home/End) move between tabs.
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    const i = TABS.findIndex((t) => t.id === tab);
+    const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: TABS.length - 1 }[e.key];
+    if (next === undefined) return;
+    e.preventDefault();
+    const t = TABS[(next + TABS.length) % TABS.length];
+    setTab(t.id);
+    document.getElementById(`tab-${t.id}`)?.focus();
+  };
   return (
     <div className="showcase">
-      <div className="seg" role="tablist" aria-label="What you can make">
+      <div className="seg" role="tablist" aria-label="What you can make" onKeyDown={onKeyDown}>
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -79,6 +89,7 @@ export default function Showcase() {
             id={`tab-${t.id}`}
             aria-selected={t.id === tab}
             aria-controls="showcase-stage"
+            tabIndex={t.id === tab ? 0 : -1}
             onClick={() => setTab(t.id)}
           >
             {t.label}
