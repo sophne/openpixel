@@ -10,11 +10,11 @@ public struct ToolOutput {
 /// The document, its undo history and every tool. The editor window and agents (MCP) both drive it,
 /// so whatever an agent does shows up live on the canvas and can be undone by the person.
 public final class Engine {
-    public private(set) var doc: Document
-    public private(set) var activeLayer = 0
-    public private(set) var activeFrame = 0
-    public private(set) var path: URL?
-    public private(set) var revision = 0
+    public internal(set) var doc: Document
+    public internal(set) var activeLayer = 0
+    public internal(set) var activeFrame = 0
+    public internal(set) var path: URL?
+    public internal(set) var revision = 0
     public internal(set) var dirty = false
     var undoStack: [(doc: Document, label: String, layer: Int, frame: Int)] = []
     var redoStack: [(doc: Document, label: String, layer: Int, frame: Int)] = []
@@ -29,6 +29,21 @@ public final class Engine {
     /// Tools the host (the app window) answers, e.g. get_editor_screenshot.
     public var hostTools: [String: ([String: Any]) throws -> ToolOutput] = [:]
 
+    /// The style every agent edit must follow (set_style). Kept across new canvases, so a set stays consistent.
+    public internal(set) var style: StyleLock?
+    /// Who is calling right now ("agent" or "person"): the style lock binds agents only.
+    var source = "agent"
+    /// set while a tool may replace the palette under a style lock (opening files, new canvases, set_style).
+    var paletteLockBypass = false
+    /// Automatic critique after each agent edit (set_feedback), and what the last one saw.
+    var autoCritique = true
+    var lastCritique: Critique?
+    var critiqueRevision: Int?
+    var critiques = 0
+    var batchDepth = 0
+    /// Above this many cells the automatic critique is skipped (analyze_model still works).
+    static let critiqueCellLimit = 300_000
+
     public init(doc: Document = Document()) { self.doc = doc }
 
     // MARK: - entry point
@@ -36,6 +51,9 @@ public final class Engine {
     public func execute(_ name: String, _ raw: [String: Any], source: String = "agent") throws -> ToolOutput {
         let a = Args(raw)
         var out: ToolOutput
+        let outer = self.source
+        self.source = source
+        defer { self.source = outer }
         do {
             out = try run(name, a)
             if source == "agent" { coach(name, &out) }
@@ -66,6 +84,8 @@ public final class Engine {
         switch name {
         case "new_sprite", "new_model", "open_model":
             reviewedRevision = nil; reviewIssues = 0; reviews = 0; rampsMade = 0
+            lastCritique = nil; critiques = 0; critiqueRevision = revision
+            if let s = style { out.json["style"] = "\(s.name) (locked palette: \(s.lockPalette && s.palette != nil); see get_style)" }
             if name != "open_model" {
                 out.json["next_steps"] = [
                     "pixel_art_guide once, if you have not read it",
@@ -91,7 +111,12 @@ public final class Engine {
             }
             if issues.isEmpty && reviews == 1 { next.append("No issues. After further changes, review again before exporting.") }
             if !next.isEmpty { out.json["next"] = next }
+            if let total = (out.json["score"] as? [String: Any])?["total"] as? Int {
+                lastCritique = Critique(total: total, findings: Analysis.full(doc, frame: activeFrame, style: style).findings)
+                critiqueRevision = revision
+            }
         default:
+            critique(name, &out)
             guard Engine.finishingTools.contains(name) else { return }
             if reviewedRevision == nil {
                 out.json["review_reminder"] = "Saved without a review. Call review_model, fix what it lists, then save or export again."
@@ -118,6 +143,9 @@ public final class Engine {
         let before = doc
         var d = doc
         var res = try body(&d)
+        if let s = style, s.lockPalette, s.palette != nil, source == "agent", !paletteLockBypass, d.palette != before.palette {
+            try refuseOffPalette(before: before.palette, after: d.palette, style: s)
+        }
         if d != before {
             undoStack.append((before, label, activeLayer, activeFrame))
             if undoStack.count > Engine.undoLimit { undoStack.removeFirst() }
@@ -275,7 +303,10 @@ public final class Engine {
             let sx = a.int("size_x", 32), sy = a.int("size_y", 32), sz = a.int("size_z", 32)
             try Document.checkSize(sx, sy, sz)
             let presetName = a.string("palette") ?? "db32"
-            guard let pal = Palettes.named(presetName) else { throw PCError.invalid("unknown palette \(presetName); use \(Palettes.names.joined(separator: ", "))") }
+            guard var pal = Palettes.named(presetName) else { throw PCError.invalid("unknown palette \(presetName); use \(Palettes.names.joined(separator: ", "))") }
+            if let locked = style?.palette { pal = locked }
+            paletteLockBypass = true
+            defer { paletteLockBypass = false }
             let out = try edit("New model") { d in
                 d = Document(name: a.string("name") ?? "Untitled", sx: sx, sy: sy, sz: sz, palette: pal)
                 return [:]
@@ -289,8 +320,9 @@ public final class Engine {
 
         case "new_sprite":
             var args = a.d
-            args["size_x"] = a.int("width", 32)
-            args["size_y"] = a.int("height", 32)
+            let styled = style?.size?.count == 2 ? style?.size : nil
+            args["size_x"] = a.int("width", styled?[0] ?? 32)
+            args["size_y"] = a.int("height", styled?[1] ?? 32)
             args["size_z"] = 1
             return try run("new_model", Args(args))
 
@@ -340,6 +372,8 @@ public final class Engine {
             } else {
                 loaded = try NativeFile.decode(data)
             }
+            paletteLockBypass = true
+            defer { paletteLockBypass = false }
             try edit("Open \(u.lastPathComponent)") { d in d = loaded; return [:] }
             activeLayer = 0; activeFrame = 0
             path = u.pathExtension.lowercased() == "vox" ? nil : u
@@ -653,6 +687,20 @@ public final class Engine {
         case "get_slice":
             return try getSlice(a)
 
+        case "view_as_text":
+            return try viewAsText(a)
+        case "set_style":
+            return try setStyle(a)
+        case "get_style":
+            return ToolOutput(style.map { ["style": $0.json] } ?? ["style": NSNull(), "note": "no style set; set_style locks one"])
+        case "set_feedback":
+            if a.has("auto_critique") { autoCritique = a.bool("auto_critique", true) }
+            return ToolOutput(["auto_critique": autoCritique, "cell_limit": Engine.critiqueCellLimit])
+        case "batch":
+            return try batch(a)
+        case "review_set":
+            return try reviewSet(a)
+
         case "find_voxels":
             let f = try frameIndex(a)
             let merged = !a.has("layer")
@@ -676,7 +724,9 @@ public final class Engine {
             return ToolOutput(["total": total, "returned": cells.count, "voxels": cells, "format": "[x, y, z, palette index]"])
 
         case "analyze_model":
-            return ToolOutput(Analysis.analyze(doc, frame: try frameIndex(a)))
+            var json = Analysis.analyze(doc, frame: try frameIndex(a), style: style)
+            if let s = style, !s.notes.isEmpty { json["style_notes"] = s.notes }
+            return ToolOutput(json)
 
         case "render_view":
             let f = try frameIndex(a)
@@ -690,7 +740,8 @@ public final class Engine {
             if isSprite {
                 // A 2D sprite: enlarged with a pixel grid and as values, then silhouette and real sizes.
                 let (images, layout) = Craft.spriteReview(doc, frame: f, scale: a.int("scale"))
-                var json = Analysis.analyze(doc, frame: f)
+                var json = Analysis.analyze(doc, frame: f, style: style)
+                if let s = style, !s.notes.isEmpty { json["style_notes"] = s.notes }
                 json["picture_layout"] = layout
                 return ToolOutput(json, images: images)
             }
@@ -700,7 +751,8 @@ public final class Engine {
                 var o = RenderOptions(); (o.yaw, o.pitch) = ViewPreset.angles(v)!; o.scale = scale; return Renderer.render(doc, frame: f, o)
             }
             let (sheet, _) = Renderer.sheet(pics, columns: 4, gap: 6, background: RGBA(44, 44, 48))
-            var json = Analysis.analyze(doc, frame: f)
+            var json = Analysis.analyze(doc, frame: f, style: style)
+            if let s = style, !s.notes.isEmpty { json["style_notes"] = s.notes }
             json["picture_layout"] = "Row 1: iso (front-right), iso-front-left, iso-back-right, iso-back-left. Row 2: front, right, top."
             return ToolOutput(json, images: [ImageFiles.png(sheet)])
 

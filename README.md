@@ -17,6 +17,9 @@ Until releases are notarized by Apple, macOS asks you to confirm the first launc
 - **Exports**: PNG, SVG, HTML, animated GIF, sprite sheets, MagicaVoxel `.vox`, OBJ.
 - **Agents**: ChatGPT, Codex, Claude, Claude Code, Cursor, OpenClaw, Hermes Agent and any other MCP client. The
   Agents page in the app shows who is connected and how to set each one up.
+- **Agent review loop**: every agent edit comes back with a score and the problems it introduced or fixed; agents can
+  read the canvas as text (pixel grid with rulers, values, silhouette, frame diffs), lock a style for a whole set of
+  assets, run many calls in one batch and review saved files side by side.
 
 ## Connect an agent
 

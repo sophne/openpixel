@@ -1750,7 +1750,7 @@ async function showReview() {
     img.onload = () => { img.style.width = Math.min(860, img.naturalWidth * 1.5) + 'px'; };
     img.src = r.images[0];
     const b = r.bounds ? r.bounds.size.join('×') : '—';
-    $('#review-stats').textContent = `${r.voxels} ${S.isSprite ? 'pixels' : 'voxels'} · bounds ${b} · ${r.parts || 0} part(s) · ${(r.colors || []).length} colours · left/right symmetry ${Math.round((r.symmetry_x || 0) * 100)}%`;
+    $('#review-stats').textContent = `${r.voxels} ${S.isSprite ? 'pixels' : 'voxels'} · bounds ${b} · ${r.parts || 0} part(s) · ${(r.colors || []).length} colours · left/right symmetry ${Math.round((r.symmetry_x || 0) * 100)}%${r.score ? ` · score ${r.score.total}/100` : ''}`;
     const ul = $('#review-issues');
     ul.innerHTML = '';
     (r.issues && r.issues.length ? r.issues : ['No problems found.']).forEach((t) => {

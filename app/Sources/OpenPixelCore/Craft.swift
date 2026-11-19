@@ -19,6 +19,7 @@ public enum Craft {
         5. Shading: pick ONE light direction (top-left by default) and shade each form by how it faces the light, not by distance from the edge.
         6. Outline and edges, then details last (eyes, buckles, highlights): a detail is 1-3 pixels at this size.
         7. Clean up: run review_model, fix every issue it lists (pixel_perfect fixes doubled corners), and look at the actual-size picture: that is what players see.
+        Each edit's critique says which findings it introduced or resolved; view_as_text shows the canvas as text with coordinate rulers when you need exact positions.
         Draw symmetric subjects (faces, front-facing characters, chests, trees) on one half and mirror with transform op=mirror, then break the symmetry slightly by hand if it looks stiff.
         """),
         ("shape", """
@@ -74,7 +75,7 @@ public enum Craft {
         - Anticipation before a big action, follow-through after it (hair, cloth, tails settle a frame later).
         - Timing lives in frame durations (set_frame_duration): hold key poses longer (150-250 ms), move in-betweens quicker (60-100 ms).
         - Loops must connect: the last frame leads into the first. No two frames should be identical unless the hold is intended (use a longer duration instead).
-        - Keep the ground line fixed so the sprite does not jitter; move parts by whole pixels and only what should move. Onion skin: compare neighbouring frames with get_slice.
+        - Keep the ground line fixed so the sprite does not jitter; move parts by whole pixels and only what should move. Onion skin: view_as_text maps=["diff"] marks what changed since the previous frame.
         - Make each frame with add_frame (copies the previous) and change only what moves.
         """),
         ("voxel", """
@@ -317,24 +318,24 @@ public enum Craft {
 
     static func round2(_ x: Double) -> Double { (x * 100).rounded() / 100 }
 
-    /// Pixel-art checks for a 2D sprite: adds to `result` and returns problems and gentler style tips.
-    static func spriteChecks(_ doc: Document, frame: Int, fullFrame: Bool = false,
-                             into result: inout [String: Any]) -> (issues: [String], tips: [String]) {
+    /// Pixel-art checks for a 2D sprite: adds its report to `result` and its problems and gentler style tips
+    /// to `f`. A style lock replaces the default colour budget and light/outline expectations.
+    static func spriteChecks(_ doc: Document, frame: Int, fullFrame: Bool = false, style: StyleLock? = nil,
+                             into result: inout [String: Any], findings f: inout Findings) {
         let img = Image2D(doc, frame: frame)
-        var issues: [String] = [], tips: [String] = []
         var report: [String: Any] = [:]
         let pal = doc.palette
         var used: [UInt8: Int] = [:]
         for v in img.px where v != 0 { used[v, default: 0] += 1 }
         let filled = used.values.reduce(0, +)
-        guard filled > 0 else { return ([], []) }
+        guard filled > 0 else { return }
 
         // Colours.
         let side = max(img.w, img.h)
         let budget = side <= 16 ? 8 : side <= 32 ? 16 : side <= 64 ? 32 : 48
         report["colors_used"] = used.count
-        if used.count > budget {
-            issues.append("Uses \(used.count) colours; a sprite this size reads best with about \(budget) or fewer. Merge similar shades (replace_color).")
+        if used.count > budget && style?.maxColors == nil {
+            f.issue("too_many_colours", "color", min(15, 3 + 2 * (used.count - budget)), n: used.count, "Uses \(used.count) colours; a sprite this size reads best with about \(budget) or fewer. Merge similar shades (replace_color).")
         }
         let keys = used.keys.sorted()
         var near: [String] = []
@@ -344,7 +345,7 @@ public enum Craft {
         } }
         if !near.isEmpty {
             report["near_identical_colors"] = near
-            issues.append("\(near.count) pair(s) of almost identical colours; they add noise without adding shape. Merge them with replace_color.")
+            f.issue("near_identical_colours", "color", min(12, 4 * near.count), n: near.count, "\(near.count) pair(s) of almost identical colours; they add noise without adding shape. Merge them with replace_color.")
         }
         let black = used.filter { pal[Int($0.key)].r < 8 && pal[Int($0.key)].g < 8 && pal[Int($0.key)].b < 8 }.map { $0.value }.reduce(0, +)
 
@@ -352,7 +353,7 @@ public enum Craft {
         let dbl = doubles(img, palette: pal)
         if !dbl.isEmpty {
             report["doubled_corners"] = ["count": dbl.count, "at_x_row": dbl.prefix(12).map { [$0.0, $0.1] }]
-            issues.append("\(dbl.count) doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result.")
+            f.issue("doubled_corners", "cleanup", min(20, 4 + 2 * dbl.count), n: dbl.count, "\(dbl.count) doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result.")
         }
         let st = strays(img)
         if st.count > max(3, filled / 40) {
@@ -360,7 +361,7 @@ public enum Craft {
             let text = fullFrame
                 ? "\(st.count) single pixels unlike all their neighbours. Stars, fireflies and sparkles are fine; scattered noise in large areas is not."
                 : "\(st.count) single pixels unlike all their neighbours. Keep deliberate ones (eye glints, highlights, small fruit) and merge the rest into clusters; too many read as noise."
-            if st.count > max(6, filled / 15) && !fullFrame { issues.append(text) } else { tips.append(text) }
+            if st.count > max(6, filled / 15) && !fullFrame { f.issue("stray_pixels", "cleanup", min(12, 3 + st.count / 2), n: st.count, text) } else { f.tip("stray_pixels", "cleanup", fullFrame ? 2 : 3, n: st.count, text) }
         }
 
         // Edge and interior pixels; distance from the edge for the interior.
@@ -387,7 +388,7 @@ public enum Craft {
         if let band = stripes(img) {
             report["stripes"] = ["rows": [band.from, band.to], "heights": band.heights]
             let even = (band.heights.max() ?? 1) * 10 <= (band.heights.min() ?? 1) * 13
-            tips.append("Rows \(band.from)-\(band.to) are \(band.heights.count) flat full-width stripes with hard straight edges"
+            f.tip("flat_stripes", "shading", even ? 6 : 5, "Rows \(band.from)-\(band.to) are \(band.heights.count) flat full-width stripes with hard straight edges"
                 + (even ? ", all about the same height" : " (heights \(band.heights.map(String.init).joined(separator: ", ")))")
                 + ". A valid style, but it reads flat: stagger or dither a few pixels along each edge, vary the heights, or let clouds, hills or light cross the bands.")
         }
@@ -397,18 +398,18 @@ public enum Craft {
         if fullFrame {
             report["note"] = "Full-frame background: outline, light-direction and pillow-shading checks are skipped."
             result["pixel_art"] = report
-            return (issues, tips)
+            return
         }
 
         // Outline.
         let darkEdge = edge.filter { luma(pal[Int(img.px[$0])]) < 0.22 }.count
         let edgeShare = Double(darkEdge) / Double(max(1, edge.count))
         report["outline_dark_share"] = round2(edgeShare)
-        if side >= 16 && edgeShare < 0.35 {
-            tips.append("Only \(Int(edgeShare * 100))% of the silhouette edge is dark; a 1-pixel outline (or a darker rim) makes the shape read on any background.")
+        if side >= 16 && edgeShare < 0.35 && style?.outline == nil {
+            f.tip("weak_outline", "shape", 5, "Only \(Int(edgeShare * 100))% of the silhouette edge is dark; a 1-pixel outline (or a darker rim) makes the shape read on any background.")
         }
         if black > filled / 5 {
-            tips.append("Pure black covers \(black * 100 / filled)% of the sprite; a dark hue (deep blue, purple, brown) or a selective outline looks richer.")
+            f.tip("pure_black", "color", 3, "Pure black covers \(black * 100 / filled)% of the sprite; a dark hue (deep blue, purple, brown) or a selective outline looks richer.")
         }
 
         // Light: how brightness inside the sprite (not the outline) leans across the shape.
@@ -426,25 +427,23 @@ public enum Craft {
                                "brightness_vs_x": round2(cx), "brightness_vs_row": round2(cy), "brightness_vs_edge_distance": round2(cd)]
             let directional = max(abs(cx), abs(cy))
             if cd > 0.45 && directional < 0.2 {
-                issues.append("Looks pillow-shaded: brightness follows the distance from the edge (\(round2(cd))) instead of a light direction. Pick one light (top-left) and reshade by form.")
+                f.issue("pillow_shading", "shading", 15, "Looks pillow-shaded: brightness follows the distance from the edge (\(round2(cd))) instead of a light direction. Pick one light (top-left) and reshade by form.")
             } else if dir.hasPrefix("bottom") {
-                tips.append("The brightest pixels sit toward the \(dir); light usually comes from above (top-left). Check the shading direction.")
-            } else if dir.isEmpty {
-                tips.append("No clear light direction inside the sprite; shade the side facing the light lighter and the far side darker.")
+                if style?.light == nil { f.tip("light_from_below", "shading", 6, "The brightest pixels sit toward the \(dir); light usually comes from above (top-left). Check the shading direction.") }
+            } else if dir.isEmpty && style?.light != "none" {
+                f.tip("no_light_direction", "shading", 6, "No clear light direction inside the sprite; shade the side facing the light lighter and the far side darker.")
             }
         }
         // Too-flat: big areas of one colour with no shading.
-        if filled >= 64 && interiorColours < 3 {
-            tips.append("The inside uses \(interiorColours) colour(s); 2-3 shades per material give the shape volume.")
+        if filled >= 64 && interiorColours < 3 && style?.light != "none" {
+            f.tip("flat_interior", "shading", 6, "The inside uses \(interiorColours) colour(s); 2-3 shades per material give the shape volume.")
         }
         result["pixel_art"] = report
-        return (issues, tips)
     }
 
     /// Animation checks across all frames of a sprite (or model).
-    static func animationChecks(_ doc: Document) -> (info: [String: Any], tips: [String]) {
-        guard doc.frames.count > 1 else { return ([:], []) }
-        var tips: [String] = []
+    static func animationChecks(_ doc: Document, fullFrame: Bool = false, findings f: inout Findings) -> [String: Any] {
+        guard doc.frames.count > 1 else { return [:] }
         let grids = doc.frames.indices.map { doc.composite(frame: $0) }
         let counts = grids.map { $0.reduce(0) { $0 + ($1 == 0 ? 0 : 1) } }
         var same: [String] = []
@@ -454,7 +453,7 @@ public enum Craft {
             if grids[i] == grids[j] { same.append("\(i)→\(j)") }
         }
         if !same.isEmpty {
-            tips.append("Identical neighbouring frames (\(same.joined(separator: ", "))): drop one and lengthen the other's duration instead.")
+            f.tip("identical_frames", "animation", min(10, 4 * same.count), n: same.count, "Identical neighbouring frames (\(same.joined(separator: ", "))): drop one and lengthen the other's duration instead.")
         }
         var jumps: [String] = []
         for i in 0..<(counts.count - 1) where counts[i] > 0 {
@@ -462,13 +461,32 @@ public enum Craft {
             if change > 0.3 { jumps.append("\(i)→\(i + 1) (\(Int(change * 100))%)") }
         }
         if !jumps.isEmpty {
-            tips.append("The amount of filled cells jumps between frames \(jumps.joined(separator: ", ")); unless that is a deliberate squash/stretch or effect, keep the volume steady.")
+            f.tip("volume_jumps", "animation", min(10, 3 * jumps.count), n: jumps.count, "The amount of filled cells jumps between frames \(jumps.joined(separator: ", ")); unless that is a deliberate squash/stretch or effect, keep the volume steady.")
         }
         let durations = doc.frames.map { $0.duration }
         if durations.count >= 4 && Set(durations).count == 1 {
-            tips.append("Every frame lasts \(durations[0]) ms; holding key poses longer (set_frame_duration) gives the motion weight.")
+            f.tip("uniform_timing", "animation", 3, "Every frame lasts \(durations[0]) ms; holding key poses longer (set_frame_duration) gives the motion weight.")
         }
-        return (["frames": doc.frames.count, "filled_per_frame": counts, "durations_ms": durations], tips)
+        var info: [String: Any] = ["frames": doc.frames.count, "filled_per_frame": counts, "durations_ms": durations]
+        // The ground line: the lowest filled row (y) of each frame. Feet that move up and down between frames
+        // make a walk or idle jitter, unless the sprite jumps or flies on purpose. Backgrounds have no ground.
+        if !fullFrame {
+            let ground = grids.map { g -> Int? in
+                for y in 0..<doc.sy { for z in 0..<doc.sz { for x in 0..<doc.sx where g[doc.index(x, y, z)] != 0 { return y } } }
+                return nil
+            }
+            let rows = ground.compactMap { $0 }
+            if rows.count == ground.count, let lo = rows.min(), let hi = rows.max() {
+                // Report as image rows for sprites (row 0 at the top), as y for models.
+                info["ground_line"] = doc.sz == 1 ? rows.map { doc.sy - 1 - $0 } : rows
+                if hi > lo {
+                    let moved = rows.indices.filter { rows[$0] != rows[0] }
+                    f.tip("ground_jitter", "animation", min(10, 3 + 2 * (hi - lo)),
+                          n: hi - lo, "The lowest filled \(doc.sz == 1 ? "row" : "y") moves by up to \(hi - lo) between frames (frames \(moved.map(String.init).joined(separator: ", ")) differ from frame 0): the sprite bobs against its ground line. Keep the feet planted unless it jumps or flies on purpose.")
+                }
+            }
+        }
+        return info
     }
 
     // MARK: - pixel-perfect cleanup

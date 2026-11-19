@@ -205,11 +205,260 @@ enum SelfTest {
               && !sIssues.contains { $0.contains("float in the air") },
               "3D: a broken-off voxel is an issue, a separate cloud only a tip (\(sIssues), \(sTips))")
 
+        // Agent observation and pipeline tools, one scenario per kind of work: a static sprite, an animation,
+        // a full-frame background and a voxel model; then the style lock, batches and set reviews.
+        let obsDir = FileManager.default.temporaryDirectory.appendingPathComponent("openpixel-observe-\(getpid())")
+        try? FileManager.default.createDirectory(at: obsDir, withIntermediateDirectories: true)
+        /// A text map from view_as_text as [row label: [column label: character]], read with the column and
+        /// row ranges the tool reports. Also checks that every row starts with its label and the units ruler
+        /// line matches the column labels.
+        func textGrid(_ out: [String: Any], _ key: String) -> (grid: [Int: [Int: Character]], rulersOK: Bool) {
+            func labels(_ s: Any?) -> [Int] {
+                let ends = ((s as? String)?.split(separator: " ").last.map(String.init) ?? "").components(separatedBy: "→").compactMap { Int($0) }
+                guard ends.count == 2 else { return [] }
+                return ends[0] <= ends[1] ? Array(ends[0]...ends[1]) : Array((ends[1]...ends[0]).reversed())
+            }
+            let cols = labels(out["columns"]), rows = labels(out["rows"]), lines = out[key] as? [String] ?? []
+            guard !cols.isEmpty, !rows.isEmpty, lines.count > rows.count else { return ([:], false) }
+            let head = lines.count - rows.count
+            var ok = String(lines[head - 1].suffix(cols.count)) == String(cols.map { Character(String($0 % 10)) })
+            var g: [Int: [Int: Character]] = [:]
+            for (i, r) in rows.enumerated() {
+                let line = lines[head + i]
+                ok = ok && Int(line.dropLast(cols.count).trimmingCharacters(in: .whitespaces)) == r
+                for (j, c) in Array(line.suffix(cols.count)).enumerated() { g[r, default: [:]][cols[j]] = c }
+            }
+            return (g, ok)
+        }
+        func score(_ e: Engine) -> [String: Any] { (try? e.execute("analyze_model", [:]))?.json["score"] as? [String: Any] ?? [:] }
+        func codes(_ s: [String: Any]) -> [String] { (s["deductions"] as? [[String: Any]] ?? []).compactMap { $0["code"] as? String } }
+        let orbColours: [String: Any] = ["1": "#222034", "2": "#45283c", "3": "#ac3232", "4": "#d95763"]
+
+        // STATIC: the score ranks a top-left-lit orb above a pillow-shaded one, and the automatic critique
+        // pins each change on the edit that made it.
+        let st = Engine()
+        _ = try? st.execute("new_sprite", ["width": 24, "height": 24])
+        let c1 = (try? st.execute("paint_slice", ["rows": disc(false), "legend": orbColours]))?.json["critique"] as? [String: Any] ?? [:]
+        let c2 = (try? st.execute("paint_slice", ["rows": disc(true), "legend": orbColours]))?.json["critique"] as? [String: Any] ?? [:]
+        let pillowScore = c1["score"] as? Int ?? -1, litScore = c2["score"] as? Int ?? -1
+        check(((c1["findings"] as? [String]) ?? []).contains { $0.contains("pillow") } && litScore > pillowScore
+              && (c2["change"] as? Int) == litScore - pillowScore && (c2["resolved"] as? [String])?.contains("pillow_shading") == true,
+              "static: the first edit's critique lists pillow shading; relighting resolves it and raises the score (\(pillowScore) → \(litScore))")
+        let cleaned = (try? st.execute("pixel_perfect", [:]))?.json ?? [:]
+        let cleanCrit = cleaned["critique"] as? [String: Any] ?? [:]
+        let removed = (cleaned["cells"] as? [[String: Any]])?.first
+        let redo = (try? st.execute("set_pixels", ["pixels": [[removed?["x"] as? Int ?? 0, removed?["row"] as? Int ?? 0, "#222034"]]]))?.json["critique"] as? [String: Any] ?? [:]
+        check((cleanCrit["resolved"] as? [String])?.contains("doubled_corners") == true
+              && (redo["introduced"] as? [String])?.contains { $0.contains("doubled corner") } == true && (redo["change"] as? Int ?? 0) < 0,
+              "static: pixel_perfect's critique resolves doubled corners; putting one back is reported as introduced, with the score drop")
+        _ = try? st.execute("undo", [:])
+        _ = try? st.execute("set_pixels", ["pixels": [[6, 9, "#ff00ff"]]])
+        let stText = (try? st.execute("view_as_text", ["region": [0, 0, 23, 23]]))?.json ?? [:]
+        let (pix, pixRulers) = textGrid(stText, "pixels")
+        let magenta = (stText["legend"] as? [String: [String: Any]])?.first { $0.value["hex"] as? String == "#ff00ff" }?.key
+        check(pixRulers && magenta != nil && pix[9]?[6].map(String.init) == magenta && pix[0]?[0] == ".",
+              "static: view_as_text pixels put x=6, row 9 under its ruler labels, with the legend colour")
+        let (vals, _) = textGrid(stText, "values")
+        func meanValue(_ rows: ClosedRange<Int>, _ cols: ClosedRange<Int>) -> Double {
+            let ds = rows.flatMap { r in cols.compactMap { vals[r]?[$0]?.wholeNumberValue } }
+            return ds.isEmpty ? 0 : Double(ds.reduce(0, +)) / Double(ds.count)
+        }
+        check(meanValue(4...10, 4...10) > meanValue(13...19, 13...19),
+              "static: the value map is brighter toward the top-left light (\(meanValue(4...10, 4...10)) vs \(meanValue(13...19, 13...19)))")
+
+        // ANIMATION: a walk frame that lifts the whole body (feet off the ground line) versus one that only
+        // swings the arms; the diff map agrees with the frame counts.
+        let walker = ["................", "......1111......", ".....133331.....", ".....134431.....", ".....133331.....",
+                      "......1331......", ".....133331.....", "....13333331....", "....13333331....", ".....133331.....",
+                      ".....133331.....", ".....13..31.....", ".....13..31.....", ".....13..31.....", "....113..311....", "................"]
+        func walk(lift: Bool) -> Engine {
+            let w = Engine()
+            _ = try? w.execute("new_sprite", ["width": 16, "height": 16])
+            _ = try? w.execute("paint_slice", ["rows": walker, "legend": orbColours])
+            _ = try? w.execute("add_frame", [:])
+            if lift { _ = try? w.execute("transform", ["op": "move", "dy": 1]) } else {
+                _ = try? w.execute("set_pixels", ["pixels": [[3, 8, "#222034"], [12, 8, "#222034"], [4, 7, "#ac3232"], [11, 7, "#ac3232"]]])
+            }
+            return w
+        }
+        let lifted = walk(lift: true), planted = walk(lift: false)
+        let liftJSON = (try? lifted.execute("analyze_model", [:]))?.json ?? [:]
+        let liftAnim = liftJSON["animation"] as? [String: Any] ?? [:]
+        let liftScore = liftJSON["score"] as? [String: Any] ?? [:], plantScore = score(planted)
+        let animCat = { (s: [String: Any]) in (s["categories"] as? [String: Int])?["animation"] ?? -1 }
+        check(codes(liftScore).contains("ground_jitter") && !codes(plantScore).contains("ground_jitter")
+              && (liftAnim["ground_line"] as? [Int]) == [14, 13] && animCat(plantScore) > animCat(liftScore),
+              "animation: lifting the feet is flagged as ground-line jitter (rows \(liftAnim["ground_line"] ?? "-")); swinging the arms is not (\(animCat(liftScore)) < \(animCat(plantScore)))")
+        let lastCrit = (try? lifted.execute("transform", ["op": "move", "dy": -1]))?.json["critique"] as? [String: Any] ?? [:]
+        check((lastCrit["resolved"] as? [String])?.contains("ground_jitter") == true,
+              "animation: moving the frame back down resolves the jitter in the critique (\(lastCrit))")
+        _ = try? lifted.execute("undo", [:])
+        let frameDiff = (try? lifted.execute("view_as_text", ["maps": ["diff"], "frame": 1]))?.json ?? [:]
+        let dc = frameDiff["diff_counts"] as? [String: Int] ?? [:], filled = liftAnim["filled_per_frame"] as? [Int] ?? []
+        let (dg, diffRulers) = textGrid(frameDiff, "diff")
+        check(diffRulers && filled.count == 2 && (dc["added"] ?? -1) + (dc["same"] ?? 0) + (dc["recolored"] ?? 0) == filled[1]
+              && (dc["removed"] ?? -1) + (dc["same"] ?? 0) + (dc["recolored"] ?? 0) == filled[0]
+              && frameDiff["diff_against_frame"] as? Int == 0 && dg[14]?[4] == "-" && dg[0]?[6] == "+",
+              "animation: the diff map against the previous frame accounts for every filled pixel of both frames (\(dc))")
+        let noDiff = try? Engine().execute("view_as_text", ["maps": ["diff"]])
+        check(noDiff == nil, "animation: a diff on a single frame is refused with a reason")
+
+        // BACKGROUND: hard flat sky stripes score below dithered ones; neither is wrecked by sprite-only checks
+        // (edge, outline, light), and the text view shows the whole canvas.
+        var skyScores: [Bool: Int] = [:]
+        var skyRows: [Bool: [Int: [Int: Character]]] = [:]
+        for dithered in [false, true] {
+            let bg = Engine()
+            _ = try? bg.execute("new_sprite", ["width": 48, "height": 24])
+            _ = try? bg.execute("paint_slice", ["rows": sky(dithered: dithered),
+                                                 "legend": ["1": "#1e1a3f", "2": "#2e2459", "3": "#473575", "4": "#6e4585", "5": "#243b2c"]])
+            skyScores[dithered] = score(bg)["total"] as? Int ?? -1
+            let t = (try? bg.execute("view_as_text", ["maps": ["pixels"]]))?.json ?? [:]
+            if t["columns"] as? String == "x 0→47" && t["rows"] as? String == "row 0→23" { skyRows[dithered] = textGrid(t, "pixels").grid }
+        }
+        check((skyScores[true] ?? 0) > (skyScores[false] ?? 0) && (skyScores[false] ?? 0) >= 85,
+              "background: dithered band edges score above hard stripes, and a background is not penalised as a sprite (\(skyScores[false] ?? -1) < \(skyScores[true] ?? -1))")
+        let distinct = { (g: [Int: [Int: Character]]?, r: Int) in Set((g?[r] ?? [:]).values).count }
+        check(skyRows.count == 2 && distinct(skyRows[false], 6) == 1 && distinct(skyRows[true], 6) == 2,
+              "background: the text view covers the full canvas; a hard band edge is one character wide, a dithered one mixes two")
+
+        // VOXEL: projections face the right way, and the critique catches a stray voxel when it is placed and
+        // clears it when it is erased.
+        let vx = Engine()
+        _ = try? vx.execute("new_model", ["size_x": 12, "size_y": 12, "size_z": 12])
+        _ = try? vx.execute("fill_box", ["from": [2, 0, 2], "to": [8, 5, 8], "color": 3])
+        let towerCrit = (try? vx.execute("fill_box", ["from": [2, 6, 6], "to": [4, 9, 8], "color": 5]))?.json["critique"] as? [String: Any] ?? [:]
+        let strayCrit = (try? vx.execute("set_voxels", ["voxels": [[10, 8, 10]], "color": 7]))?.json["critique"] as? [String: Any] ?? [:]
+        let eraseCrit = (try? vx.execute("erase_voxels", ["voxels": [[10, 8, 10]]]))?.json["critique"] as? [String: Any] ?? [:]
+        check((strayCrit["introduced"] as? [String])?.contains { $0.contains("loose piece") } == true && (strayCrit["change"] as? Int ?? 0) < 0
+              && (eraseCrit["resolved"] as? [String])?.contains("floating_strays") == true && eraseCrit["score"] as? Int == towerCrit["score"] as? Int,
+              "voxel: placing a stray voxel is reported as introduced; erasing it resolves it and restores the score (\(towerCrit["score"] ?? "-"))")
+        // The tower stands on the left (x 2-4) at the front (z 6-8) of the block.
+        func sil(_ view: String) -> [Int: [Int: Character]] {
+            textGrid((try? vx.execute("view_as_text", ["view": view, "maps": ["silhouette"]]))?.json ?? [:], "silhouette").grid
+        }
+        let front = sil("front"), left = sil("left"), right = sil("right"), above = sil("top")
+        check(front[9]?[2] == "#" && front[9]?[5] == "." && left[9]?[7] == "#" && left[9]?[3] == "."
+              && right[9]?[7] == "#" && above[7]?[3] == "#" && above[3]?[3] == "#" && front[5]?[8] == "#",
+              "voxel: front, left, right and top projections put the tower at the left front of the block")
+        // Reading order, not just labels: from the left the front (high z) is on the right of each text row, from
+        // the right it is on the left, from the front low x is on the left.
+        func order(_ view: String) -> String? { (try? vx.execute("view_as_text", ["view": view, "maps": ["silhouette"]]))?.json["columns"] as? String }
+        check(order("left") == "z 1→9" && order("right") == "z 9→1" && order("front") == "x 1→9" && order("back") == "x 9→1",
+              "voxel: each projection reads left to right as that view is seen (\(order("left") ?? "-"), \(order("right") ?? "-"))")
+        let topText = (try? vx.execute("view_as_text", ["view": "top", "maps": ["pixels"]]))?.json ?? [:]
+        let topPix = textGrid(topText, "pixels").grid
+        let towerChar = (topText["legend"] as? [String: [String: Any]])?.first { $0.value["index"] as? Int == 5 }?.key
+        check(topPix[7]?[3].map(String.init) == towerChar && topPix[3]?[3].map(String.init) != towerChar,
+              "voxel: the top projection shows the first voxel from above (the tower's colour on top of the tower only)")
+
+        // STYLE LOCK: a locked palette, size and light for a set; agents can't drift, the person still can.
+        let sty = Engine()
+        let styleFile = obsDir.appendingPathComponent("house.json").path
+        let set = (try? sty.execute("set_style", ["name": "house", "preset": "pico8", "max_colors": 6, "light": "top-left",
+                                                  "outline": "dark", "size": [16, 16], "notes": ["2px chunky outlines"], "save_path": styleFile]))?.json ?? [:]
+        _ = try? sty.execute("new_sprite", [:])
+        let sInfo2 = (try? sty.execute("get_model_info", [:]))?.json ?? [:]
+        var refusal = ""
+        do { _ = try sty.execute("set_pixels", ["pixels": [[3, 3, "#123456"]]]) } catch { refusal = "\(error)" }
+        let rampRefused = (try? sty.execute("make_color_ramp", ["base": "#c0503c"])) == nil
+        let exact = try? sty.execute("set_pixels", ["pixels": [[3, 3, "#ff004d"]]])
+        check(set["saved"] != nil && sInfo2["size"] as? [Int] == [16, 16, 1] && sInfo2["palette_colors"] as? Int == 16
+              && refusal.contains("locks the palette") && refusal.contains("Closest") && rampRefused && exact != nil,
+              "style: new canvases take the locked size and palette; off-palette hex colours and ramps are refused with the closest colours, exact matches pass")
+        _ = try? sty.execute("set_pixels", ["pixels": [[4, 4, "#123456"]]], source: "person")
+        let styScore = score(sty)
+        let styNotes = (try? sty.execute("review_model", [:]))?.json["style_notes"] as? [String]
+        check(codes(styScore).contains("style_palette") && (styScore["categories"] as? [String: Int])?["style"] != nil && styNotes == ["2px chunky outlines"],
+              "style: the person may still use any colour; the review flags it against the style and repeats the notes")
+        let loaded = Engine()
+        _ = try? loaded.execute("paint_slice", ["rows": disc(true), "legend": orbColours])
+        let applied = (try? loaded.execute("set_style", ["path": styleFile]))?.json ?? [:]
+        let loadedStyle = (try? loaded.execute("get_style", [:]))?.json["style"] as? [String: Any]
+        let movedCount = (applied["applied_to_canvas"] as? [String: Any])?["drawn_colours_moved_to_closest"] as? Int ?? 0
+        check(loadedStyle?["name"] as? String == "house" && (loadedStyle?["colors"] as? [String])?.count == 16 && movedCount > 0
+              && !codes(score(loaded)).contains("style_palette"),
+              "style: a saved style file loads in another session and moves a drawing's colours into the locked palette (\(movedCount) moved)")
+        _ = try? loaded.execute("undo", [:])
+        let relocked = try? loaded.execute("set_pixels", ["pixels": [[1, 1, "#ff004d"]]])
+        check(relocked != nil, "style: after undoing the palette change, a locked colour can still be used (it is added back)")
+        let lightLock = Engine()
+        _ = try? lightLock.execute("new_sprite", ["width": 24, "height": 24])
+        _ = try? lightLock.execute("set_style", ["name": "lit", "lock_palette": false, "light": "top-left"])
+        _ = try? lightLock.execute("paint_slice", ["rows": disc(true), "legend": orbColours])
+        let litOK = !codes(score(lightLock)).contains("style_light")
+        _ = try? lightLock.execute("transform", ["op": "flip", "axis": "x"])
+        _ = try? lightLock.execute("transform", ["op": "flip", "axis": "y"])
+        check(litOK && codes(score(lightLock)).contains("style_light"),
+              "style: shading that agrees with the locked light passes; the same orb lit from the bottom-right is flagged")
+
+        // BATCH: many calls in one request, one critique; checked up front; atomic rollback.
+        let bat = Engine()
+        _ = try? bat.execute("new_sprite", ["width": 8, "height": 8])
+        let ok3 = (try? bat.execute("batch", ["calls": [
+            ["tool": "paint_slice", "args": ["rows": ["........", ".1111...", ".1221...", ".1111..."], "legend": ["1": "#222034", "2": "#df7126"]]],
+            ["tool": "set_pixels", "args": ["pixels": [[5, 2, "#df7126"]]]],
+            ["tool": "view_as_text", "args": ["maps": ["silhouette"]]],
+        ]]))?.json ?? [:]
+        let inner = ok3["results"] as? [[String: Any]] ?? []
+        check(ok3["ran"] as? Int == 3 && ok3["failed"] as? Int == 0 && ok3["critique"] != nil
+              && !inner.contains { ($0["result"] as? [String: Any])?["critique"] != nil }
+              && (inner.last?["result"] as? [String: Any])?["silhouette"] != nil,
+              "batch: three calls run in one request with one critique for the whole batch")
+        let revBefore = bat.revision
+        let typo = try? bat.execute("batch", ["calls": [["tool": "set_pixels", "args": ["pixels": [[0, 0, 1]]]], ["tool": "set_pixel"]]])
+        let revAfterTypo = bat.revision
+        let filledBefore = (try? bat.execute("get_model_info", [:]))?.json["voxels_in_active_frame"] as? Int
+        let atomic = (try? bat.execute("batch", ["atomic": true, "calls": [
+            ["tool": "set_pixels", "args": ["pixels": [[0, 7, 1], [1, 7, 1]]]], ["tool": "fill_box", "args": ["from": [0, 0, 0]]],
+        ]]))?.json ?? [:]
+        let filledAfter = (try? bat.execute("get_model_info", [:]))?.json["voxels_in_active_frame"] as? Int
+        check(typo == nil && revAfterTypo == revBefore && atomic["rolled_back"] as? Bool == true && filledBefore == filledAfter,
+              "batch: an unknown tool is refused before anything runs; atomic=true rolls back when a call fails (\(filledBefore ?? -1) = \(filledAfter ?? -1) pixels)")
+
+        // SET REVIEW: three saved orbs, one lit from the other side in other colours.
+        var setPaths: [String] = []
+        for (k, (flip, colours)) in [(false, orbColours), (false, orbColours),
+                                     (true, ["1": "#1a1c2c", "2": "#3b5dc9", "3": "#41a6f6", "4": "#73eff7"] as [String: Any])].enumerated() {
+            let e2 = Engine()
+            _ = try? e2.execute("new_sprite", ["width": 24, "height": 24])
+            _ = try? e2.execute("paint_slice", ["rows": disc(true), "legend": colours])
+            if flip { _ = try? e2.execute("transform", ["op": "flip", "axis": "x"]); _ = try? e2.execute("transform", ["op": "flip", "axis": "y"]) }
+            let p = obsDir.appendingPathComponent("orb\(k).openpixel").path
+            _ = try? e2.execute("save_model", ["path": p])
+            setPaths.append(p)
+        }
+        let rs = try? Engine().execute("review_set", ["paths": setPaths])
+        let setJSON = rs?.json["set"] as? [String: Any] ?? [:]
+        let setIssues = setJSON["issues"] as? [String] ?? [], setTips = setJSON["tips"] as? [String] ?? []
+        check(rs?.images.count == 1 && (rs?.json["files"] as? [Any])?.count == 3 && setJSON["weakest_file"] != nil
+              && setIssues.contains { $0.contains("different sides") } && setTips.contains { $0.contains("drift") },
+              "review_set: one contact sheet, a score per file, and set checks for mixed light and palette drift")
+
+        // Over HTTP, every file argument is confined, including inside batches, style files and sets.
+        let jailRoot = obsDir.appendingPathComponent("jail")
+        let policy: (String) throws -> String = { try MCPHTTPServer.confine($0, root: jailRoot) }
+        let nestedOut = try? MCPServer.confinePaths("batch", ["calls": [["tool": "export_png", "args": ["path": "/etc/x.png"]]]], policy)
+        let nestedIn = try? MCPServer.confinePaths("batch", ["calls": [["tool": "export_png", "args": ["path": "a.png"]]]], policy)
+        let innerPath = ((nestedIn?["calls"] as? [[String: Any]])?.first?["args"] as? [String: Any])?["path"] as? String
+        check(nestedOut == nil && innerPath?.hasSuffix("/jail/a.png") == true
+              && (try? MCPServer.confinePaths("set_style", ["save_path": "/tmp/style.json"], policy)) == nil
+              && (try? MCPServer.confinePaths("set_style", ["path": "../style.json"], policy)) == nil
+              && (try? MCPServer.confinePaths("review_set", ["paths": ["a.openpixel", "/etc/hosts"]], policy)) == nil
+              && (try? MCPServer.confinePaths("export_png", ["path": 5], policy)) == nil,
+              "HTTP paths: batch calls, style files and review_set lists are confined like path")
+        try? FileManager.default.removeItem(at: obsDir)
+
         let server = MCPServer { LocalBackend(engine: engine) }
         let initRes = server.handle(#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}"#) ?? ""
         check(initRes.contains("\"openpixel\""), "MCP initialize")
         let list = server.handle(#"{"jsonrpc":"2.0","id":2,"method":"tools/list"}"#) ?? ""
         check(list.contains("paint_slice") && !list.contains("ui_state"), "MCP tools/list hides editor-only tools")
+        let listed = ((try? JSONSerialization.jsonObject(with: Data(list.utf8))) as? [String: Any]).flatMap { ($0["result"] as? [String: Any])?["tools"] as? [[String: Any]] } ?? []
+        let readOnly = { (n: String) in (listed.first { $0["name"] as? String == n }?["annotations"] as? [String: Any])?["readOnlyHint"] as? Bool }
+        check(["view_as_text", "set_style", "get_style", "set_feedback", "batch", "review_set"].allSatisfy { n in listed.contains { $0["name"] as? String == n } }
+              && readOnly("view_as_text") == true && readOnly("review_set") == true && readOnly("batch") == false,
+              "MCP lists the observation and pipeline tools with the right read-only hints")
         let call = server.handle(#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"render_view","arguments":{"view":"front"}}}"#) ?? ""
         check(call.contains("image/png"), "MCP tools/call returns an image")
         let bad = server.handle(#"{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"fill_box","arguments":{"from":[0,0,0]}}}"#) ?? ""

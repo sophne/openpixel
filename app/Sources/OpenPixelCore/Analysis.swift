@@ -2,7 +2,12 @@ import Foundation
 
 /// Checks an agent (or person) can use to review a model before refining it.
 public enum Analysis {
-    public static func analyze(_ doc: Document, frame: Int) -> [String: Any] {
+    public static func analyze(_ doc: Document, frame: Int, style: StyleLock? = nil) -> [String: Any] {
+        full(doc, frame: frame, style: style).json
+    }
+
+    /// The report plus its findings (coded and scored), which the automatic critique compares between edits.
+    public static func full(_ doc: Document, frame: Int, style: StyleLock? = nil) -> (json: [String: Any], findings: Findings, total: Int) {
         let g = doc.composite(frame: frame)
         var count = 0
         var lo = (Int.max, Int.max, Int.max), hi = (-1, -1, -1)
@@ -14,13 +19,16 @@ public enum Analysis {
             perColor[Int(v), default: 0] += 1
             lo = (min(lo.0, x), min(lo.1, y), min(lo.2, z)); hi = (max(hi.0, x), max(hi.1, y), max(hi.2, z))
         } } }
-        var issues: [String] = []
+        var f = Findings()
         var result: [String: Any] = [
             "size": [doc.sx, doc.sy, doc.sz], "frame": frame, "voxels": count,
         ]
         if count == 0 {
-            result["issues"] = ["The model is empty."]
-            return result
+            f.issue("empty", "shape", 100, "The model is empty.")
+            result["issues"] = f.issues
+            result["tips"] = [String]()
+            result["score"] = f.score(categories: ["shape"])
+            return (result, f, 0)
         }
         result["bounds"] = ["min": [lo.0, lo.1, lo.2], "max": [hi.0, hi.1, hi.2],
                             "size": [hi.0 - lo.0 + 1, hi.1 - lo.1 + 1, hi.2 - lo.2 + 1]]
@@ -52,7 +60,6 @@ public enum Analysis {
         } } }
         let largest = parts.map { $0.size }.max() ?? 0
         let flat = doc.sz == 1
-        var tips: [String] = []
         // A picture that fills (nearly) the whole canvas is a background or scene, not a sprite on empty canvas:
         // margins, outlines and a single light direction don't apply to it.
         let fullFrame = flat && count * 10 >= doc.sx * doc.sy * 9
@@ -60,7 +67,7 @@ public enum Analysis {
         let floating = flat ? [] : parts.filter { !$0.grounded && $0.size < largest }
         result["parts"] = parts.count
         if flat && parts.count > 1 && !fullFrame {
-            issues.append("\(parts.count) separate shapes; small ones may be stray pixels (see find_voxels).")
+            f.issue("separate_shapes", "shape", min(12, 3 * (parts.count - 1)), n: parts.count, "\(parts.count) separate shapes; small ones may be stray pixels (see find_voxels).")
         }
         if !floating.isEmpty {
             // Tiny loose bits are almost always stray voxels; bigger separate pieces (clouds, a floating island's
@@ -69,10 +76,10 @@ public enum Analysis {
             let strays = floating.filter { $0.size <= tiny }, pieces = floating.filter { $0.size > tiny }
             result["floating_parts"] = floating.prefix(20).map { ["voxels": $0.size, "at": [$0.sample.0, $0.sample.1, $0.sample.2]] }
             if !strays.isEmpty {
-                issues.append("\(strays.count) tiny loose piece(s) of \(tiny) voxels or fewer float apart from everything else: probably strays (see floating_parts).")
+                f.issue("floating_strays", "cleanup", min(15, 5 * strays.count), n: strays.count, "\(strays.count) tiny loose piece(s) of \(tiny) voxels or fewer float apart from everything else: probably strays (see floating_parts).")
             }
             if !pieces.isEmpty {
-                tips.append("\(pieces.count) larger piece(s) are separate from the main body. Fine for clouds or a floating scene; otherwise connect them.")
+                f.tip("floating_pieces", "shape", 0, "\(pieces.count) larger piece(s) are separate from the main body. Fine for clouds or a floating scene; otherwise connect them.")
             }
         }
 
@@ -88,21 +95,21 @@ public enum Analysis {
         let sym = total == 0 ? 1.0 : Double(same) / Double(total)
         result["symmetry_x"] = (sym * 1000).rounded() / 1000
         if sym > 0.9 && sym < 0.999 && !fullFrame {
-            tips.append("Almost symmetric left/right (\(Int(sym * 100))%): if it should be symmetric, transform op=mirror makes it exact.")
+            f.tip("near_symmetric", "shape", 2, "Almost symmetric left/right (\(Int(sym * 100))%): if it should be symmetric, transform op=mirror makes it exact.")
         }
 
         if flat {
             if !fullFrame && (lo.0 == 0 || lo.1 == 0 || hi.0 == doc.sx - 1 || hi.1 == doc.sy - 1) {
-                issues.append("The sprite touches the canvas edge; leave a 1-pixel margin for outlines.")
+                f.issue("touches_edge", "shape", 6, "The sprite touches the canvas edge; leave a 1-pixel margin for outlines.")
             }
         } else {
             if lo.0 == 0 || lo.2 == 0 || hi.0 == doc.sx - 1 || hi.1 == doc.sy - 1 || hi.2 == doc.sz - 1 {
-                issues.append("The model touches the edge of the model space; resize_model gives it room.")
+                f.issue("touches_edge", "shape", 6, "The model touches the edge of the model space; resize_model gives it room.")
             }
-            if lo.1 > 0 { tips.append("The lowest voxel is at y=\(lo.1); if the model should stand on the ground, move it down (transform op=move dy=-\(lo.1)).") }
+            if lo.1 > 0 { f.tip("off_ground", "shape", 3, "The lowest voxel is at y=\(lo.1); if the model should stand on the ground, move it down (transform op=move dy=-\(lo.1)).") }
         }
         if perColor.count == 1 && count > 8 {
-            issues.append("Only one colour is used; shading with 2-4 tones of a ramp reads better as pixel art.")
+            f.issue("one_colour", "color", 15, "Only one colour is used; shading with 2-4 tones of a ramp reads better as pixel art.")
         }
         // Surface share: lone voxels with no neighbours are often stray clicks.
         var lonely = 0
@@ -112,16 +119,29 @@ public enum Analysis {
             where doc.inBounds(nx, ny, nz) && g[doc.index(nx, ny, nz)] != 0 { n += 1 }
             if n == 0 { lonely += 1 }
         } } }
-        if lonely > 0 { issues.append("\(lonely) single \(flat ? "pixel" : "voxel")(s) with no neighbours (possible strays).") }
+        if lonely > 0 { f.issue("lonely", "cleanup", min(12, 2 + 2 * lonely), n: lonely, "\(lonely) single \(flat ? "pixel" : "voxel")(s) with no neighbours (possible strays).") }
+        var light: String?, outlineShare: Double?
         if flat {
-            let (more, t) = Craft.spriteChecks(doc, frame: frame, fullFrame: fullFrame, into: &result)
-            issues += more; tips += t
+            Craft.spriteChecks(doc, frame: frame, fullFrame: fullFrame, style: style, into: &result, findings: &f)
+            let art = result["pixel_art"] as? [String: Any]
+            light = (art?["light"] as? [String: Any])?["brightest_toward"] as? String
+            outlineShare = art?["outline_dark_share"] as? Double
         }
-        let (anim, animTips) = Craft.animationChecks(doc)
-        if !anim.isEmpty { result["animation"] = anim; tips += animTips }
-        result["issues"] = issues
-        result["tips"] = tips
-        return result
+        let anim = Craft.animationChecks(doc, fullFrame: fullFrame, findings: &f)
+        if !anim.isEmpty { result["animation"] = anim }
+        if let style {
+            style.check(doc, usedIndexes: Set(perColor.keys), light: light, outlineDarkShare: outlineShare, into: &f)
+            result["style"] = style.name
+        }
+        var categories = ["shape", "cleanup", "color"]
+        if flat { categories.append("shading") }
+        if doc.frames.count > 1 { categories.append("animation") }
+        if style != nil { categories.append("style") }
+        result["issues"] = f.issues
+        result["tips"] = f.tips
+        let score = f.score(categories: categories)
+        result["score"] = score
+        return (result, f, score["total"] as? Int ?? 0)
     }
 
     /// Differences between two grids of the same size.
