@@ -1,0 +1,122 @@
+{
+  "cels" : [
+    {
+      "data" : "7ZJLFoAgCAC7Cg\/DIu9\/viIwkWxZq2Y78\/A7Td+AgajXQB8gG+Pg0r5oAYLzy8IxQABwug7pPAlVa+E9JYHmmRmzFc6XpBwTLs\/NnzpnDfLYI0pAbafufJ23wt2Pnw+gRXd9JW11g+rD+0hwFjR+PVshlZtogfCo7X8865+X2AE=",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZJBEoAgCAD7ipFo6v\/fFyiVQh7r1F53R3FwWb4BFFrvijGAJDwHl+6LOwCXBmIcA3CuL2JM1lOBTNXtGuVxY9D7IIOMvmwNBPHp9qvoEDgwnoKVPQAHaDQHnXdGU9CdX1+rFkA+nwOSN\/upQW7z2+1JwJQnJwEz1fJF5vrnDQ4=",
+      "encoding" : "zlib-base64",
+      "frame" : 1,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZJLEoQgDAW9CkSJBu9\/vuEFFBJlNzWr6W13pcJnWX4DObw+HDYgabwHtx6LHlAQA+y+94BC8EXR1rciARFo7wOTpBWkbcOMpz\/XStJZ3cfqVTNfwXCAqAU8E3H15gIiCuPdBZYgjvMfD0Dw+VrQay3K\/jnPtCb1gOdEIwBT3b7JXP\/5Nh8=",
+      "encoding" : "zlib-base64",
+      "frame" : 2,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZFBEsMgCADzFcRAQvz\/+6qAMRq9dXrqXndHEbftN+DAqM+BPkBx5sGtn0W7BEE6PDgOrB4mxa3Vt4IK8tDugXUMigXa9\/Pt8xkpGiTSfDDPAKqZNWgvxGCFeUbMAXULCF4svAYBuvOHDVuR4lUHfH2RkoNrqmtlD0wLXYLCUvs9a\/3nq3wA",
+      "encoding" : "zlib-base64",
+      "frame" : 3,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZJLEoQgDAW9CkSJBu9\/vuEFFBJlNzWr6W13pcJnWX4DObw+HDYgabwHtx6LHlAQA+y+94BC8EXR1rciARFo7wOTpBWkbcOMpz\/XStJZ3cfqVTNfwXCAqAU8E3H15gIiCuPdBZYgjvMfD0Dw+VrQay3K\/jnPtCb1gOdEIwBT3b7JXP\/5Nh8=",
+      "encoding" : "zlib-base64",
+      "frame" : 4,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZJBEoAgCAD7ipFo6v\/fFyiVQh7r1F53R3FwWb4BFFrvijGAJDwHl+6LOwCXBmIcA3CuL2JM1lOBTNXtGuVxY9D7IIOMvmwNBPHp9qvoEDgwnoKVPQAHaDQHnXdGU9CdX1+rFkA+nwOSN\/upQW7z2+1JwJQnJwEz1fJF5vrnDQ4=",
+      "encoding" : "zlib-base64",
+      "frame" : 5,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 300
+    },
+    {
+      "duration" : 90
+    },
+    {
+      "duration" : 90
+    },
+    {
+      "duration" : 300
+    },
+    {
+      "duration" : 90
+    },
+    {
+      "duration" : 90
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "search-buddy",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#222034",
+    "#45283c",
+    "#663931",
+    "#8f563b",
+    "#df7126",
+    "#d9a066",
+    "#eec39a",
+    "#fbf236",
+    "#99e550",
+    "#6abe30",
+    "#37946e",
+    "#4b692f",
+    "#524b24",
+    "#323c39",
+    "#3f3f74",
+    "#306082",
+    "#5b6ee1",
+    "#639bff",
+    "#5fcde4",
+    "#cbdbfc",
+    "#ffffff",
+    "#9badb7",
+    "#847e87",
+    "#696a6a",
+    "#595652",
+    "#76428a",
+    "#ac3232",
+    "#d95763",
+    "#d77bba",
+    "#8f974a",
+    "#8a6f30",
+    "#7cc95c",
+    "#c8f08a",
+    "#1d1a2b",
+    "#7fd0e6",
+    "#ff4a1c",
+    "#5a6988",
+    "#f4f1e8",
+    "#6b3f2a",
+    "#2b5e3f",
+    "#45914a",
+    "#c9f1fb",
+    "#a9b6cc"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

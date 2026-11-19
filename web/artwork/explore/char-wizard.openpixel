@@ -1,0 +1,136 @@
+{
+  "cels" : [
+    {
+      "data" : "lZLrCsMgDEZ9FleIBQWFuTDf\/8EWE6f1NrrvRys9J4lYlboX9D5gWQbv8UJ2CWJhanlTvuvKj0dLSvzSlLu8E\/7haeYIgFN9ExCMYWHNMxZhyQWzQBQbFwHhFH4Cam3dwCvmDtq5uv8s9JiErj8JAKZxCqqOk+AolpKfhEdOA10JWjtzK7XSo+eb+9HO\/7j+4sX5U3plOL95hhr3x06+djHmezjtX4QyRGPpOPAiCI7xOXERhL+2wi+eBebL+fy98G02det8AA==",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    },
+    {
+      "data" : "lZJhCsMgDEY9iyukBQUL0zDvf7DFxNWqEbrvhxXeSyJWY54FQzixbs8Q8EZWOcXC3PKh\/PYX314tOfPHUp7yTviH55kjAE71TUDYdxZ0XrAIKhfMAlFsXASEQ\/gBaK3zA78wd7DeX+cvQo9J6PqTALA3TkHTcRI8xVHKSnjkNNDXoHMzd1IrPXq+eB\/t\/rf7L1bun9Irw\/3NM8x4PnbKs4uxvMPp\/CLUIRZrx4FXQXCM8a0LwlNKceIsCD9UXgTiSZ\/PgtSvs6jT8wU=",
+      "encoding" : "zlib-base64",
+      "frame" : 1,
+      "layer" : 0
+    },
+    {
+      "data" : "lZJhCsMgDEY9ixvYgoKFxjDvf7DFpGuqptB9P1rpeyaS6tyzYM4bHsstZ7yQu2xiYdV8KL\/1yd8vTa388pSnvBP+4XXmGAJO+1XAsCws2LxhEUwumAWiqFwEDKvwNaD3MQ38xFzBp3Sevwk9JqGrT0IIi3IKuo6TkCiR0p6ER04N0xGMceZR9kqNnt\/cD53\/+\/qLjflTemWY39zDSX9w1\/BNBGj3cDq\/CEcTj27nirspeC4PAPtYQAThpRSYOAvCV5M3oXG7PwvEi\/FdBTTK3uUL",
+      "encoding" : "zlib-base64",
+      "frame" : 2,
+      "layer" : 0
+    },
+    {
+      "data" : "lZLrCsMgDEZ9FlewBQULTcN8\/wdbLl1t1I7u+2GFc5KI1blnwZxXPLZrznghd1nVwlLzpnz3J59eNaXIx1OeciP8w0vPMQTs6quAYZ5FGHPGKgy5YhGIYuUqYFiULwG9j6nhJ5YOPqXz\/CxYTILpT0IIc+UUdIaTkCiRwivhltPAdARj7HnUWu1h+c37qPc\/XX\/x4P4pVmnur5\/hoTmfOPzsAPgddudX4Rji0W3ScRsKnusQALa2gQrK932HjougfBlyFpiP54ug9fehup\/c5AM=",
+      "encoding" : "zlib-base64",
+      "frame" : 3,
+      "layer" : 0
+    },
+    {
+      "data" : "lZLrCsMgDEZ9FleIBQUL0zDf\/8EWE6f10tJ9P1rpOUnEqtSzoPcHluXhPZ7IVQ6xMLV8KL915durJSV+acpT3gn\/8DRzBMCpvgkIxrCw5hmLsOSCWSCKjYuAsAvfAbW2buAVcwftXN1\/FnpMQtefBADTOAVVx0lwFEvJT8Ijp4GuBK2duZVa6dHzi\/vRzn87\/+LF+VN6ZTi\/eYYa98dOvnYh5Hs47V+EMkRj6TjwIggOIbzXgvAYY5g4C8L3Jc8C8+V8\/l74ZU518c7jfAE=",
+      "encoding" : "zlib-base64",
+      "frame" : 4,
+      "layer" : 0
+    },
+    {
+      "data" : "lZLtCsMgDEV9FldIBwoW5i7z\/R9sMXG1fkF3f7TSc5KI1Zh7QQgHyvIIAReyyqEWUs2H81uffHvUpCQvy7nLG+EfnkYOIgz1VQDtuwhznrEKU65YBKaoXAXQU\/mTYK3zHT+xdLDen\/vPQotZaPqzQLRXzoFpOAue4zj5ybjnPNCXwLmRO63VHi1f3I96\/tv1F0\/On9Mq3fmNM0y\/P3HytYsx38Nh\/yqUIRalY8eLoDjG18BVyDzivRS0fs6zIHw6X74Xvsyibp4v",
+      "encoding" : "zlib-base64",
+      "frame" : 5,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 180
+    },
+    {
+      "duration" : 110
+    },
+    {
+      "duration" : 110
+    },
+    {
+      "duration" : 160
+    },
+    {
+      "duration" : 110
+    },
+    {
+      "duration" : 110
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "Wizard",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#222034",
+    "#45283c",
+    "#663931",
+    "#8f563b",
+    "#df7126",
+    "#d9a066",
+    "#eec39a",
+    "#fbf236",
+    "#99e550",
+    "#6abe30",
+    "#37946e",
+    "#4b692f",
+    "#524b24",
+    "#323c39",
+    "#3f3f74",
+    "#306082",
+    "#5b6ee1",
+    "#639bff",
+    "#5fcde4",
+    "#cbdbfc",
+    "#ffffff",
+    "#9badb7",
+    "#847e87",
+    "#696a6a",
+    "#595652",
+    "#76428a",
+    "#ac3232",
+    "#d95763",
+    "#d77bba",
+    "#8f974a",
+    "#8a6f30",
+    "#110e30",
+    "#342468",
+    "#6a3fa0",
+    "#b070d4",
+    "#f2aaff",
+    "#413229",
+    "#8c7c69",
+    "#d8d0b8",
+    "#eeecd3",
+    "#fffdea",
+    "#431b1c",
+    "#925445",
+    "#e0a27a",
+    "#f2cf9c",
+    "#fff2bf",
+    "#250d0b",
+    "#7a4632",
+    "#e7c09c",
+    "#4d060d",
+    "#c42614",
+    "#ff783e",
+    "#ffc182",
+    "#17152c",
+    "#242231",
+    "#975a29",
+    "#e8b048"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

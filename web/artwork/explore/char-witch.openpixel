@@ -1,0 +1,145 @@
+{
+  "cels" : [
+    {
+      "data" : "vZRbDoMgEEXdyiCJNNFmTBM1sftfV8d5UPEB\/LTnx6DnyjiATfN\/QLh9jukQhmHoibsATsjU+hRgYoRqGSDnz8ooEyG0hHPFwKi0ggNMKzV9UsaXYL7l8ZCL79f73ktA46+YU31RaEw1g\/cWwBAC5S2X+jQfQE\/N2XznuCLSNyGpBxcdkc3E17vzt3JALmpvtNrQ+z2R6L0vLMDJ54qyehPLF98XfZ5iXdl\/E+vVt+7BN2tr\/2SKvvSZRJJD6LrusptHAJ7sS6JkE+ZDna4TPB60F7ILZrrbUxOw4zbnfhI7UHZDVXc2+PiWV9eAms3zhY+Lr9b1d1iSfsUH",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    },
+    {
+      "data" : "zZTRDoMgDEX9lSKJmAipMZkm+v\/ftdIWFafC4058Yd6DpcCa5v8B4fE95kPw3g\/Ek4AfZGrzJDC7QrV4eMvPyigfQmgJY4rCqLSCAcwrTfGPMk5CyicfL94+v\/5urQiqT7un8UWRMVibBHTOkZ+8PM\/fixsV88ZwRRSPgaweXGQ0xGxs\/D69+V0rC1LGcNBqQ5\/PRJ63hQ24ClLRe\/wsSIdK+UOwG7HerfUMbtuwRgJTzFOfadpATwjOdV13282LgcCT08ayURII0DzUxelIRKHv6Sy8bliKmzM1Qrpu89ufxAmU01DujgB8fcu7q0Dd4TngG1Mfj9Sts4Yv",
+      "encoding" : "zlib-base64",
+      "frame" : 1,
+      "layer" : 0
+    },
+    {
+      "data" : "zZRdroMgEEbdyiCJNBEzpknbBPa\/rjvMj5W2Ao\/3vKHfwWEAp+n\/A8Lle6yHEGNciSsBH8iM5klgDoVqidDKP5VdPoQwE851hV2ZBQdYV2rxh7LfBcubjx\/eMb8+914E1e+Hp\/GXImPw3gQMIZBvXp2PGue8c1wRxUugqgdf2hVhXY\/p3fdaWZB51zezNvT6TNR539mAT0EqasfPgnSolzchETnn9GutFViEtCndPOYMKW0shLAsy89ungUyMmySF6MtlJ2cQPPQjzPAwu1GZ6G5YRZ3Z0YEu27P1k\/iBMpp6HXHAL6+\/d1VYOzwvIFyY8bjhbF1jvAH",
+      "encoding" : "zlib-base64",
+      "frame" : 2,
+      "layer" : 0
+    },
+    {
+      "data" : "vZTRDoMgDEX9lSKJLBmmxkSXwP9\/12pbGGwTfNnOG3oulAoOw\/8B4fQ91kPw3t+JswBuyFz1KcDkCNXioeXvyiILIYyEMd3AooyCAawrTfqmLKuQ\/JTHt1yeX59bKwGNrzmn+kORMVibAuico3zK1b7nITXn8I3hikg\/hKoefGhXGGp8nt587pUDPO+9YNSGnp+JOpD8hl4vwBU19SIQQuAtdHwNhKiEb3utA0Bzz2EW+v6AECOw7Nw0TV+7WeoxkgLiS6Kty4QgPnT0dDGBF7jd6Cw0P5gCpuRKIF23vfWTKEA5Db3uZPj6dr9uBq4cnhd8XexlXX+HPelXPAE=",
+      "encoding" : "zlib-base64",
+      "frame" : 3,
+      "layer" : 0
+    },
+    {
+      "data" : "rZQNCoMwDEZ3ldSCHeiIDObA3v9ci0naWX8aZXuMgdv7bExab7ffAeHwfywvoe\/7jjgK4AuZsz4FmByhWnqo+aMyyEIIDeGcGRiURnCAZaVJfynDU0h+yuMql++vv3svAY0\/c071tyLX4H0KYAiB8ilX+rSeDGr2neOKSJ+Foh58a1cAOibf3m2flQNSRvel0YYe74lC77wxgHVAKqrqa99bvgQmJcY47T1rESBifNCHMX3qVKS2shxC27a73Sx1+gbxJWHrEiAdDD0Pjhe432kv1AaWALfkTCAdt7H2kliAshus7mT4+FrTXQD25lnC5+WKXn0Zbrni\/p0P",
+      "encoding" : "zlib-base64",
+      "frame" : 4,
+      "layer" : 0
+    },
+    {
+      "data" : "rZTtCoQgEAB7lTUhg4qNoAJ9\/+e61V277EOLu\/kT3c2UmlVVvwPM7f+YnkLf9x1xF+CMgac+BYEtobH0kPMXYeQbIdSEUsVgFGpGAaYjjfosjBMT\/djjoduuL79rzYHk09aJvgrop1qB1jFAYwz1sUt9uh\/4ZQy+UmFEpHshGQ+ucgZeJ7bLq\/NcQ8AHsT21LOj9nkj0ThcewEGXEeX0GFgrvi75PF3nfKEdYa\/meigc4jDYIVD20aGPvGxM0zSXq3nQKWCfi3zAB2AfSrrAA2pb2gvZBxZ1tedJEF+3JfeR2IG8Gwqr8yW8vqWnuwPKm2dPeF\/e6NmP4Zk37t\/5AA==",
+      "encoding" : "zlib-base64",
+      "frame" : 5,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 90
+    },
+    {
+      "duration" : 90
+    },
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 90
+    },
+    {
+      "duration" : 90
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "Witch on a Broom",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#222034",
+    "#45283c",
+    "#663931",
+    "#8f563b",
+    "#df7126",
+    "#d9a066",
+    "#eec39a",
+    "#fbf236",
+    "#99e550",
+    "#6abe30",
+    "#37946e",
+    "#4b692f",
+    "#524b24",
+    "#323c39",
+    "#3f3f74",
+    "#306082",
+    "#5b6ee1",
+    "#639bff",
+    "#5fcde4",
+    "#cbdbfc",
+    "#ffffff",
+    "#9badb7",
+    "#847e87",
+    "#696a6a",
+    "#595652",
+    "#76428a",
+    "#ac3232",
+    "#d95763",
+    "#d77bba",
+    "#8f974a",
+    "#8a6f30",
+    "#0f0d29",
+    "#2c215a",
+    "#5a3a8a",
+    "#9d69bf",
+    "#e5a7f5",
+    "#431a19",
+    "#925240",
+    "#e0a070",
+    "#f2cf94",
+    "#fff3b9",
+    "#0d0c1a",
+    "#211f37",
+    "#3c3654",
+    "#76668d",
+    "#b7a0c7",
+    "#2e100d",
+    "#643521",
+    "#9a6a3a",
+    "#ceb06b",
+    "#fff6a8",
+    "#461c0b",
+    "#97591b",
+    "#e8b030",
+    "#f5e55e",
+    "#fff690",
+    "#4d0614",
+    "#a61010",
+    "#ff4a1c",
+    "#ff964f",
+    "#ffcd82",
+    "#0f0d2e",
+    "#212a64",
+    "#3a5a9a",
+    "#6ba0ce",
+    "#a8e8ff"
+  ],
+  "size" : [
+    48,
+    32,
+    1
+  ],
+  "version" : 1
+}

@@ -1,0 +1,128 @@
+{
+  "cels" : [
+    {
+      "data" : "vZNRCsMgEERzFkeJAaE49z9c1zVpoXU20I\/O73uOujHb9kNoiXC2aMFwKREvtvoTv7fkqpzJMg2uup2bIZaPfhcUdgMJGg8D4cUnRhfCqC4ZmttY7IRACgRYrkEshNGPcxALnl1IN4KPSnD4DuJ5sM8DmvDNBu4EhLCT9UFmxbnXyslbY1tsYAVVr38pI8ehPuJZED7uHODbf+ffeQI=",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    },
+    {
+      "data" : "zZNBDsQgDAPzliSoVEKq8P8f1wDqYbXEvdbXcYwhrcivAAgR3J0ZUBiP8MKwqhZiGFxfA1g\/KOuPcTuCzZ1fL6gbqR9cracvjIg3M9W9A2YRMHg4tgZ\/4zMA6Y5XQP4FzIBomI33cbxtDePMq9ujP8NxVFyxgIzHfK2Lt4a2axCOfH45pE6dZ74CMr4MbMUyi9I\/6GO6AQ==",
+      "encoding" : "zlib-base64",
+      "frame" : 1,
+      "layer" : 0
+    },
+    {
+      "data" : "vZJRCgMhDEQ9i4noglCc+x+uGdwthe7kq21+35tEo6V8qwCk2N2RmGiXgFprJggeQmsUcI85l1zF37jAFtx0PITgpttbI3+t4VPw4C45J1eNmTee4GecAm+QNSBXApaTKgFrwUwI8WfwAFzx3gcV8jkx7\/JjDJ3fCp2o49BPpM9\/Cp5tcE9J8L\/rCQ==",
+      "encoding" : "zlib-base64",
+      "frame" : 2,
+      "layer" : 0
+    },
+    {
+      "data" : "vZNBDsMgDATzltgoREKq2P8\/rgtO1UNYR+qhe52xAQPb9kPAZHhntDDxA7\/1\/y6JVTGcCQOr3ihlGqJ89J+GwmGwgSU7H4KZxjZ5FwJX9pLzEZMrYGc18xnEXfDAMQjB3QsjhTnmhI8TmHge6B47XJyAFegdZkI4DtQX4IoDtSJ4a2jLG6Yh68OgMnKe6hKvBsnj5YAS\/Ph3\/p03",
+      "encoding" : "zlib-base64",
+      "frame" : 3,
+      "layer" : 0
+    },
+    {
+      "data" : "zZNRDsMwCEM5SwCVSpGq+v6HG6XapGnB\/Z0\/8wyYRBH5FgAhwhiDGTjP5hRbihjgnJeB5itD3x+evMeq6qYP+Xueu7sNPdsbhuUEzR5rxzW\/sDUhq97Nc4uWV\/cuQRq8m\/7hOWNhuI5wWm2wMmwQHKe+9WPAhjgA67ggIm4+J+YqARCkviwSpX3nT\/DwxgRXDPqD\/kwv",
+      "encoding" : "zlib-base64",
+      "frame" : 4,
+      "layer" : 0
+    },
+    {
+      "data" : "vZJBDsMgDATzFrwoREKK2P8\/rjaozYX1qa2vM2sD5ji+VSRTXEphYgZfAgFkAuuWfwTn+5OQwUX7h8u40YrpuAtYpfLBxOGngFp1fN1P48ibVdjPeAjO0wbBlcCBoFsh9jYGzYRw+qe5SSjOs7kxee\/smwFsren8NKbjdV16RTL+FpC94JqS4H\/XCw==",
+      "encoding" : "zlib-base64",
+      "frame" : 5,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 110
+    },
+    {
+      "duration" : 80
+    },
+    {
+      "duration" : 80
+    },
+    {
+      "duration" : 110
+    },
+    {
+      "duration" : 80
+    },
+    {
+      "duration" : 80
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "Ninja",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#222034",
+    "#45283c",
+    "#663931",
+    "#8f563b",
+    "#df7126",
+    "#d9a066",
+    "#eec39a",
+    "#fbf236",
+    "#99e550",
+    "#6abe30",
+    "#37946e",
+    "#4b692f",
+    "#524b24",
+    "#323c39",
+    "#3f3f74",
+    "#306082",
+    "#5b6ee1",
+    "#639bff",
+    "#5fcde4",
+    "#cbdbfc",
+    "#ffffff",
+    "#9badb7",
+    "#847e87",
+    "#696a6a",
+    "#595652",
+    "#76428a",
+    "#ac3232",
+    "#d95763",
+    "#d77bba",
+    "#8f974a",
+    "#8a6f30",
+    "#0f0d1f",
+    "#222242",
+    "#3b4466",
+    "#6a809e",
+    "#a5c3d6",
+    "#4d060d",
+    "#c42614",
+    "#ff783e",
+    "#ffc182",
+    "#431b1c",
+    "#925445",
+    "#e0a27a",
+    "#f2cf9c",
+    "#fff2bf",
+    "#975a29",
+    "#c8d4e4",
+    "#4f201c",
+    "#0e0d18"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

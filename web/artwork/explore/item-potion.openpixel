@@ -1,0 +1,126 @@
+{
+  "cels" : [
+    {
+      "data" : "hZBRFsQQDEVtJQzJUHT\/q5vQ0YOkp+\/z3niIMS\/BHokBwDm3C6xBE1hrBSka1gTSEDRzJBoizKLx+wQsvExiLmJO4RLLvY3\/25aHppJ6rN0+NrhYRKdJLs5zlT28wPGM8ZD8mpcYCydp\/Tnnr5x\/5h+Owo3nKHjLDw==",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    },
+    {
+      "data" : "hZBbFsMgCAXdilrFSoTuf3WFpG2M0JPr3wxeHyHcBPZYHGPMOa8COHoCmD2huDoCGvNvB0y4fUWbhfKPqCJmTu2smovorLqcq7we7nJRJKyyMKXlYYR7Fqw7lKL9uCJVaSsG91fvm+XHvMVAEvT6xxhPO\/+fPyQOD0Xi4CVv",
+      "encoding" : "zlib-base64",
+      "frame" : 1,
+      "layer" : 0
+    },
+    {
+      "data" : "hZBREoMgDES5SqAQCgK9\/+kaEcfI4rif7yU7EGNewj2Iicg5NwtuRAEFtyYCNna8EhwFxyFY4SgigNh5vKo0r0roonpshKbx4KPt9tBcc4+108dODofoNOPhvFTZzQNOv5Q25Mc8Yq6SvOovpXxx\/pl\/JAtuvGSBp\/wB",
+      "encoding" : "zlib-base64",
+      "frame" : 2,
+      "layer" : 0
+    },
+    {
+      "data" : "hZBbFsMgCAXdirECkSjd\/+qK5qQ1Qk\/u5wxcHyE8BEcsjjGmlFaBEj2BIp7oWASMQBri3MAJkwoyonMSuMTMG\/2q5qJGX3E7t3MNqLldlBtrgGFbHjY484L7RqdsPy5r1XZkg8u7lMPyc95ibBr2+mutu53\/z18ah4escfCSDw==",
+      "encoding" : "zlib-base64",
+      "frame" : 3,
+      "layer" : 0
+    },
+    {
+      "data" : "hZDREgMRDEX9CkpSVuz\/f10jZqckOr2P58RFnPsTkFjsvY8xagHdD5GVgN6n2E8MfBKAIlAELBhFZCUGx2\/VymkRaxFhfsR2L+EMm+2hlaokBPWxh5tFCK12cYmrwpUMLncpl+Vz3mIgTj31t9bedv43f3EO3CXOAat8AA==",
+      "encoding" : "zlib-base64",
+      "frame" : 4,
+      "layer" : 0
+    },
+    {
+      "data" : "hZBrGgMRDEVtBUNSGdH9r65ipi2Jfr3+nRPXw7k\/gRGLvfcxRi2g+Z2A1nZC8BB5FYBv4WcOiEOgEsJF5EvMnPFbNRcxfsRyLmPGu225KOW+ekJQD2MaUVh2CCX7cYmYwpkMLs9STsuveYuBe2jXX2t92Pnf\/OjZcJd6NljlBQ==",
+      "encoding" : "zlib-base64",
+      "frame" : 5,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 130
+    },
+    {
+      "duration" : 100
+    },
+    {
+      "duration" : 100
+    },
+    {
+      "duration" : 110
+    },
+    {
+      "duration" : 100
+    },
+    {
+      "duration" : 140
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "Health Potion",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#222034",
+    "#45283c",
+    "#663931",
+    "#8f563b",
+    "#df7126",
+    "#d9a066",
+    "#eec39a",
+    "#fbf236",
+    "#99e550",
+    "#6abe30",
+    "#37946e",
+    "#4b692f",
+    "#524b24",
+    "#323c39",
+    "#3f3f74",
+    "#306082",
+    "#5b6ee1",
+    "#639bff",
+    "#5fcde4",
+    "#cbdbfc",
+    "#ffffff",
+    "#9badb7",
+    "#847e87",
+    "#696a6a",
+    "#595652",
+    "#76428a",
+    "#ac3232",
+    "#d95763",
+    "#d77bba",
+    "#8f974a",
+    "#8a6f30",
+    "#8e1a3c",
+    "#4f6a8c",
+    "#4a0d2c",
+    "#bf8a58",
+    "#24131f",
+    "#ffc6a8",
+    "#1e1a33",
+    "#ff7563",
+    "#5a3424",
+    "#ff4a1c",
+    "#8fb6cf",
+    "#a3271a",
+    "#8c5a38",
+    "#d6eef7",
+    "#d0344a",
+    "#ff9a66"
+  ],
+  "size" : [
+    24,
+    24,
+    1
+  ],
+  "version" : 1
+}

@@ -1,0 +1,248 @@
+[
+  {
+    "slug": "scene-space",
+    "title": "Ringed Planet",
+    "collection": "scenes",
+    "kind": "animation",
+    "size": [
+      192,
+      108,
+      1
+    ],
+    "frames": 8,
+    "issues": [
+      "33 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/scene-space.gif",
+    "downloads": {
+      "png": "/explore/scene-space.png",
+      "gif": "/explore/scene-space.gif",
+      "html": "/explore/scene-space.html"
+    },
+    "frame_durations_ms": [
+      80,
+      80,
+      80,
+      80,
+      80,
+      260,
+      260,
+      260
+    ],
+    "display_size": [
+      384,
+      216
+    ]
+  },
+  {
+    "slug": "scene-reef",
+    "title": "Coral Reef",
+    "collection": "scenes",
+    "kind": "animation",
+    "size": [
+      192,
+      108,
+      1
+    ],
+    "frames": 8,
+    "issues": [
+      "15 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/scene-reef.gif",
+    "downloads": {
+      "png": "/explore/scene-reef.png",
+      "gif": "/explore/scene-reef.gif",
+      "html": "/explore/scene-reef.html"
+    },
+    "frame_durations_ms": [
+      130,
+      130,
+      130,
+      130,
+      130,
+      130,
+      130,
+      130
+    ],
+    "display_size": [
+      384,
+      216
+    ]
+  },
+  {
+    "slug": "scene-shrine",
+    "title": "Blossom Shrine",
+    "collection": "scenes",
+    "kind": "animation",
+    "size": [
+      192,
+      108,
+      1
+    ],
+    "frames": 8,
+    "issues": [
+      "58 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/scene-shrine.gif",
+    "downloads": {
+      "png": "/explore/scene-shrine.png",
+      "gif": "/explore/scene-shrine.gif",
+      "html": "/explore/scene-shrine.html"
+    },
+    "frame_durations_ms": [
+      140,
+      140,
+      140,
+      140,
+      140,
+      140,
+      140,
+      140
+    ],
+    "display_size": [
+      384,
+      216
+    ]
+  },
+  {
+    "slug": "scene-rain",
+    "title": "Rainy Café",
+    "collection": "scenes",
+    "kind": "animation",
+    "size": [
+      192,
+      108,
+      1
+    ],
+    "frames": 6,
+    "issues": [
+      "12 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/scene-rain.gif",
+    "downloads": {
+      "png": "/explore/scene-rain.png",
+      "gif": "/explore/scene-rain.gif",
+      "html": "/explore/scene-rain.html"
+    },
+    "frame_durations_ms": [
+      90,
+      90,
+      90,
+      90,
+      90,
+      90
+    ],
+    "display_size": [
+      384,
+      216
+    ]
+  },
+  {
+    "slug": "scene-volcano",
+    "title": "Volcano Island",
+    "collection": "scenes",
+    "kind": "sprite",
+    "size": [
+      192,
+      108,
+      1
+    ],
+    "frames": 1,
+    "issues": [
+      "82 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/scene-volcano.png",
+    "downloads": {
+      "png": "/explore/scene-volcano.png",
+      "html": "/explore/scene-volcano.html"
+    },
+    "display_size": [
+      192,
+      108
+    ]
+  },
+  {
+    "slug": "scene-autumn",
+    "title": "Autumn Path",
+    "collection": "scenes",
+    "kind": "sprite",
+    "size": [
+      192,
+      108,
+      1
+    ],
+    "frames": 1,
+    "issues": [
+      "159 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/scene-autumn.png",
+    "downloads": {
+      "png": "/explore/scene-autumn.png",
+      "html": "/explore/scene-autumn.html"
+    },
+    "display_size": [
+      192,
+      108
+    ]
+  },
+  {
+    "slug": "scene-lighthouse",
+    "title": "Lighthouse",
+    "collection": "scenes",
+    "kind": "animation",
+    "size": [
+      192,
+      108,
+      1
+    ],
+    "frames": 8,
+    "issues": [
+      "12 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/scene-lighthouse.gif",
+    "downloads": {
+      "png": "/explore/scene-lighthouse.png",
+      "gif": "/explore/scene-lighthouse.gif",
+      "html": "/explore/scene-lighthouse.html"
+    },
+    "frame_durations_ms": [
+      120,
+      120,
+      120,
+      120,
+      120,
+      120,
+      120,
+      120
+    ],
+    "display_size": [
+      384,
+      216
+    ]
+  },
+  {
+    "slug": "scene-cottage",
+    "title": "Voxel Cottage",
+    "collection": "scenes",
+    "kind": "voxel",
+    "size": [
+      38,
+      32,
+      38
+    ],
+    "frames": 1,
+    "issues": [],
+    "display": "/explore/scene-cottage-view.png",
+    "display_scale": 1,
+    "downloads": {
+      "png": "/explore/scene-cottage.png",
+      "gif": "/explore/scene-cottage.gif",
+      "html": "/explore/scene-cottage.html",
+      "vox": "/explore/scene-cottage.vox"
+    },
+    "display_size": [
+      259,
+      236
+    ]
+  }
+]

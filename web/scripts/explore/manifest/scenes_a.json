@@ -1,0 +1,226 @@
+[
+  {
+    "slug": "scene-cabin",
+    "title": "Snowy Cabin",
+    "collection": "scenes",
+    "kind": "animation",
+    "size": [
+      192,
+      108,
+      1
+    ],
+    "frames": 8,
+    "issues": [],
+    "display": "/explore/scene-cabin.gif",
+    "downloads": {
+      "png": "/explore/scene-cabin.png",
+      "gif": "/explore/scene-cabin.gif",
+      "html": "/explore/scene-cabin.html"
+    },
+    "frame_durations_ms": [
+      120,
+      120,
+      120,
+      120,
+      120,
+      120,
+      120,
+      120
+    ],
+    "display_size": [
+      384,
+      216
+    ]
+  },
+  {
+    "slug": "scene-beach",
+    "title": "Sunset Beach",
+    "collection": "scenes",
+    "kind": "animation",
+    "size": [
+      192,
+      108,
+      1
+    ],
+    "frames": 8,
+    "issues": [],
+    "display": "/explore/scene-beach.gif",
+    "downloads": {
+      "png": "/explore/scene-beach.png",
+      "gif": "/explore/scene-beach.gif",
+      "html": "/explore/scene-beach.html"
+    },
+    "frame_durations_ms": [
+      130,
+      130,
+      130,
+      130,
+      130,
+      130,
+      130,
+      130
+    ],
+    "display_size": [
+      384,
+      216
+    ]
+  },
+  {
+    "slug": "scene-dungeon",
+    "title": "Torchlit Dungeon",
+    "collection": "scenes",
+    "kind": "animation",
+    "size": [
+      160,
+      90,
+      1
+    ],
+    "frames": 6,
+    "issues": [],
+    "display": "/explore/scene-dungeon.gif",
+    "downloads": {
+      "png": "/explore/scene-dungeon.png",
+      "gif": "/explore/scene-dungeon.gif",
+      "html": "/explore/scene-dungeon.html"
+    },
+    "frame_durations_ms": [
+      140,
+      110,
+      150,
+      120,
+      130,
+      110
+    ],
+    "display_size": [
+      480,
+      270
+    ]
+  },
+  {
+    "slug": "scene-neon",
+    "title": "Neon Rooftop",
+    "collection": "scenes",
+    "kind": "animation",
+    "size": [
+      192,
+      108,
+      1
+    ],
+    "frames": 8,
+    "issues": [],
+    "display": "/explore/scene-neon.gif",
+    "downloads": {
+      "png": "/explore/scene-neon.png",
+      "gif": "/explore/scene-neon.gif",
+      "html": "/explore/scene-neon.html"
+    },
+    "frame_durations_ms": [
+      150,
+      150,
+      150,
+      150,
+      150,
+      150,
+      150,
+      150
+    ],
+    "display_size": [
+      384,
+      216
+    ]
+  },
+  {
+    "slug": "scene-lake",
+    "title": "Mountain Lake",
+    "collection": "scenes",
+    "kind": "sprite",
+    "size": [
+      256,
+      144,
+      1
+    ],
+    "frames": 1,
+    "issues": [],
+    "display": "/explore/scene-lake.png",
+    "downloads": {
+      "png": "/explore/scene-lake.png",
+      "html": "/explore/scene-lake.html"
+    },
+    "display_size": [
+      256,
+      144
+    ]
+  },
+  {
+    "slug": "scene-oasis",
+    "title": "Desert Oasis",
+    "collection": "scenes",
+    "kind": "sprite",
+    "size": [
+      192,
+      108,
+      1
+    ],
+    "frames": 1,
+    "issues": [],
+    "display": "/explore/scene-oasis.png",
+    "downloads": {
+      "png": "/explore/scene-oasis.png",
+      "html": "/explore/scene-oasis.html"
+    },
+    "display_size": [
+      192,
+      108
+    ]
+  },
+  {
+    "slug": "scene-island",
+    "title": "Floating Island",
+    "collection": "scenes",
+    "kind": "voxel",
+    "size": [
+      42,
+      42,
+      42
+    ],
+    "frames": 1,
+    "issues": [],
+    "display": "/explore/scene-island-view.png",
+    "display_scale": 1,
+    "downloads": {
+      "png": "/explore/scene-island.png",
+      "gif": "/explore/scene-island.gif",
+      "html": "/explore/scene-island.html",
+      "vox": "/explore/scene-island.vox"
+    },
+    "display_size": [
+      191,
+      240
+    ]
+  },
+  {
+    "slug": "scene-camp",
+    "title": "Campfire Clearing",
+    "collection": "scenes",
+    "kind": "voxel",
+    "size": [
+      38,
+      28,
+      38
+    ],
+    "frames": 1,
+    "issues": [],
+    "display": "/explore/scene-camp-view.png",
+    "display_scale": 1,
+    "downloads": {
+      "png": "/explore/scene-camp.png",
+      "gif": "/explore/scene-camp.gif",
+      "html": "/explore/scene-camp.html",
+      "vox": "/explore/scene-camp.vox"
+    },
+    "display_size": [
+      259,
+      244
+    ]
+  }
+]

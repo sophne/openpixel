@@ -1,0 +1,112 @@
+{
+  "cels" : [
+    {
+      "data" : "jZOBjoQgDET5lWkxdGMTd1f\/\/9uuBVYB2bsbYzW+YdCCIfxXaDXBRMwMMBPRhJuBoz1H\/Jv75WYxzg7YOfgYDaCUxJQSATGlxoDKJStzWS8OhUe+931\/52JY9AxAZNjMMLKreh159I6ApOY7FpVqgKquFtByddU3KA21Oeghsq5m6McHLBGLnc5VM\/c7kZ4TrvzFFfniJmvbkTUuo\/MQyAwf9c3PHN7+IhoWMOc7PezwMhhO3oy\/c3+z11nm\/NKNM8eP8hQd9\/0SW879B4S8iKVpxXHffQUvNeK+gVEchc72d8Dradq2bUobwzduBnPMw6th+mv+ph8=",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    },
+    {
+      "data" : "pZMNjoUgDIS5SlsM3djEfU\/vf7adAk\/522STHWNj\/IYBoYbwV1GrBWYWESIRZl5wGCTiPcXM54iGA8s1GohTUiglJoopNQaqXLMy1\/3hZOSR7\/M837kAq90BFIUEHOQ08zry6F9MrDXfsZpWA5nZjoCWm6uuoGwY5uAv1X2HoR8faIu04XZulrk\/qfac6cnfXIi8OYRtu7LGY3IeAsPwUb\/5mWO8VPFwgDnf6YXLy2C4eTN+5r6y113W\/NHEReJHeYqOe7\/Elkv\/ASEfYtm04pi7r+CtRswNTMVR6Kq\/A72+oeM4lrQx\/MZhgGMdXg3LX+8\/+gE=",
+      "encoding" : "zlib-base64",
+      "frame" : 1,
+      "layer" : 0
+    },
+    {
+      "data" : "pZMNCoMwDIV7lSSVZhhwm97\/bEvSqv0bDPbEIH6vr7WNIfwqqDXBiEQEQISIE64GivoeovMxouKK6egNgCmxKiUEiClVBiicXc55vTkIWOR73\/e3F8UsVwBEAlKuZBex2vNoXwzIJd8wCxcDiMiqATUXU1lB3jCdAx\/M66qGdnyAJcKit3ER5\/bE3HKEO38xaeTFVbpth6s\/JuMhoBpOtZvvXMdTEXYH6PlGD72sdIaLV+NHbit7XWXObw2cKJ7yKRpu\/RJrTu0HBD\/EvGnZMXZfxkuJGBsYsiPTWX8HeD1V27ZN6cmfX7kazDEPz4bpn\/eXPg==",
+      "encoding" : "zlib-base64",
+      "frame" : 2,
+      "layer" : 0
+    },
+    {
+      "data" : "jZMNjoUgDIS5yrQYurGJ7z29\/9m2BVRA9meM1fgNgxYM4b9CqwkmYmaAmYgm3Awc7Tni39wvD4txdsDOwcdoAKUkppQIiCk1BlQuWZnLenMoPPKz7\/snF8OiVwAiw2aGkV3V68ijdwQkNd+xqFQDVHW1gJarq75BaajNQV8i62qGfnzAErHY6Vw1c78T6Tnhzl9ckW9usrYdWeMyOg+BzHCqb37m8PYX0bCAOd\/pYYeXwXDxZvyT+5u9rzLntx6cOZ7KU3Tc90tsOfcfEPIilqYVx3P3FbzUiOcGRnEUOtvfAe+Xadu2KT3560duBnfMw4th+mf+qm8=",
+      "encoding" : "zlib-base64",
+      "frame" : 3,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 260
+    },
+    {
+      "duration" : 140
+    },
+    {
+      "duration" : 260
+    },
+    {
+      "duration" : 140
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "Knight",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#222034",
+    "#45283c",
+    "#663931",
+    "#8f563b",
+    "#df7126",
+    "#d9a066",
+    "#eec39a",
+    "#fbf236",
+    "#99e550",
+    "#6abe30",
+    "#37946e",
+    "#4b692f",
+    "#524b24",
+    "#323c39",
+    "#3f3f74",
+    "#306082",
+    "#5b6ee1",
+    "#639bff",
+    "#5fcde4",
+    "#cbdbfc",
+    "#ffffff",
+    "#9badb7",
+    "#847e87",
+    "#696a6a",
+    "#595652",
+    "#76428a",
+    "#ac3232",
+    "#d95763",
+    "#d77bba",
+    "#8f974a",
+    "#8a6f30",
+    "#17152c",
+    "#363c60",
+    "#5f7194",
+    "#91afc9",
+    "#cbf0fd",
+    "#0b0d36",
+    "#213d89",
+    "#4e8ad0",
+    "#98dcff",
+    "#462310",
+    "#b27933",
+    "#f1ce64",
+    "#fff79e",
+    "#4d060d",
+    "#c42614",
+    "#ff783e",
+    "#ffc182",
+    "#4f201c",
+    "#7a4632",
+    "#2b2f4f"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

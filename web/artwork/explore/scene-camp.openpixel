@@ -1,0 +1,96 @@
+{
+  "cels" : [
+    {
+      "data" : "7ZyNVts4EEb1KiUhMhWbLIEtWbK07\/9Wa0mWrJ8Z6QsYSMjc42BwriV5PBoUl1OlQG5+3DQ3SLq5gaQfo9YzfGM9w27SY9ikx7BJj2GTHsOG9gg05oshIi1Kb1yQ5Ep5X\/qa2PcMu0mPYZMewyY9hu06egQac8UQkhZl1QGSnNZTLGIFxAqIFRAr8BUWoEHFkK+1b2VtGcaXXuthHX+KB6NUv5nunJQ1oCl1tIqjmjhjGtVaz0f1Ot2tfZdpO97OGrfD0dbyb+rZKXb2KuOZOo2EDu24n9w1ti7PHXTjagzLH6wiocNPOjkjRCKqt+PX2+REN1Zvad+EvYLN7WZjX1nPo5XdIK+4V9JHEolMsa3N15zkTaUNOowjiYQeUmV8+fP1usiJTaX5uPi2QvA3hRbPT3OiaGmj461QSs\/hLrV4fpYT1bjISJTj8vdk0CEnfGDqDqfz50iM4iZrbe6jzIli6OEq7TU6Z9oFbb1O59w0O+bmboeNy7H5RBf72SFnmbvKPCfonY9EmIk6a87PtRiJeIPmXTnnkkikw5ovb+0j4c\/Nj+Y7V+fqwZZqXjGZHV9rP5Q7pUzPAbjjfnyyX4oeHjz3DlVxF6x4hLBCD20rMFkmWHFA2TMmtq3UMg8P7pqetvv9\/f1+YqsKQlukFcODjn63+2nZ7RqWZ1cf2laDo9jvkx9W21V61\/5uWGq6x4\/Ti7WcZAO5f3yarRCK1BoDrmILWVsJdkx\/qTC2xLqbBhTYq3j3uLbUo33j5pG3fIvMNbpApYFP41XMDBJ6XNlVlNb8ZjK57LfZ3Uandkxw9gSjisni4a4O7TjDh7D71JdI8cgUFqNaQ7gjvxUykhrdsuJ3H2flaXeStV2t7uOnoLoMnmSpzuh3rkiPX3slmgKr0dknuS33sY63fkGWen5+7lvPh8MhaPwnTG\/9gizVsdhxZbDXOPKPosA+Hy9pYXe7APvnMMx6Oz6E3U7oSAsLE2t025r2H2gVafcuq2BRa6rRbynR50VSC1vSAdDS6tuwoLawcaX82xMuCaz6YtZ7+ZROvglmBHG6njGVVtdokzBbbneqZTLOx8JGz1hjkc6fdNQSCSQp7G4vwqEnWMbq21Os9IJpgASOK+G\/nlAD3QnohmE3\/8ys4\/F4itWMxGxhUb1mfjsgKdOmGp0cMb9rzRWwojDVGmUZzDKYZTDLYJZpW4k2HxuL9M\/iYXTQVBtIOjewunp4RTSsrZN5yzo6z+6G1NWqxCWlOr9pq8xvxjKMdTyGkknkN2FFrZZSq5G6qcUvLzJLaEOkgKvRhJRrYwErCxOhERaRnJRVJydpVclJW2VyMpbpWFFLj41FunwyxKfw5fPy0jNGXv4gFtbWGVHNFU7qakjxnWcL9V5eMBmrrL6kdTxWWi3lFlt9c4sFkrI1+TVD3NyxRhNSqT2UD2rJlUFphawrCn5tETlMWXUOk1aVw\/XoJy07WFlk9X2oH0Z\/3xIN8vraMy6SXlH1DldWU\/jim0qNGj0Mw2xxNXoYSo2TgsbW6MyyHuFUFgckpdd4zVA1J\/mThlSqShMtFdq3srBIfO91NMTzn55xkUB3Fbr5dCKdYuXFl7HK4ktadY1mm8r6JCSp0R8B9Qu4+vdbaGmAPGFj1tGEBXwWNFHrWtw6o9aaEjgBwcn8nTnxTzEuhW5+KHCyvH8dnVlcfmtLphFSZZHr6Mxi19GFxYFZ1wk2deq\/seknigKTEym+CyRnYdEP4gitI0n1Fbr0U1KBNVoh+R1mC2Bxa5C8+DbKL\/1GBmZdJVj1xSzi7yD7KQDWaCw5l6zRreQsLKBGswsIQTgFIHGVny09x5fynuMnVc8RLhZo9eiqXE8zBtE+38JGD0ZCuGagFMHS7fMtbPTCGYL8npZ1tCCgAImrZB0tLAyUdkjxVZ\/1IK7Ueo4gLAWQksvWaFleCCBI8V02OWUBIVwqSH7b2dIzBMECrUSxx2Kfb2GjF4SFgLINS0rMwnoUBFlHCwIMkt+yjhYWBkq7JWu0LCCES0X+q3vhbIGKrywgBEEQFgZa1WKP2DAL61EQBEGAkXW0IAjC+SIP4gRBEARBEARBEAThy\/kf",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 100
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "Campfire Clearing",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#222034",
+    "#45283c",
+    "#663931",
+    "#8f563b",
+    "#df7126",
+    "#d9a066",
+    "#eec39a",
+    "#fbf236",
+    "#99e550",
+    "#6abe30",
+    "#37946e",
+    "#4b692f",
+    "#524b24",
+    "#323c39",
+    "#3f3f74",
+    "#306082",
+    "#5b6ee1",
+    "#639bff",
+    "#5fcde4",
+    "#cbdbfc",
+    "#ffffff",
+    "#9badb7",
+    "#847e87",
+    "#696a6a",
+    "#595652",
+    "#76428a",
+    "#ac3232",
+    "#d95763",
+    "#d77bba",
+    "#8f974a",
+    "#8a6f30",
+    "#6b3e2e",
+    "#5a3428",
+    "#8a5a3a",
+    "#5ab84a",
+    "#9a7448",
+    "#b08a5a",
+    "#78d058",
+    "#4a9a44",
+    "#63c74d",
+    "#16303a",
+    "#3e8948",
+    "#1d6a78",
+    "#c2341a",
+    "#c49a6a",
+    "#e8dcc0",
+    "#6a6a80",
+    "#2a8f9a",
+    "#6a3e2a",
+    "#8a8aa0",
+    "#9a9ab0",
+    "#e43b44",
+    "#a8a8bc",
+    "#ff4a1c",
+    "#ff9a3c",
+    "#3a3448",
+    "#ffb83c",
+    "#2f7a3a",
+    "#ffd27a",
+    "#ffd86a",
+    "#265c42",
+    "#fff0a0"
+  ],
+  "size" : [
+    38,
+    28,
+    38
+  ],
+  "version" : 1
+}

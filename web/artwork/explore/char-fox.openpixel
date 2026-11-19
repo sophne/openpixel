@@ -1,0 +1,117 @@
+{
+  "cels" : [
+    {
+      "data" : "jZJZCoUwDEW7lTSlA9qi\/rj\/nb0MTh3Ed6FBPMcYosb8mYWiZZiVs0j55MBp+LRs2yZnAsuphTlzZg32Qs2x46smScVe8DFeDUJQYcTzCzdeB+AWDlGEesBy8Dy7Q2h4ubkKLS\/KM3EXY2wWJDznfWeeiEff8iI4g0uURhAuHUhIKjw5IHLPEGycjBfhiX1ClJ7R8nO+w8IBhLPgq+mYg7zWslMxiuWNJJCtJeh+Dua6Mhx82lN4GC1Wfhtv3H3x0Zc7BZqbyxALp2rpvPDrph1xY4eX3\/kB",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    },
+    {
+      "data" : "pZFpDoQgDEa5SgvBEsU4\/vH+N5suLqg1TjJfQkN4j4YlhB8zcay4+UgmLe8cOBfeT\/M86+h7QM5ZGKpksES8CWd+Fz6WojWa0PJMtDfoOhM8Xjd+E+wA0iKlaELLh3HldePxfIFxPHhyuXZYlppEIKLscMYVmBe6CMKtgwiFcxYgSkvqOqQ+YDHh4LnEqFsIZTmr0GLlAMpXoekuHED2oDhMcm4wyo0L6KsVuH2+8PXNnK\/bhMa4YuOH8cTTG\/d+ZhP43FJcrJwr8njg+yJ6PKA7\/T9f",
+      "encoding" : "zlib-base64",
+      "frame" : 1,
+      "layer" : 0
+    },
+    {
+      "data" : "pZFRDoQgDAW5SluDJYhRf7z\/zZa2Lgpi3GRfQmOYoang3I9Zcqx0s0oWLe8cJDWPy7ZtumIElFTClCSThegmNJxavlqCVroLnrk0GMdD6PD0wJ23AaTFMJAJ1YDzwVPmh1Dz+cJNaLh22PcEKjCzv\/OMjQeuBeHWQYWQUwlA0pHHETk6xGBC4T4Q6QlG3fUqXLByAOVf4ewuHECOoDgCvD8xyg8H0EsJ0L69cruRzssV4WK02PhpPPHhjXcepgh5bildrDxXzOuBl03scYfdz\/\/zAQ==",
+      "encoding" : "zlib-base64",
+      "frame" : 2,
+      "layer" : 0
+    },
+    {
+      "data" : "jZJpDoQgDEa9SgvBEoSof+b+N5suLiBMnC+hMb5HZXGa\/szKsTLMJlm1vHPgPHha933XkRIgpxWWLFksDjuh5b2wWaJWZ0LNA9HVYJ5NGPF88k6wBUgL750JNV\/KwfPJXbuBUm7uh7wYz14EIgo9z\/nzycA80kMQXhTnhD5yWkG5dhAhmlBxcPJJmmekxLtVocIhOqctCXVaeGLlAMpVCPXqhANITxSn2RkH5UQi6KlG6H4O4ceZDq72FCrjiY3fxi\/u3\/jo5k6B1y1liJVzRR4\/+PUSR3zC4eN7vg==",
+      "encoding" : "zlib-base64",
+      "frame" : 3,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 260
+    },
+    {
+      "duration" : 140
+    },
+    {
+      "duration" : 260
+    },
+    {
+      "duration" : 140
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "Fox Ranger",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#222034",
+    "#45283c",
+    "#663931",
+    "#8f563b",
+    "#df7126",
+    "#d9a066",
+    "#eec39a",
+    "#fbf236",
+    "#99e550",
+    "#6abe30",
+    "#37946e",
+    "#4b692f",
+    "#524b24",
+    "#323c39",
+    "#3f3f74",
+    "#306082",
+    "#5b6ee1",
+    "#639bff",
+    "#5fcde4",
+    "#cbdbfc",
+    "#ffffff",
+    "#9badb7",
+    "#847e87",
+    "#696a6a",
+    "#595652",
+    "#76428a",
+    "#ac3232",
+    "#d95763",
+    "#d77bba",
+    "#8f974a",
+    "#8a6f30",
+    "#410c0a",
+    "#8c3519",
+    "#d8782c",
+    "#eeba5b",
+    "#ffed8f",
+    "#473028",
+    "#997d64",
+    "#ecd8b0",
+    "#f7f0c6",
+    "#fffcdb",
+    "#0e291c",
+    "#235935",
+    "#3e8948",
+    "#73be6e",
+    "#bef4aa",
+    "#290d0d",
+    "#5a2c21",
+    "#8a5a3a",
+    "#bf9d69",
+    "#f5e5a7",
+    "#4d0614",
+    "#a61010",
+    "#ff4a1c",
+    "#ff964f",
+    "#ffcd82"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

@@ -1,0 +1,83 @@
+{
+  "cels" : [
+    {
+      "data" : "7ZjtisMgEEXnXSrUHyGQff+H24g1M6N3tmuDJk28LEIP2Yn3VPpFdECeT14FDCCu7Snew0Uy\/LbN8HtEHg9eBQwgrp9RPPeGGX7bZvhtG+d4FTCAuH5G8dybxZPy4CP0XjoLD00a\/kX69Tz7wn79FggZe003v1lsiicYdyNjZ73zeAVCAyvotkDIeNF0iXBZJF0f2hRPMO5Gxs56p59fp6krLuTLMcUTjLuR7bfrmb6j38lPUye\/yxZJL+53+fFzJ7+3PL9nfX2Ab8fwXdoxlX4lZb+COvZbUjzBuBuZnx8gbJYavxC+OTonPL9dU+c3bDb\/FopLQIob76c0rZnnaVLQoIHPc866Bz3roNl+k07kHTXmvkSuf5JSoqQTKRXpKb3sQDUmnUh7ms5pCFNiSjKJkk6k1Cl5BQFP6Tfp1X6B9CSyUAmlN0tegVnOIcUeWlGhV\/lF0g26+kXSmyWvIOAJzy\/rlYKg9CSyfH0Yfi0q9Cq\/CCaRB\/sNVRDTxQT8j\/X9z0XNXGNnRgvCjTsHbQy3+LOwxh5SfC2mNXsg3OLMgfuF1WBjD2mdMwi\/z+T+gMbe8lBDR8yon0ZHRrL8Ag==",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 100
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "Astronaut",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#222034",
+    "#45283c",
+    "#663931",
+    "#8f563b",
+    "#df7126",
+    "#d9a066",
+    "#eec39a",
+    "#fbf236",
+    "#99e550",
+    "#6abe30",
+    "#37946e",
+    "#4b692f",
+    "#524b24",
+    "#323c39",
+    "#3f3f74",
+    "#306082",
+    "#5b6ee1",
+    "#639bff",
+    "#5fcde4",
+    "#cbdbfc",
+    "#ffffff",
+    "#9badb7",
+    "#847e87",
+    "#696a6a",
+    "#595652",
+    "#76428a",
+    "#ac3232",
+    "#d95763",
+    "#d77bba",
+    "#8f974a",
+    "#8a6f30",
+    "#403f47",
+    "#92919b",
+    "#dfe3ee",
+    "#f8f7ee",
+    "#fffdeb",
+    "#1c1c2d",
+    "#585d73",
+    "#9fa9b9",
+    "#e8f5ff",
+    "#0e0b2e",
+    "#1b2264",
+    "#2f4f9a",
+    "#5f97ce",
+    "#9ee2ff",
+    "#4d060d",
+    "#c42614",
+    "#ff783e",
+    "#ffc182"
+  ],
+  "size" : [
+    22,
+    29,
+    16
+  ],
+  "version" : 1
+}

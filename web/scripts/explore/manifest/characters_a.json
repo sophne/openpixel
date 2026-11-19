@@ -1,0 +1,222 @@
+[
+  {
+    "slug": "char-knight",
+    "title": "Knight",
+    "collection": "characters",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 4,
+    "issues": [],
+    "display": "/explore/char-knight.gif",
+    "downloads": {
+      "png": "/explore/char-knight.png",
+      "gif": "/explore/char-knight.gif",
+      "html": "/explore/char-knight.html"
+    },
+    "frame_durations_ms": [
+      260,
+      140,
+      260,
+      140
+    ],
+    "display_size": [
+      512,
+      512
+    ]
+  },
+  {
+    "slug": "char-wizard",
+    "title": "Wizard",
+    "collection": "characters",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 6,
+    "issues": [],
+    "display": "/explore/char-wizard.gif",
+    "downloads": {
+      "png": "/explore/char-wizard.png",
+      "gif": "/explore/char-wizard.gif",
+      "html": "/explore/char-wizard.html"
+    },
+    "frame_durations_ms": [
+      180,
+      110,
+      110,
+      160,
+      110,
+      110
+    ],
+    "display_size": [
+      512,
+      512
+    ]
+  },
+  {
+    "slug": "char-slime",
+    "title": "Slime",
+    "collection": "characters",
+    "kind": "animation",
+    "size": [
+      24,
+      24,
+      1
+    ],
+    "frames": 6,
+    "issues": [],
+    "display": "/explore/char-slime.gif",
+    "downloads": {
+      "png": "/explore/char-slime.png",
+      "gif": "/explore/char-slime.gif",
+      "html": "/explore/char-slime.html"
+    },
+    "frame_durations_ms": [
+      220,
+      90,
+      70,
+      140,
+      70,
+      110
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  },
+  {
+    "slug": "char-skeleton",
+    "title": "Skeleton",
+    "collection": "characters",
+    "kind": "sprite",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 1,
+    "issues": [],
+    "display": "/explore/char-skeleton.png",
+    "downloads": {
+      "png": "/explore/char-skeleton.png",
+      "html": "/explore/char-skeleton.html"
+    },
+    "display_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "slug": "char-pirate",
+    "title": "Pirate Captain",
+    "collection": "characters",
+    "kind": "sprite",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 1,
+    "issues": [],
+    "display": "/explore/char-pirate.png",
+    "downloads": {
+      "png": "/explore/char-pirate.png",
+      "html": "/explore/char-pirate.html"
+    },
+    "display_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "slug": "char-ninja",
+    "title": "Ninja",
+    "collection": "characters",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 6,
+    "issues": [],
+    "display": "/explore/char-ninja.gif",
+    "downloads": {
+      "png": "/explore/char-ninja.png",
+      "gif": "/explore/char-ninja.gif",
+      "html": "/explore/char-ninja.html"
+    },
+    "frame_durations_ms": [
+      110,
+      80,
+      80,
+      110,
+      80,
+      80
+    ],
+    "display_size": [
+      512,
+      512
+    ]
+  },
+  {
+    "slug": "char-astronaut",
+    "title": "Astronaut",
+    "collection": "characters",
+    "kind": "voxel",
+    "size": [
+      22,
+      29,
+      16
+    ],
+    "frames": 1,
+    "issues": [],
+    "display": "/explore/char-astronaut-view.png",
+    "display_scale": 1,
+    "downloads": {
+      "png": "/explore/char-astronaut.png",
+      "gif": "/explore/char-astronaut.gif",
+      "html": "/explore/char-astronaut.html",
+      "vox": "/explore/char-astronaut.vox"
+    },
+    "display_size": [
+      92,
+      145
+    ]
+  },
+  {
+    "slug": "char-ghost",
+    "title": "Ghost",
+    "collection": "characters",
+    "kind": "animation",
+    "size": [
+      24,
+      24,
+      1
+    ],
+    "frames": 4,
+    "issues": [],
+    "display": "/explore/char-ghost.gif",
+    "downloads": {
+      "png": "/explore/char-ghost.png",
+      "gif": "/explore/char-ghost.gif",
+      "html": "/explore/char-ghost.html"
+    },
+    "frame_durations_ms": [
+      240,
+      160,
+      240,
+      160
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  }
+]

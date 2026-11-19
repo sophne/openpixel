@@ -133,6 +133,11 @@ export default async function Home() {
               )}
             </div>
           </div>
+          <div className="wrap center gallery-more">
+            <Link className="button" href="/explore">
+              Explore
+            </Link>
+          </div>
         </section>
 
         {/* Agents */}

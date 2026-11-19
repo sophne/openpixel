@@ -1,0 +1,228 @@
+[
+  {
+    "slug": "item-sword",
+    "title": "Iron Sword",
+    "collection": "assets",
+    "kind": "sprite",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 1,
+    "issues": [],
+    "display": "/explore/item-sword.png",
+    "downloads": {
+      "png": "/explore/item-sword.png",
+      "html": "/explore/item-sword.html"
+    },
+    "display_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "slug": "item-potion",
+    "title": "Health Potion",
+    "collection": "assets",
+    "kind": "animation",
+    "size": [
+      24,
+      24,
+      1
+    ],
+    "frames": 6,
+    "issues": [
+      "2 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/item-potion.gif",
+    "downloads": {
+      "png": "/explore/item-potion.png",
+      "gif": "/explore/item-potion.gif",
+      "html": "/explore/item-potion.html"
+    },
+    "frame_durations_ms": [
+      130,
+      100,
+      100,
+      110,
+      100,
+      140
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  },
+  {
+    "slug": "item-chest",
+    "title": "Treasure Chest",
+    "collection": "assets",
+    "kind": "voxel",
+    "size": [
+      22,
+      18,
+      17
+    ],
+    "frames": 1,
+    "issues": [],
+    "display": "/explore/item-chest-view.png",
+    "display_scale": 1,
+    "downloads": {
+      "png": "/explore/item-chest.png",
+      "gif": "/explore/item-chest.gif",
+      "html": "/explore/item-chest.html",
+      "vox": "/explore/item-chest.vox"
+    },
+    "display_size": [
+      145,
+      158
+    ]
+  },
+  {
+    "slug": "item-coin",
+    "title": "Spinning Coin",
+    "collection": "assets",
+    "kind": "animation",
+    "size": [
+      16,
+      16,
+      1
+    ],
+    "frames": 8,
+    "issues": [
+      "1 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/item-coin.gif",
+    "downloads": {
+      "png": "/explore/item-coin.png",
+      "gif": "/explore/item-coin.gif",
+      "html": "/explore/item-coin.html"
+    },
+    "frame_durations_ms": [
+      140,
+      110,
+      70,
+      60,
+      60,
+      60,
+      70,
+      90
+    ],
+    "display_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "slug": "item-heart",
+    "title": "Heart",
+    "collection": "assets",
+    "kind": "animation",
+    "size": [
+      16,
+      16,
+      1
+    ],
+    "frames": 4,
+    "issues": [
+      "1 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/item-heart.gif",
+    "downloads": {
+      "png": "/explore/item-heart.png",
+      "gif": "/explore/item-heart.gif",
+      "html": "/explore/item-heart.html"
+    },
+    "frame_durations_ms": [
+      320,
+      90,
+      90,
+      120
+    ],
+    "display_size": [
+      256,
+      256
+    ]
+  },
+  {
+    "slug": "item-staff",
+    "title": "Magic Staff",
+    "collection": "assets",
+    "kind": "sprite",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 1,
+    "issues": [
+      "3 separate shapes; small ones may be stray pixels (see find_voxels).",
+      "2 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/item-staff.png",
+    "downloads": {
+      "png": "/explore/item-staff.png",
+      "html": "/explore/item-staff.html"
+    },
+    "display_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "slug": "item-gem",
+    "title": "Crystal Gem",
+    "collection": "assets",
+    "kind": "animation",
+    "size": [
+      24,
+      24,
+      1
+    ],
+    "frames": 6,
+    "issues": [
+      "2 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/item-gem.gif",
+    "downloads": {
+      "png": "/explore/item-gem.png",
+      "gif": "/explore/item-gem.gif",
+      "html": "/explore/item-gem.html"
+    },
+    "frame_durations_ms": [
+      450,
+      70,
+      70,
+      80,
+      120,
+      110
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  },
+  {
+    "slug": "item-shield",
+    "title": "Knight Shield",
+    "collection": "assets",
+    "kind": "sprite",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 1,
+    "issues": [],
+    "display": "/explore/item-shield.png",
+    "downloads": {
+      "png": "/explore/item-shield.png",
+      "html": "/explore/item-shield.html"
+    },
+    "display_size": [
+      32,
+      32
+    ]
+  }
+]

@@ -1,0 +1,119 @@
+{
+  "cels" : [
+    {
+      "data" : "xZBBFoAgCAW9CqTfuP8Fw0CTdF2znFGemNLviOw1110QZtoE1eqX0DTTElQDyEeNoZ1Wf2YKwTXIkEnPvgeBw8648Mh5joXhw4OAYqPotQDKHTjq9plG+ogL",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    },
+    {
+      "data" : "xZBBFoAgCAW9Cj\/BuP8FwzCfJOua5YzyxFJ+RzXXaFlQgJJg2vwWugZtwbSI1KPF0E+bPyuFMLSQo4te\/ROUxcFgXuAp1zkepg8PYvFhoNcCzHdA1P0znfIRFw==",
+      "encoding" : "zlib-base64",
+      "frame" : 1,
+      "layer" : 0
+    },
+    {
+      "data" : "xZBREoAgCAW9Ci\/BuP8FA2kqku\/aGX92lRls7XdUa41RBQWoCKbNL8E1aAmmRaRvIwdlcb93SsFuM5unQG8dgXJQcSzg5HrgHtM\/50TADEnPwDGKXgu4tIOs\/TOD9hEH",
+      "encoding" : "zlib-base64",
+      "frame" : 2,
+      "layer" : 0
+    },
+    {
+      "data" : "xY9BDoAgDAT7lVZY7P8\/6BIbpcDRxD1wmKFsEfk97ntsbSfcTDfCK8gXwdsVughioJajZUFMjrNoEoGhrGB8wDfPwhGxXs7jGQjI9Imh4OWKtBC3vJ\/S6QMhLGMRYu+ROVjIJ7kA",
+      "encoding" : "zlib-base64",
+      "frame" : 3,
+      "layer" : 0
+    },
+    {
+      "data" : "xdBJEsAgCARAvwKRMfz\/g8G4xIVU5ZY59iglhvB7VH3m5BXKTE5hbL4VmZm2whhAPNJc5NPmZ6SpqAwq0YFHb4Wihmv6hQfHOaXoPj2oj6JlAYjcvixsLFB1vlQ2KcGLf8wF",
+      "encoding" : "zlib-base64",
+      "frame" : 4,
+      "layer" : 0
+    },
+    {
+      "data" : "xc9bDsAgCERRtgJV7Ox\/g8WIFh+fTTqf56qJRL8POLOUU4AIH4Kx+RYqC2\/BWFXTVeZQT5vfiafgrNyGwNF7gPrENy68GN9pYTgyxZDbU7x8wIPMTGSMOlqnm3yyBw==",
+      "encoding" : "zlib-base64",
+      "frame" : 5,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 450
+    },
+    {
+      "duration" : 70
+    },
+    {
+      "duration" : 70
+    },
+    {
+      "duration" : 80
+    },
+    {
+      "duration" : 120
+    },
+    {
+      "duration" : 110
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "Crystal Gem",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#222034",
+    "#45283c",
+    "#663931",
+    "#8f563b",
+    "#df7126",
+    "#d9a066",
+    "#eec39a",
+    "#fbf236",
+    "#99e550",
+    "#6abe30",
+    "#37946e",
+    "#4b692f",
+    "#524b24",
+    "#323c39",
+    "#3f3f74",
+    "#306082",
+    "#5b6ee1",
+    "#639bff",
+    "#5fcde4",
+    "#cbdbfc",
+    "#ffffff",
+    "#9badb7",
+    "#847e87",
+    "#696a6a",
+    "#595652",
+    "#76428a",
+    "#ac3232",
+    "#d95763",
+    "#d77bba",
+    "#8f974a",
+    "#8a6f30",
+    "#1b5a85",
+    "#2aa0c0",
+    "#c9361b",
+    "#ff4a1c",
+    "#e9fff9",
+    "#73e2df",
+    "#14274e",
+    "#ff9a66",
+    "#0b1430"
+  ],
+  "size" : [
+    24,
+    24,
+    1
+  ],
+  "version" : 1
+}

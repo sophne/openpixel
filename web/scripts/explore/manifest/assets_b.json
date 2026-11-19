@@ -1,0 +1,226 @@
+[
+  {
+    "slug": "item-bomb",
+    "title": "Bomb",
+    "collection": "assets",
+    "kind": "animation",
+    "size": [
+      24,
+      24,
+      1
+    ],
+    "frames": 5,
+    "issues": [],
+    "display": "/explore/item-bomb.gif",
+    "downloads": {
+      "png": "/explore/item-bomb.png",
+      "gif": "/explore/item-bomb.gif",
+      "html": "/explore/item-bomb.html"
+    },
+    "frame_durations_ms": [
+      110,
+      70,
+      60,
+      70,
+      90
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  },
+  {
+    "slug": "item-key",
+    "title": "Golden Key",
+    "collection": "assets",
+    "kind": "sprite",
+    "size": [
+      24,
+      24,
+      1
+    ],
+    "frames": 1,
+    "issues": [
+      "9 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/item-key.png",
+    "downloads": {
+      "png": "/explore/item-key.png",
+      "html": "/explore/item-key.html"
+    },
+    "display_size": [
+      24,
+      24
+    ]
+  },
+  {
+    "slug": "item-mushroom",
+    "title": "Red Mushroom",
+    "collection": "assets",
+    "kind": "voxel",
+    "size": [
+      18,
+      18,
+      18
+    ],
+    "frames": 1,
+    "issues": [],
+    "display": "/explore/item-mushroom-view.png",
+    "display_scale": 1,
+    "downloads": {
+      "png": "/explore/item-mushroom.png",
+      "gif": "/explore/item-mushroom.gif",
+      "html": "/explore/item-mushroom.html",
+      "vox": "/explore/item-mushroom.vox"
+    },
+    "display_size": [
+      140,
+      156
+    ]
+  },
+  {
+    "slug": "item-torch",
+    "title": "Torch",
+    "collection": "assets",
+    "kind": "animation",
+    "size": [
+      16,
+      32,
+      1
+    ],
+    "frames": 6,
+    "issues": [
+      "2 separate shapes; small ones may be stray pixels (see find_voxels).",
+      "1 single pixel(s) with no neighbours (possible strays).",
+      "1 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/item-torch.gif",
+    "downloads": {
+      "png": "/explore/item-torch.png",
+      "gif": "/explore/item-torch.gif",
+      "html": "/explore/item-torch.html"
+    },
+    "frame_durations_ms": [
+      90,
+      80,
+      100,
+      80,
+      90,
+      100
+    ],
+    "display_size": [
+      256,
+      512
+    ]
+  },
+  {
+    "slug": "item-spellbook",
+    "title": "Spellbook",
+    "collection": "assets",
+    "kind": "sprite",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 1,
+    "issues": [
+      "2 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/item-spellbook.png",
+    "downloads": {
+      "png": "/explore/item-spellbook.png",
+      "html": "/explore/item-spellbook.html"
+    },
+    "display_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "slug": "item-bow",
+    "title": "Bow & Arrow",
+    "collection": "assets",
+    "kind": "sprite",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 1,
+    "issues": [
+      "13 separate shapes; small ones may be stray pixels (see find_voxels).",
+      "12 single pixel(s) with no neighbours (possible strays).",
+      "9 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/item-bow.png",
+    "downloads": {
+      "png": "/explore/item-bow.png",
+      "html": "/explore/item-bow.html"
+    },
+    "display_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "slug": "item-barrel",
+    "title": "Barrel",
+    "collection": "assets",
+    "kind": "voxel",
+    "size": [
+      16,
+      18,
+      16
+    ],
+    "frames": 1,
+    "issues": [],
+    "display": "/explore/item-barrel-view.png",
+    "display_scale": 1,
+    "downloads": {
+      "png": "/explore/item-barrel.png",
+      "gif": "/explore/item-barrel.gif",
+      "html": "/explore/item-barrel.html",
+      "vox": "/explore/item-barrel.vox"
+    },
+    "display_size": [
+      143,
+      171
+    ]
+  },
+  {
+    "slug": "item-ramen",
+    "title": "Ramen Bowl",
+    "collection": "assets",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 6,
+    "issues": [
+      "8 separate shapes; small ones may be stray pixels (see find_voxels).",
+      "5 single pixel(s) with no neighbours (possible strays).",
+      "16 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/item-ramen.gif",
+    "downloads": {
+      "png": "/explore/item-ramen.png",
+      "gif": "/explore/item-ramen.gif",
+      "html": "/explore/item-ramen.html"
+    },
+    "frame_durations_ms": [
+      120,
+      120,
+      120,
+      120,
+      120,
+      120
+    ],
+    "display_size": [
+      512,
+      512
+    ]
+  }
+]

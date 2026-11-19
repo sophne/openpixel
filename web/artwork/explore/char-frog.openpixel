@@ -1,0 +1,96 @@
+{
+  "cels" : [
+    {
+      "data" : "jZNBrsMgDERzFWNkjNRskNqsotz\/VrUNpJigrz8LavUNozjTbtu\/BKZ5\/GE0gdJg8obG5Vs9n7waQkpQ+ZxPBDFGTKIaM2EWReZUhfNtfonsKHq8aIHFoLIAx4n3\/eaJGyca+V5K5xpBQKXQg+fKWXYI032R8JyNs6w67NgNNyd9F8OO1ZCbmLQf+RgN7ZZJ2yPHZRvEeEvb8QarB7q0IMcBrwt7xwLDFTyX5x0U5gAtd3QsuXfMXK50h8aj3wAAqyH2+G3kEPHUveqvx0ZnkPxTI7S7Nj74eSJm685GrYemBUHK4TZuXvZeKR\/H57P4ezW9D+HvJWoG0R94pS8=",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 100
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "Frog Knight",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#222034",
+    "#45283c",
+    "#663931",
+    "#8f563b",
+    "#df7126",
+    "#d9a066",
+    "#eec39a",
+    "#fbf236",
+    "#99e550",
+    "#6abe30",
+    "#37946e",
+    "#4b692f",
+    "#524b24",
+    "#323c39",
+    "#3f3f74",
+    "#306082",
+    "#5b6ee1",
+    "#639bff",
+    "#5fcde4",
+    "#cbdbfc",
+    "#ffffff",
+    "#9badb7",
+    "#847e87",
+    "#696a6a",
+    "#595652",
+    "#76428a",
+    "#ac3232",
+    "#d95763",
+    "#d77bba",
+    "#8f974a",
+    "#8a6f30",
+    "#113413",
+    "#33702a",
+    "#6aac4a",
+    "#aedc7b",
+    "#e9ffaf",
+    "#1f1f36",
+    "#4f5675",
+    "#8b9bb4",
+    "#b8cfdf",
+    "#dff8ff",
+    "#2e100d",
+    "#643521",
+    "#9a6a3a",
+    "#ceb06b",
+    "#fff6a8",
+    "#461c0b",
+    "#97591b",
+    "#e8b030",
+    "#f5e55e",
+    "#fff690",
+    "#4d0614",
+    "#a61010",
+    "#ff4a1c",
+    "#ff964f",
+    "#ffcd82",
+    "#46362d",
+    "#978672",
+    "#e8e0c8",
+    "#f5f3db",
+    "#fffdec",
+    "#e8836a"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

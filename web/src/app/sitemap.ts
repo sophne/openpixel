@@ -11,6 +11,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     page("/", 1, "weekly"),
     page("/downloads", 0.9, "weekly"),
+    page("/explore", 0.8, "monthly"),
     page("/changelog", 0.7, "weekly"),
     page("/compare", 0.7, "monthly"),
     ...COMPETITORS.map((c) => page(`/compare/${c.slug}`, 0.6, "monthly")),
