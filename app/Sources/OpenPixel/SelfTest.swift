@@ -363,6 +363,7 @@ enum SelfTest {
         do { _ = try sty.execute("set_pixels", ["pixels": [[3, 3, "#123456"]]]) } catch { refusal = "\(error)" }
         let rampRefused = (try? sty.execute("make_color_ramp", ["base": "#c0503c"])) == nil
         let exact = try? sty.execute("set_pixels", ["pixels": [[3, 3, "#ff004d"]]])
+        check(set["critique"] == nil, "style: locking a style on an empty canvas gives no critique (nothing is drawn yet)")
         check(set["saved"] != nil && sInfo2["size"] as? [Int] == [16, 16, 1] && sInfo2["palette_colors"] as? Int == 16
               && refusal.contains("locks the palette") && refusal.contains("Closest") && rampRefused && exact != nil,
               "style: new canvases take the locked size and palette; off-palette hex colours and ramps are refused with the closest colours, exact matches pass")

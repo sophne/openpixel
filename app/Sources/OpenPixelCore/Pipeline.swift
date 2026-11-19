@@ -17,6 +17,8 @@ extension Engine {
             return
         }
         let (_, findings, total) = Analysis.full(doc, frame: activeFrame, style: style)
+        // Nothing drawn yet (e.g. a palette change on a new canvas): nothing to critique.
+        if findings.list.contains(where: { $0.code == "empty" }) { critiqueRevision = revision; return }
         let now = Critique(total: total, findings: findings)
         var c = now.compared(to: lastCritique)
         if critiques == 0 {
