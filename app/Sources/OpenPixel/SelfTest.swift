@@ -182,6 +182,11 @@ enum SelfTest {
         check(unreviewed?.contains("without a review") == true && openIssues?.contains("issue(s)") == true
               && changed?.contains("since the last review") == true,
               "exports remind: not reviewed, issues still open, changed since the review (\(unreviewed ?? "-") | \(openIssues ?? "-") | \(changed ?? "-"))")
+        let palWarn = (try? coach.execute("set_palette", ["colors": ["#2b2a55", "#2c2b57", "#a65a86"]]))?.json["warnings"] as? [String] ?? []
+        let addWarn = (try? coach.execute("add_colors", ["colors": ["#a75b87", "#ffd23f"]]))?.json["warnings"] as? [String] ?? []
+        check(palWarn.first?.contains("#2b2a55 and #2c2b57") == true && addWarn.first?.contains("#a75b87 and #a65a86") == true
+              && !addWarn.contains { $0.contains("#ffd23f") },
+              "set_palette and add_colors warn about near-identical colours as they are chosen (\(palWarn.first ?? "-") | \(addWarn.first ?? "-"))")
         check(next.contains { $0.contains("review_model again") } && next.contains { $0.contains("make_color_ramp") },
               "a review with colour issues says to review again and points to make_color_ramp (\(next))")
         check(second == 0 ? reReviewed == nil : reReviewed?.contains("listed \(second) issue(s)") == true,

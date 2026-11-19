@@ -142,6 +142,22 @@ public enum Craft {
         return h + (d > 0 ? min(d, by) : max(d, -by))
     }
 
+    /// Colours closer than this (weighted RGB distance) are too alike to tell apart in a sprite.
+    static let nearDistance = 9 * 10 * 10
+
+    /// Warnings for colours that are almost identical to another colour, checking each of `fresh` against
+    /// `fresh` and `existing`. Used when an agent sets or extends a palette by hand, before it paints with it.
+    static func nearWarnings(_ fresh: [RGBA], existing: [RGBA] = []) -> [String] {
+        var out: [String] = []
+        for (i, a) in fresh.enumerated() {
+            for b in fresh.dropFirst(i + 1) + existing where a != b && a.distance(to: b) < nearDistance {
+                out.append("\(a.hex) and \(b.hex) are almost identical")
+            }
+        }
+        guard !out.isEmpty else { return [] }
+        return Array(out.prefix(12)) + ["Near-identical colours add noise without adding shape: drop or change one of each pair. make_color_ramp base=<colour> spaces a material's shades evenly."]
+    }
+
     /// Perceived brightness 0-1.
     static func luma(_ c: RGBA) -> Double { (0.299 * Double(c.r) + 0.587 * Double(c.g) + 0.114 * Double(c.b)) / 255 }
 
@@ -324,7 +340,7 @@ public enum Craft {
         var near: [String] = []
         for i in keys.indices { for j in keys.indices where j > i {
             let a = pal[Int(keys[i])], b = pal[Int(keys[j])]
-            if a.distance(to: b) < 9 * 10 * 10 { near.append("\(a.hex) (index \(keys[i])) ≈ \(b.hex) (index \(keys[j]))") }
+            if a.distance(to: b) < nearDistance { near.append("\(a.hex) (index \(keys[i])) ≈ \(b.hex) (index \(keys[j]))") }
         } }
         if !near.isEmpty {
             report["near_identical_colors"] = near

@@ -385,7 +385,12 @@ public final class Engine {
                 for layer in d.cels { for cel in layer { for v in cel.data where Int(v) > maxUsed { maxUsed = Int(v) } } }
                 while pal.count <= maxUsed { pal.append(d.palette[pal.count]) }
                 d.palette = pal
-                return ["palette_colors": pal.count - 1]
+                var res: [String: Any] = ["palette_colors": pal.count - 1]
+                if a.has("colors") {
+                    let w = Craft.nearWarnings(Array(pal.dropFirst()))
+                    if !w.isEmpty { res["warnings"] = w }
+                }
+                return res
             }
 
         case "set_palette_color":
@@ -401,9 +406,15 @@ public final class Engine {
         case "add_colors":
             guard let list = a.array("colors") else { throw PCError.invalid("missing colors") }
             return try edit("Add colours") { d in
+                let before = Array(d.palette.dropFirst())
                 var idx: [Int] = []
                 for v in list { idx.append(Int(try Engine.color(v, &d))) }
-                return ["indexes": idx]
+                var res: [String: Any] = ["indexes": idx]
+                // Only colours this call really added are checked (reused ones were already in the palette).
+                let fresh = Array(d.palette.dropFirst(before.count + 1))
+                let w = Craft.nearWarnings(fresh, existing: before)
+                if !w.isEmpty { res["warnings"] = w }
+                return res
             }
 
         case "make_color_ramp":
