@@ -515,6 +515,23 @@ public final class Engine {
                 return ["layer": l, "name": d.layers[l].name, "visible": d.layers[l].visible, "locked": d.layers[l].locked]
             }
 
+        case "move_layer":
+            let l = try layerIndex(a)
+            let n = doc.layers.count
+            let to: Int = try a.req("to")
+            guard to >= 0 && to < n else { throw PCError.invalid("to must be 0-\(n - 1) (0 is the back)") }
+            if to == l { return ToolOutput(["layer": l, "unchanged": true]) }
+            let out = try edit("Move layer") { d in
+                let layer = d.layers.remove(at: l); d.layers.insert(layer, at: to)
+                let cels = d.cels.remove(at: l); d.cels.insert(cels, at: to)
+                return ["layer": to, "name": layer.name]
+            }
+            // The active layer stays the same layer, wherever it now sits.
+            if activeLayer == l { activeLayer = to }
+            else if l < activeLayer && to >= activeLayer { activeLayer -= 1 }
+            else if l > activeLayer && to <= activeLayer { activeLayer += 1 }
+            return out
+
         case "duplicate_layer":
             let l = try layerIndex(a)
             let out = try edit("Duplicate layer") { d in
@@ -1092,5 +1109,28 @@ public final class Engine {
             s["onion"] = o
         }
         return s
+    }
+}
+
+extension Engine {
+    /// Writes the document to `url` (or its own file) without logging a tool call: the app's autosave. The undo
+    /// history stays as it is. Tells `onChange` with the tool name "autosave".
+    public func autosave(to url: URL? = nil) throws {
+        guard var u = url ?? path else { throw PCError.invalid("no file to save to") }
+        if u.pathExtension.isEmpty { u.appendPathExtension("openpixel") }
+        try NativeFile.encode(doc).write(to: u, options: .atomic)
+        path = u; dirty = false
+        onChange?("autosave")
+    }
+}
+
+extension Engine {
+    /// The document's file moved to `url` (nil: it has none yet) and is now called `name`. Marks it changed, so the
+    /// app's autosave writes the new name into the file. Tells `onChange` with the tool name "rename".
+    public func rename(to url: URL?, name: String) {
+        if let url { path = url }
+        doc.name = name
+        dirty = true
+        onChange?("rename")
     }
 }

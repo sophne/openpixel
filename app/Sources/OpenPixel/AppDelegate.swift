@@ -7,7 +7,25 @@ import Sparkle
 /// The editor window: a native Mac window whose design canvas is HTML (WKWebView), backed by the
 /// Swift engine. The same engine answers agents through the local bridge (see `OpenPixel --mcp`).
 final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandlerWithReply, WKNavigationDelegate, NSWindowDelegate, SPUUpdaterDelegate {
-    let engine = Engine()
+    /// One open file in the tab bar, with its own engine (document, undo history, activity).
+    final class DocTab {
+        let id: Int
+        let engine: Engine
+        /// A built-in sample or an imported .vox: it gets a file of its own only once it is changed.
+        var saveOnEdit = false
+        init(id: Int, engine: Engine) { self.id = id; self.engine = engine }
+    }
+    /// Where new files are saved: ~/Documents/OpenPixel (the folder agents over HTTP can reach too).
+    lazy var filesFolder: URL = uiTestFolder.map { URL(fileURLWithPath: $0, isDirectory: true).appendingPathComponent("Files", isDirectory: true) }
+        ?? MCPHTTPServer.filesFolder
+    var autosaveScheduled = false
+    /// The open files, in tab-bar order.
+    var tabs: [DocTab] = []
+    var nextTabID = 1
+    /// The engine the editor and agents work on: the active tab's, or a blank spare while no file is open
+    /// (the spare becomes a tab as soon as an agent starts drawing in it).
+    var engine = Engine()
+    var pendingOpens: [String] = []
     var window: NSWindow!
     var web: WKWebView!
     var bridge: BridgeServer?
@@ -19,7 +37,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
     let uiTestFolder: String?
     /// Screenshot and UI-test runs never take focus, never open the agent bridge and never ask to save.
     var headless: Bool { screenshotPath != nil || uiTestFolder != nil }
-    lazy var recents = Recents(folder: uiTestFolder.map { URL(fileURLWithPath: $0, isDirectory: true) } ?? Recents.defaultFolder)
+    /// UI tests start from an empty library in their own folder, so every run sees the same home screen.
+    /// Recents and the library. UI tests use their own folder; --screenshot uses a throwaway one, so taking a picture
+    /// never adds the file to the person's Recents.
+    lazy var recents = Recents(folder: uiTestFolder.map { URL(fileURLWithPath: $0, isDirectory: true) }
+                                   ?? (screenshotPath != nil ? FileManager.default.temporaryDirectory.appendingPathComponent("OpenPixel-screenshot-\(UUID().uuidString)", isDirectory: true) : Recents.defaultFolder),
+                               load: uiTestFolder == nil && screenshotPath == nil)
 
     init(screenshotPath: String?, openPath: String?, uiTestFolder: String? = nil) {
         self.screenshotPath = screenshotPath
@@ -39,20 +62,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         launched = true
         trace("setting up")
         if headless { NSApp.setActivationPolicy(.accessory) }
-        if let p = openPath, (try? engine.execute("open_model", ["path": p], source: "person")) != nil {
-        } else {
-            Sample.build(into: engine, threeD: false)
+        engine = makeSpare()
+        if let p = openPath {
+            let e = Engine()
+            if (try? e.execute("open_model", ["path": p], source: "person")) != nil {
+                wire(e)
+                engine = e
+                addTab(e)
+                recents.touch(engine: e)
+            }
         }
         trace("model ready")
-        engine.onChange = { [weak self] tool in
-            guard let self else { return }
-            if tool == "open_model" || tool == "save_model" { self.recents.touch(engine: self.engine) }
-            self.scheduleRefresh(tool)
-        }
-        engine.hostTools["get_editor_screenshot"] = { [weak self] _ in
-            guard let self else { throw PCError.invalid("window closed") }
-            return try self.editorScreenshotBlocking()
-        }
         // Automatic updates run only in the real app bundle (not in checks, tests or the bare program).
         if !headless && Bundle.main.bundleURL.pathExtension == "app" {
             updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: self, userDriverDelegate: nil)
@@ -64,9 +84,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         trace("menu ready")
         buildWindow()
         trace("window built")
+        for p in pendingOpens { do { try openFile(p) } catch { showError(error) } }
+        pendingOpens.removeAll()
         if let f = uiTestFolder {
             // The test drives real agent connections through a private socket in its own folder.
             setenv("OPENPIXEL_SOCKET", URL(fileURLWithPath: f).appendingPathComponent("op.sock").path, 1)
+            // Files the last run saved would push new ones to "Name 2": each run starts with its own empty folder.
+            if filesFolder.lastPathComponent == "Files", filesFolder.path.hasPrefix(URL(fileURLWithPath: f).standardizedFileURL.path) {
+                try? FileManager.default.removeItem(at: filesFolder)
+            }
             startBridge()
             window.orderFrontRegardless()
             DispatchQueue.main.asyncAfter(deadline: .now() + 300) { [weak self] in self?.finishUITest(["error": "timed out after 300 s"]) }
@@ -80,6 +106,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
             trace("window shown")
             DispatchQueue.main.asyncAfter(deadline: .now() + 20) { [weak self] in self?.saveScreenshotAndQuit() }
         }
+        // Showing the window lays its title bar out again; put the window buttons back on the tab bar's centre line.
+        placeWindowButtons()
+        DispatchQueue.main.async { [weak self] in self?.placeWindowButtons() }
     }
 
     /// Progress notes on stderr while making a --screenshot picture.
@@ -91,7 +120,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
 
     /// Files opened from Finder.
     func application(_ sender: NSApplication, openFile filename: String) -> Bool {
-        do { _ = try engine.execute("open_model", ["path": filename], source: "person"); return true } catch {
+        // Files Finder hands over while the app is still starting open once the window exists.
+        if window == nil { pendingOpens.append(filename); return true }
+        do { try openFile(filename); return true } catch {
             if window != nil { showError(error) }
             return false
         }
@@ -100,17 +131,221 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
     func applicationWillTerminate(_ note: Notification) { bridge?.stop() }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard !headless, engine.dirty else { return .terminateNow }
+        guard !headless else { return .terminateNow }
+        autosaveAll()
+        for tab in tabs where tab.engine.dirty {
+            if !askToSave(tab) { return .terminateCancel }
+        }
+        return .terminateNow
+    }
+
+    /// Asks whether to save a tab's unsaved changes. False when the person cancels (or the save fails).
+    func askToSave(_ tab: DocTab) -> Bool {
+        if tab.engine !== engine { activate(tab) }
         let alert = NSAlert()
-        alert.messageText = "Save changes to “\(engine.doc.name)”?"
-        alert.informativeText = "Your changes will be lost if you don't save them."
+        alert.messageText = "Save changes to “\(tab.engine.doc.name)”?"
+        alert.informativeText = "OpenPixel could not save them by itself. Your changes will be lost if you don't save them."
         alert.addButton(withTitle: "Save…")
         alert.addButton(withTitle: "Don't Save")
         alert.addButton(withTitle: "Cancel")
         switch alert.runModal() {
-        case .alertFirstButtonReturn: return saveDocument(saveAs: false) ? .terminateNow : .terminateCancel
-        case .alertSecondButtonReturn: return .terminateNow
-        default: return .terminateCancel
+        case .alertFirstButtonReturn: return saveDocument(saveAs: false)
+        case .alertSecondButtonReturn: return true
+        default: return false
+        }
+    }
+
+    // MARK: - tabs
+
+    /// Engines tell the window when they change; only the active one redraws the page.
+    func wire(_ e: Engine) {
+        e.onChange = { [weak self, weak e] tool in
+            guard let self, let e else { return }
+            if tool == "open_model" || tool == "save_model" || tool == "autosave" { self.recents.touch(engine: e) }
+            if e.dirty || (e.path == nil && tool != "autosave") { self.scheduleAutosave() }
+            guard e === self.engine else { return }
+            // An agent drawing while no file is open: what it makes becomes a tab.
+            if !self.tabs.contains(where: { $0.engine === e }) { self.addTab(e) }
+            self.scheduleRefresh(tool)
+        }
+        e.hostTools["get_editor_screenshot"] = { [weak self] _ in
+            guard let self else { throw PCError.invalid("window closed") }
+            return try self.editorScreenshotBlocking()
+        }
+    }
+
+    /// A blank canvas for while no file is open.
+    func makeSpare() -> Engine {
+        let e = Engine()
+        _ = try? e.execute("new_sprite", ["width": 32, "height": 32, "name": "Untitled"], source: "sample")
+        e.markClean()
+        wire(e)
+        return e
+    }
+
+    @discardableResult
+    func addTab(_ e: Engine) -> DocTab {
+        let t = DocTab(id: nextTabID, engine: e)
+        nextTabID += 1
+        tabs.append(t)
+        return t
+    }
+
+    func activate(_ tab: DocTab) {
+        engine = tab.engine
+        updateTitle()
+    }
+
+    /// Opens a new tab with a fresh engine and runs `setup` in it; the tab goes away again if that fails.
+    func openInNewTab(_ setup: (Engine) throws -> Void) throws {
+        let e = Engine()
+        wire(e)
+        let previous = engine
+        let tab = addTab(e)
+        engine = e
+        do { try setup(e) } catch {
+            tabs.removeAll { $0 === tab }
+            engine = previous
+            throw error
+        }
+        updateTitle()
+        scheduleRefresh("open_model")
+    }
+
+    /// Opens a file, or switches to its tab when it is already open.
+    func openFile(_ path: String) throws {
+        let std = URL(fileURLWithPath: path).standardizedFileURL.path
+        if let t = tabs.first(where: { $0.engine.path?.standardizedFileURL.path == std }) {
+            activate(t)
+            scheduleRefresh("open_model")
+            return
+        }
+        try openInNewTab { e in _ = try e.execute("open_model", ["path": path], source: "person") }
+        if let t = tabs.first(where: { $0.engine === engine }), t.engine.path == nil { t.saveOnEdit = true }
+    }
+
+    func openSampleTab(threeD: Bool) {
+        try? openInNewTab { e in Sample.build(into: e, threeD: threeD) }
+        if let t = tabs.first(where: { $0.engine === engine }), t.engine.path == nil { t.saveOnEdit = true }
+    }
+
+    // MARK: - autosave
+
+    /// Changes are written to the file a moment after they happen (at most every 1.5 s while edits keep
+    /// coming), so nothing is lost: a file that has none yet gets one in `filesFolder`.
+    func scheduleAutosave() {
+        guard screenshotPath == nil, !autosaveScheduled else { return }
+        autosaveScheduled = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            guard let self else { return }
+            self.autosaveScheduled = false
+            self.autosaveAll()
+        }
+    }
+
+    /// Saves every tab that needs it. False when one could not be saved.
+    @discardableResult
+    func autosaveAll() -> Bool {
+        var saved = false, ok = true
+        for tab in tabs where tab.engine.dirty || (tab.engine.path == nil && !tab.saveOnEdit) {
+            if autosave(tab) { saved = true } else { ok = false }
+        }
+        if saved { scheduleRefresh("autosave") }
+        return ok
+    }
+
+    @discardableResult
+    func autosave(_ tab: DocTab) -> Bool {
+        do {
+            if tab.engine.path == nil { try tab.engine.autosave(to: newFileURL(tab.engine.doc.name)) } else { try tab.engine.autosave() }
+            tab.saveOnEdit = false
+            return true
+        } catch {
+            NSLog("OpenPixel could not autosave \(tab.engine.doc.name): \(error)")
+            return false
+        }
+    }
+
+    /// Renames a file (by its path, or the file open in a tab): on disk next to where it is, in Recents, and in its
+    /// tab. A document without a file yet only changes its name; autosave then gives it a file by that name.
+    /// True, or a message to show.
+    func renameFile(path: String?, tabID: Int?, name: String) -> Any {
+        let clean = name.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !clean.isEmpty, !clean.hasPrefix(".") else { return "Give the file a name" }
+        let std = path.map { URL(fileURLWithPath: $0).standardizedFileURL.path }
+        let tab = tabID.flatMap { id in tabs.first { $0.id == id } }
+            ?? std.flatMap { p in tabs.first { $0.engine.path?.standardizedFileURL.path == p } }
+        guard let old = tab?.engine.path ?? path.map({ URL(fileURLWithPath: $0) }) else {
+            guard let t = tab else { return "Could not find that file" }
+            t.engine.rename(to: nil, name: clean)
+            t.saveOnEdit = false
+            scheduleRefresh("rename")
+            return true
+        }
+        let ext = old.pathExtension.isEmpty ? "openpixel" : old.pathExtension
+        let new = old.deletingLastPathComponent().appendingPathComponent(clean).appendingPathExtension(ext)
+        let fm = FileManager.default
+        if new.standardizedFileURL.path != old.standardizedFileURL.path {
+            // Only the letter case changes: the Mac's disk sees the same name, so go through a temporary one.
+            let caseOnly = new.path.lowercased() == old.path.lowercased()
+            if !caseOnly, fm.fileExists(atPath: new.path) { return "There is already a file called “\(clean)” in that folder" }
+            guard fm.fileExists(atPath: old.path) else { return "The file is not there any more" }
+            do {
+                if caseOnly {
+                    let tmp = old.deletingLastPathComponent().appendingPathComponent(".\(UUID().uuidString).\(ext)")
+                    try fm.moveItem(at: old, to: tmp)
+                    try fm.moveItem(at: tmp, to: new)
+                } else {
+                    try fm.moveItem(at: old, to: new)
+                }
+            } catch { return "Could not rename it: \(error.localizedDescription)" }
+            recents.renamePath(old.path, to: new.path)
+        }
+        if let t = tab { t.engine.rename(to: new, name: clean); autosave(t) }
+        scheduleRefresh("rename")
+        return true
+    }
+
+    /// A free name for a new file in `filesFolder`: "Name.openpixel", then "Name 2.openpixel" and so on.
+    func newFileURL(_ name: String) throws -> URL {
+        try FileManager.default.createDirectory(at: filesFolder, withIntermediateDirectories: true)
+        var base = name.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if base.isEmpty || base.hasPrefix(".") { base = "Untitled" + base }
+        var u = filesFolder.appendingPathComponent(base + ".openpixel"), n = 2
+        while FileManager.default.fileExists(atPath: u.path) || tabs.contains(where: { $0.engine.path?.standardizedFileURL == u.standardizedFileURL }) {
+            u = filesFolder.appendingPathComponent("\(base) \(n).openpixel"); n += 1
+        }
+        return u
+    }
+
+    /// Closes a tab, asking about unsaved changes unless `force`. False when the person cancelled.
+    @discardableResult
+    func closeTab(_ id: Int, force: Bool = false) -> Bool {
+        guard let i = tabs.firstIndex(where: { $0.id == id }) else { return true }
+        let tab = tabs[i]
+        if !force, tab.engine.dirty { autosave(tab) }
+        if !force, tab.engine.dirty, !askToSave(tab) { return false }
+        tabs.remove(at: i)
+        if tab.engine === engine {
+            if tabs.isEmpty { engine = makeSpare() } else { engine = tabs[min(i, tabs.count - 1)].engine }
+            updateTitle()
+        }
+        return true
+    }
+
+    func tabsForPage() -> [String: Any] {
+        let active = tabs.first { $0.engine === engine }?.id
+        return ["tabs": tabs.map { t in
+            ["id": t.id, "name": t.engine.path?.deletingPathExtension().lastPathComponent ?? t.engine.doc.name, "kind": t.engine.isSprite ? "2d" : "3d", "dirty": t.engine.dirty,
+             "path": (t.engine.path?.path as Any?) ?? NSNull()] as [String: Any]
+        }, "active": (active as Any?) ?? NSNull()]
+    }
+
+    @objc func closeTabMenu(_ sender: Any?) {
+        web.evaluateJavaScript("window.PC && PC.closeActiveTab ? PC.closeActiveTab() : false") { [weak self] r, _ in
+            if (r as? Bool) != true { self?.window.performClose(nil) }
         }
     }
 
@@ -158,29 +393,54 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         // Web Inspector only in debug builds; release builds don't expose the page's internals.
         config.preferences.setValue(true, forKey: "developerExtrasEnabled")
         #endif
-        var flags = "window.OPENPIXEL_START = \(Self.jsString(openPath == nil ? "home" : "editor"));"
+        var flags = "window.OPENPIXEL_START = \(Self.jsString(tabs.isEmpty ? "home" : "editor"));"
         if let f = uiTestFolder { flags += " window.OPENPIXEL_UITEST = { folder: \(Self.jsString(f)) };" }
         config.userContentController.addUserScript(WKUserScript(source: flags, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         if screenshotPath != nil {
+            // Pictures start from the app's defaults (sidebar open, panel widths), not from what the person set.
+            config.websiteDataStore = .nonPersistent()
             // Tells the page to report when it has drawn its frames (no query string on the file address).
             config.userContentController.addUserScript(WKUserScript(source: "window.OPENPIXEL_SCREENSHOT = true;",
                                                                     injectionTime: .atDocumentStart, forMainFrameOnly: true))
         }
-        web = WKWebView(frame: .zero, configuration: config)
+        web = TitlebarWebView(frame: .zero, configuration: config)
         web.navigationDelegate = self
         web.setValue(false, forKey: "drawsBackground")
         trace("web view made")
 
         let screen = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
         let size = NSSize(width: min(1440, screen.width - 40), height: min(900, screen.height - 40))
+        // The page's tab bar is the title bar (like Figma): the content runs under a transparent title bar
+        // and the close, minimise and zoom buttons sit in the tab bar, centred in its height.
         window = NSWindow(contentRect: NSRect(x: screen.midX - size.width / 2, y: screen.midY - size.height / 2,
                                               width: size.width, height: size.height),
-                          styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
+                          styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
         window.minSize = NSSize(width: 980, height: 620)
-        window.backgroundColor = NSColor(red: 0x2c / 255, green: 0x2c / 255, blue: 0x2c / 255, alpha: 1)
-        window.contentView = web
+        // Liquid Glass: the window's chrome (tab bar, toolbar row, sidebars and panels) is one sheet of the system's
+        // translucent sidebar glass, the desktop blurred through it; the page draws only the solid content sheets
+        // (canvas, home pages) and floating glass on top. The app is dark, so the glass is too. With Reduce
+        // Transparency on, macOS makes this glass opaque by itself.
+        window.appearance = NSAppearance(named: .darkAqua)
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        let glass = NSVisualEffectView()
+        glass.material = .sidebar
+        glass.blendingMode = .behindWindow
+        glass.state = .followsWindowActiveState
+        web.autoresizingMask = [.width, .height]
+        glass.addSubview(web)
+        window.contentView = glass
+        web.frame = glass.bounds
         window.delegate = self
         window.isReleasedWhenClosed = false
+        placeWindowButtons()
+        // Empty parts of the tab bar move the window (see TitlebarWebView).
+        titlebarMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] e in
+            guard let v = self?.web as? TitlebarWebView, v.handleTitlebarClick(e) else { return e }
+            return nil
+        }
         trace("window made")
         updateTitle()
         trace("title set")
@@ -194,6 +454,91 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         let index = URL(fileURLWithPath: dir.appendingPathComponent("index.html").path, isDirectory: false)
         trace("loading \(index.path)")
         web.loadFileURL(index, allowingReadAccessTo: folder)
+    }
+
+    // MARK: - GitHub stars (tab bar)
+
+    /// The repository's public star count for the tab bar. The page asks; the answer is the last known count (kept in
+    /// the app's preferences), and at most once an hour the app asks GitHub's public API again in the background and
+    /// sends the new count to the page. Only the repository's public data is read; nothing about the person is sent.
+    static let starsAPI = URL(string: "https://api.github.com/repos/sophne/openpixel")!
+    var starsFetching = false
+
+    func githubStars() -> Any {
+        let d = UserDefaults.standard
+        let at = d.object(forKey: "githubStarsAt") as? Date
+        // Checks and tests stay offline.
+        if !headless, !starsFetching, at.map({ Date().timeIntervalSince($0) > 3600 }) ?? true { fetchGitHubStars() }
+        return (d.object(forKey: "githubStars") as? Int as Any?) ?? NSNull()
+    }
+
+    func fetchGitHubStars() {
+        starsFetching = true
+        var req = URLRequest(url: Self.starsAPI, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10)
+        req.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        req.setValue("OpenPixel", forHTTPHeaderField: "User-Agent")
+        URLSession.shared.dataTask(with: req) { [weak self] data, response, _ in
+            let ok = (response as? HTTPURLResponse)?.statusCode == 200
+            let n = ok ? (data.flatMap { try? JSONSerialization.jsonObject(with: $0) } as? [String: Any])?["stargazers_count"] as? Int : nil
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.starsFetching = false
+                guard let n, n >= 0 else { return } // offline or rate-limited: keep the last count, try again next time
+                UserDefaults.standard.set(n, forKey: "githubStars")
+                UserDefaults.standard.set(Date(), forKey: "githubStarsAt")
+                self.web?.evaluateJavaScript("window.PC && PC.githubStars && PC.githubStars(\(n))", completionHandler: nil)
+            }
+        }.resume()
+    }
+
+    // MARK: - title bar
+
+    /// Height of the page's tab bar (`--tabs-h` in style.css), which doubles as the window's title bar.
+    static let tabBarHeight: CGFloat = 38
+    var titlebarMonitor: Any?
+
+    /// Left edge of the close button and the step to the next one; the page's tab bar leaves room up to 80px.
+    static let windowButtonsX: CGFloat = 14, windowButtonsStep: CGFloat = 20
+    var placingButtons = false, watchingButtons = false
+
+    /// Puts the close, minimise and zoom buttons in the tab bar, centred on its middle line (19pt from the top),
+    /// the same line as Home, the tabs and +. AppKit lays the title bar out again whenever it likes (showing the
+    /// window, activation, resizes, full screen), so this also runs each time those buttons move.
+    func placeWindowButtons() {
+        guard !placingButtons, let w = window, let close = w.standardWindowButton(.closeButton),
+              let titlebar = close.superview, let container = titlebar.superview else { return }
+        placingButtons = true
+        defer { placingButtons = false }
+        let h = Self.tabBarHeight
+        let bar = NSRect(x: container.frame.minX, y: w.frame.height - h, width: container.frame.width, height: h)
+        if container.frame != bar { container.frame = bar }
+        if titlebar.frame != container.bounds { titlebar.frame = container.bounds }
+        for (i, kind) in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton].enumerated() {
+            guard let b = w.standardWindowButton(kind) else { continue }
+            let origin = NSPoint(x: Self.windowButtonsX + CGFloat(i) * Self.windowButtonsStep, y: ((h - b.frame.height) / 2).rounded())
+            if b.frame.origin != origin { b.setFrameOrigin(origin) }
+        }
+        if !watchingButtons {
+            watchingButtons = true
+            for v in [close, titlebar, container] {
+                v.postsFrameChangedNotifications = true
+                NotificationCenter.default.addObserver(forName: NSView.frameDidChangeNotification, object: v, queue: .main) { [weak self] _ in
+                    self?.placeWindowButtons()
+                }
+            }
+        }
+    }
+
+    func windowDidResize(_ notification: Notification) { placeWindowButtons() }
+    func windowDidEndLiveResize(_ notification: Notification) { placeWindowButtons() }
+    func windowDidBecomeKey(_ notification: Notification) { placeWindowButtons() }
+    func windowDidResignKey(_ notification: Notification) { placeWindowButtons() }
+    func windowDidEnterFullScreen(_ notification: Notification) {
+        web?.evaluateJavaScript("window.PC && PC.fullScreen && PC.fullScreen(true)", completionHandler: nil)
+    }
+    func windowDidExitFullScreen(_ notification: Notification) {
+        placeWindowButtons()
+        web?.evaluateJavaScript("window.PC && PC.fullScreen && PC.fullScreen(false)", completionHandler: nil)
     }
 
     func updateTitle() {
@@ -334,6 +679,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
             o["command"] = Bundle.main.executablePath ?? CommandLine.arguments[0]
             o["bridge"] = bridge != nil
             return o
+        case "githubStars": return githubStars()
+        case "openLink":
+            // OpenPixel's own pages (sidebar links). The page names one; only these addresses can open.
+            let links = ["website": "https://openpixel.dev", "github": "https://github.com/sophne/openpixel", "x": "https://x.com/eminvkc"]
+            if let key = body["link"] as? String, let s = links[key], let u = URL(string: s) { return NSWorkspace.shared.open(u) }
+            return false
         case "openURL":
             // Only app links the Agents page uses (Cursor's install link); never web pages.
             if let s = body["url"] as? String, s.hasPrefix("cursor://"), let u = URL(string: s) { return NSWorkspace.shared.open(u) }
@@ -347,18 +698,66 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
             return ["version": MCPServer.version, "build": Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "",
                     "updates": updater != nil, "automatic": updater?.updater.automaticallyChecksForUpdates ?? false,
                     "available": (availableUpdate as Any?) ?? NSNull()]
-        case "recents": return recents.listForPage()
-        case "samples": return Recents.samplePreviews()
+        case "library": return recents.listForPage()
         case "removeRecent": recents.remove(body["path"] as? String ?? ""); return true
         case "reveal":
             if let p = body["path"] as? String { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: p)]) }
             return true
         case "openPath":
-            do { _ = try engine.execute("open_model", ["path": body["path"] as? String ?? ""], source: "person"); return true } catch {
+            do { try openFile(body["path"] as? String ?? ""); return true } catch {
                 return "\(error)"
             }
-        case "sample2d": open2DSample(nil); return true
-        case "sample3d": open3DSample(nil); return true
+        case "sample2d": openSampleTab(threeD: false); return true
+        case "sample3d": openSampleTab(threeD: true); return true
+        case "createFolder":
+            return recents.createFolder(name: body["name"] as? String, parent: body["parent"] as? String) ?? false
+        case "renameFolder": return recents.renameFolder(body["id"] as? String ?? "", body["name"] as? String)
+        case "renameFile": return renameFile(path: body["path"] as? String, tabID: body["tab"] as? Int, name: body["name"] as? String ?? "")
+        case "moveFolder": return recents.moveFolder(body["id"] as? String ?? "", to: body["parent"] as? String)
+        case "deleteFolder": return recents.deleteFolder(body["id"] as? String ?? "")
+        case "moveItem": return recents.moveItem(body["id"] as? String ?? "", to: body["folder"] as? String)
+        case "archiveItem": return recents.setArchived(body["id"] as? String ?? "", body["archived"] as? Bool ?? true)
+        case "deleteItem":
+            let id = body["id"] as? String ?? ""
+            // An open file is closed first; one with unsaved changes stays until the person deals with it.
+            if let t = tabs.first(where: { $0.engine.path?.path == id }) {
+                if t.engine.dirty { autosave(t) }
+                if t.engine.dirty { return "“\(t.engine.doc.name)” is open with unsaved changes. Close its tab first." }
+                closeTab(t.id, force: true)
+                scheduleRefresh("close_tab")
+            }
+            return recents.deleteForever(id) ?? true
+        case "tabs": return tabsForPage()
+        case "switchTab":
+            if let id = body["id"] as? Int, let t = tabs.first(where: { $0.id == id }) { activate(t) }
+            return tabsForPage()
+        case "closeTab":
+            let ok = closeTab(body["id"] as? Int ?? -1)
+            var o = tabsForPage(); o["closed"] = ok
+            return o
+        case "moveTab":
+            if let id = body["id"] as? Int, let to = body["index"] as? Int, let i = tabs.firstIndex(where: { $0.id == id }) {
+                let t = tabs.remove(at: i)
+                tabs.insert(t, at: max(0, min(tabs.count, to)))
+            }
+            return tabsForPage()
+        case "newDocument":
+            let tool = body["tool"] as? String == "new_model" ? "new_model" : "new_sprite"
+            do {
+                try openInNewTab { e in _ = try e.execute(tool, body["args"] as? [String: Any] ?? [:], source: "person"); e.markClean() }
+                if let t = tabs.first(where: { $0.engine === engine }) { autosave(t) }
+                return tabsForPage()
+            } catch { return "\(error)" }
+        case "titlebar":
+            // Where the page's tab bar has its own controls; the rest of the bar moves the window.
+            if let v = web as? TitlebarWebView {
+                v.holes = (body["holes"] as? [[Double]] ?? []).compactMap { $0.count == 2 && $0[0] <= $0[1] ? CGFloat($0[0])...CGFloat($0[1]) : nil }
+                v.dragEnabled = body["drag"] as? Bool ?? true
+            }
+            return true
+        case "haptic":
+            NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .now)
+            return true
         case "mcpCommand": return Bundle.main.executablePath ?? CommandLine.arguments[0]
         case "socketPath": return Bridge.socketPath
         default: return false
@@ -375,7 +774,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         panel.allowsOtherFileTypes = true
         panel.beginSheetModal(for: window) { [weak self] r in
             guard r == .OK, let u = panel.url, let self else { return }
-            do { _ = try self.engine.execute("open_model", ["path": u.path], source: "person") } catch { self.showError(error) }
+            do { try self.openFile(u.path) } catch { self.showError(error) }
         }
     }
 
@@ -421,10 +820,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
     @objc func undoMenu(_ sender: Any?) { _ = try? engine.execute("undo", [:], source: "person") }
     @objc func redoMenu(_ sender: Any?) { _ = try? engine.execute("redo", [:], source: "person") }
     @objc func agentHelp(_ sender: Any?) { web.evaluateJavaScript("PC.showAgentHelp()") }
-    @objc func open3DSample(_ sender: Any?) { Sample.open3D(in: engine) }
-    @objc func open2DSample(_ sender: Any?) {
-        for (tool, args) in Sample.sprite { _ = try? engine.execute(tool, args, source: "sample") }
-    }
+    @objc func open3DSample(_ sender: Any?) { openSampleTab(threeD: true) }
+    @objc func open2DSample(_ sender: Any?) { openSampleTab(threeD: false) }
     @objc func jsCommand(_ sender: NSMenuItem) {
         if let cmd = sender.representedObject as? String { web.evaluateJavaScript("PC.command(\(Self.jsString(cmd)))") }
     }
@@ -574,7 +971,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
             item("Save As…", #selector(saveAsMenu(_:)), "s", [.command, .shift]),
             export,
             .separator(),
-            item("Close Window", #selector(NSWindow.performClose(_:)), "w"),
+            item("Close Tab", #selector(closeTabMenu(_:)), "w"),
+            item("Close Window", #selector(NSWindow.performClose(_:)), "w", [.command, .shift]),
         ])
         submenu("Edit", [
             item("Undo", #selector(undoMenu(_:)), "z"),
@@ -597,6 +995,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
             .separator(),
             item("Pixel Grid", #selector(jsCommand(_:)), "'", object: "pixelGrid"),
             item("Show or Hide Frames", #selector(jsCommand(_:)), "", object: "frames"),
+            item("Show or Hide Sidebar", #selector(jsCommand(_:)), "\\", object: "sidebar"),
             .separator(),
             item("Review Model", #selector(jsCommand(_:)), "r", object: "review"),
         ])
@@ -620,11 +1019,43 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         submenu("Help", [
             item("Keyboard Shortcuts", #selector(jsCommand(_:)), "/", object: "shortcuts"),
             item("Connect an AI Agent…", #selector(agentHelp(_:)), ""),
-            .separator(),
-            item("Open the 2D Sample Sprite", #selector(open2DSample(_:)), ""),
-            item("Open the 3D Sample Model", #selector(open3DSample(_:)), ""),
         ])
         NSApp.mainMenu = main
+    }
+}
+
+/// The web view also draws the window's title bar: the page's tab bar sits where a title would be. Empty parts of
+/// that bar move the window, and a double-click there zooms or minimises it, as set in System Settings. The page
+/// reports where its tabs and buttons are (the `titlebar` message); clicks there go to the page as usual.
+/// WebKit takes mouse events in its own inner views, so the app looks at each click first (`handleTitlebarClick`,
+/// called from an event monitor) instead of overriding mouseDown.
+final class TitlebarWebView: WKWebView {
+    /// Horizontal ranges (page points) of the bar the page uses for its own controls.
+    var holes: [ClosedRange<CGFloat>] = []
+    /// Off while a dialog covers the bar, so its backdrop still closes it.
+    var dragEnabled = true
+
+    /// True when the click was on an empty part of the bar and moved (or zoomed) the window.
+    func handleTitlebarClick(_ event: NSEvent) -> Bool {
+        guard dragEnabled, let w = window, event.window === w else { return false }
+        // The close, minimise and zoom buttons answer their own clicks.
+        for kind in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton] {
+            if let b = w.standardWindowButton(kind), b.convert(b.bounds, to: nil).contains(event.locationInWindow) { return false }
+        }
+        let p = convert(event.locationInWindow, from: nil)
+        let fromTop = isFlipped ? p.y : bounds.height - p.y
+        guard fromTop >= 0, fromTop < AppDelegate.tabBarHeight, p.x >= 0, p.x <= bounds.width,
+              !holes.contains(where: { $0.contains(p.x) }) else { return false }
+        if event.clickCount == 2 {
+            switch UserDefaults.standard.string(forKey: "AppleActionOnDoubleClick") ?? "Maximize" {
+            case "Minimize": w.performMiniaturize(nil)
+            case "None": break
+            default: w.performZoom(nil)
+            }
+        } else {
+            w.performDrag(with: event)
+        }
+        return true
     }
 }
 

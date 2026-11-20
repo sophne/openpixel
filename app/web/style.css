@@ -75,7 +75,6 @@ select.field { height: 26px; background: var(--panel-2); border: 1px solid trans
 #top .right { justify-content: flex-end; }
 #logo { width: 24px; height: 24px; margin: 0 6px 0 4px; border-radius: 5px; }
 #doc-name { font-weight: 600; margin-left: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#doc-kind { color: var(--text-3); margin-left: 6px; white-space: nowrap; }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); display: inline-block; }
 .menu { position: relative; }
 .menu-list { display: none; position: absolute; top: calc(100% + 4px); left: 0; z-index: 40; background: #1f1f1f; border: 1px solid var(--line);
@@ -103,7 +102,6 @@ select.field { height: 26px; background: var(--panel-2); border: 1px solid trans
 #layers { flex: 1; overflow-y: auto; margin: 0 -12px; }
 .layer { display: flex; align-items: center; gap: 4px; height: 32px; padding: 0 8px 0 14px; cursor: pointer; }
 .layer:hover { background: var(--hover); }
-.layer.on { background: var(--accent-soft); }
 .layer.on .lname { color: #fff; }
 .layer .lic { color: var(--text-3); }
 .layer .lname { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
@@ -264,7 +262,7 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
   #right .btn .lbl, #right .chip .lbl { display: none; }
 }
 /* top bar: shorter labels on narrow windows */
-@media (max-width: 1240px) { #doc-kind { display: none; } #top .right .btn:not(.primary) .lbl { display: none; } }
+@media (max-width: 1240px) { #top .right .btn:not(.primary) .lbl { display: none; } }
 @media (max-width: 1060px) { #top .right .btn.primary .lbl { display: none; } #top .right .btn.primary { width: 34px; padding: 0; justify-content: center; } }
 #top .left { overflow: hidden; }
 #doc-name { min-width: 0; }
@@ -283,22 +281,15 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
 #home-btn { width: 32px; }
 #home-btn img { margin: 0; }
 #home { position: fixed; inset: 0; z-index: 45; background: var(--canvas); display: grid; grid-template-columns: 220px 1fr; }
-.home-side { background: var(--panel); border-right: 1px solid var(--line); padding: 14px 10px; display: flex; flex-direction: column; gap: 2px; }
-.home-brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; padding: 4px 6px 16px; }
-.home-brand img { width: 26px; height: 26px; border-radius: 6px; }
+.home-side { background: var(--panel); border-right: 1px solid var(--line); padding: 16px 10px 12px; display: flex; flex-direction: column; gap: 2px; }
 .home-nav { height: 32px; padding: 0 10px; border-radius: 6px; display: flex; align-items: center; gap: 9px; cursor: pointer; color: var(--text-2); }
 .home-nav:hover { background: var(--hover); color: var(--text); }
 .home-nav.on { background: var(--accent-soft); color: var(--accent); }
 /* Update button: at the bottom of the home and editor sidebars, only while a newer version is available. */
-.update-slot { flex: none; }
-#left .update-slot { padding: 10px 12px 12px; border-top: 1px solid var(--line); }
-.home-side .update-slot { padding-top: 8px; }
-.update-btn { width: 100%; height: 32px; justify-content: center; gap: 6px; }
-.update-btn .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .home-main { overflow-y: auto; padding: 0 32px 48px; min-width: 0; }
 .home-top { position: sticky; top: 0; z-index: 2; background: var(--canvas); display: flex; align-items: center; gap: 10px; height: 64px; }
 .home-top h1 { font-size: 17px; margin: 0; font-weight: 600; }
-#home-search { width: 260px; max-width: 40vw; height: 30px; }
+/* #home-search lives in the home sidebar now (.side-search). */
 .home-actions { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 6px 0 26px; }
 .action-tile { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: flex; gap: 12px; align-items: center; cursor: pointer; min-width: 0; }
 .action-tile:hover { border-color: var(--accent); }
@@ -327,8 +318,6 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
 .fr .thumb img { width: 100%; height: 100%; max-width: none; max-height: none; object-fit: contain; image-rendering: pixelated; }
 .card .pv img { width: 72%; height: 72%; max-width: none; max-height: none; object-fit: contain; }
 .card .meta .s.path { direction: rtl; text-align: left; unicode-bidi: plaintext; }
-#agent-btn { position: relative; }
-#agent-btn .dot { position: absolute; left: 21px; top: 6px; width: 6px; height: 6px; box-shadow: 0 0 0 2px var(--panel); }
 
 /* ======================================================= round 4: menus visible, full-width tiles, Agents page */
 #top .left { overflow: visible; }
@@ -387,7 +376,6 @@ ol.steps li::marker { color: var(--accent); font-weight: 600; }
 .codebox .copy { position: absolute; right: 6px; top: 6px; height: 24px; background: var(--panel); border: 1px solid var(--line); }
 .note { background: var(--panel-2); border-radius: 8px; padding: 10px 12px; color: var(--text-2); line-height: 1.5; margin-top: 4px; }
 
-#agent-btn .dot { background: #777; }
 
 /* logos are inline SVG: colour ones keep their colours, single-colour ones follow the text colour */
 .alogo svg { width: 20px; height: 20px; display: block; }
@@ -487,3 +475,639 @@ kbd { display: inline-grid; place-items: center; min-width: 18px; height: 18px; 
   border-top: 1px solid rgba(255, 255, 255, 0.16); border-top-left-radius: 2px; }
 .tip .keys { display: inline-flex; gap: 2px; margin-right: -4px; }
 .tip kbd { min-width: 17px; height: 17px; margin: 0; padding: 0 4px; font-size: 10.5px; background: #303030; border-color: #444; color: #ddd; }
+
+/* ======================================================= open files as tabs (Figma-like), library, New file page */
+:root {
+  --tabs-h: 38px;        /* the tab bar, which is also the window's title bar (AppDelegate.tabBarHeight) */
+  --tab-h: 28px;         /* Home, every tab and +: one height, on the same centre line as the window buttons */
+  --tab-on: #2f2f2f;
+  --tab-hover: #242424;
+  /* Release of a "haptic" press: settles with a slight overshoot (bounce kept small, under 0.2). */
+  --ease-spring: cubic-bezier(0.3, 1.35, 0.6, 1);
+}
+/* Tab bar across the top of the window; the editor, home screen and New file page fill the space under it.
+   Its bottom line is an inset shadow, not a border, so the bar's centre stays at 19px like the window buttons'. */
+#tabbar { position: fixed; top: 0; left: 0; right: 0; height: var(--tabs-h); z-index: 46; display: flex; align-items: center;
+  gap: 6px; padding: 0 8px 0 80px; background: #181818; box-shadow: inset 0 -1px 0 #111; }
+/* the window's close, minimise and zoom buttons sit in the first 80px (they end at 68px); full screen hides them */
+body.fullscreen #tabbar { padding-left: 8px; }
+#app { position: fixed; top: var(--tabs-h); left: 0; right: 0; bottom: 0; height: auto; }
+#home, #newpage { top: var(--tabs-h); }
+.tb-home, .tb-add { flex: none; width: 32px; height: var(--tab-h); padding: 0; display: grid; place-items: center; border: 0;
+  border-radius: 7px; background: transparent; color: var(--text-2); cursor: pointer; transition: transform 140ms var(--ease-out); }
+.tb-home svg.i, .tb-add svg.i { width: 16px; height: 16px; }
+.tb-home:hover, .tb-add:hover { background: var(--tab-hover); color: var(--text); }
+.tb-home.on { background: var(--tab-on); color: var(--text); }
+.tb-home:active, .tb-add:active { transform: scale(0.94); }
+#tabs { display: flex; align-items: center; gap: 4px; height: 100%; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+#tabs:empty { display: none; }
+#tabs::-webkit-scrollbar { display: none; }
+.tab { position: relative; flex: 0 1 auto; width: 188px; min-width: 96px; height: var(--tab-h); display: flex; align-items: center; gap: 7px;
+  padding: 0 4px 0 10px; border-radius: 7px; color: var(--text-2); cursor: default; white-space: nowrap; outline: none; }
+.tab:hover { background: var(--tab-hover); color: var(--text); }
+.tab.on { background: var(--tab-on); color: var(--text); }
+.tab svg.i { width: 14px; height: 14px; color: var(--text-3); }
+.tab.on svg.i { color: var(--accent); }
+.tab .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.tab .x { flex: none; width: 20px; height: 20px; display: grid; place-items: center; border: 0; border-radius: 5px; background: transparent;
+  color: var(--text-2); cursor: pointer; opacity: 0; padding: 0; transition: transform 120ms var(--ease-out); }
+.tab .x svg.i { width: 12px; height: 12px; color: inherit; }
+.tab:hover .x, .tab.on .x, .tab:focus-visible .x { opacity: 1; }
+.tab .x:hover { background: #3a3a3a; color: var(--text); }
+.tab .x:active { transform: scale(0.9); }
+/* unsaved: a dot where the close button sits, until the tab is hovered */
+.tab.dirty:not(:hover) .x { opacity: 1; }
+.tab.dirty:not(:hover) .x svg { display: none; }
+.tab.dirty:not(:hover) .x::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--text-2); }
+.tab:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
+.tab.dragging { opacity: .45; }
+/* where a dragged tab will land: a short accent line in the gap */
+.tab.drop-before::before, .tab.drop-after::before { content: ""; position: absolute; top: 5px; bottom: 5px; width: 2px; border-radius: 1px;
+  background: var(--accent); pointer-events: none; }
+.tab.drop-before::before { left: -3px; }
+.tab.drop-after::before { right: -3px; }
+
+/* Buttons with a leading icon and a "haptic" press: a quick squeeze while held (and a tap on a Force Touch
+   trackpad), then a short spring back. No hover motion: these are pressed many times a day. */
+.btn.haptic { height: 32px; padding: 0 14px 0 11px; gap: 7px; font-weight: 500;
+  transition: transform 240ms var(--ease-spring), background-color 120ms ease, border-color 120ms ease; }
+.btn.haptic:active:not(:disabled) { transform: scale(0.96); transition: transform 100ms var(--ease-out), background-color 120ms ease, border-color 120ms ease; }
+.btn.haptic.outline { border-color: var(--line); background: var(--panel); }
+.btn.haptic.outline:hover { background: var(--hover); border-color: #4a4a4a; }
+.btn.danger.outline { color: var(--danger); }
+.btn.primary.danger { background: #e5484d; }
+.btn.primary.danger:hover { background: #f2555a; }
+
+/* home: the sidebar holds the search, the folders and the archive */
+.side-search { display: flex; align-items: center; gap: 7px; height: 32px; margin: 0 0 12px; padding: 0 8px 0 9px; border-radius: 7px;
+  background: var(--panel-2); border: 1px solid transparent; color: var(--text-3); cursor: text; }
+.side-search:hover { border-color: var(--line); }
+.side-search:focus-within { border-color: var(--accent); color: var(--text-2); }
+.side-search svg.i { width: 14px; height: 14px; }
+.side-search input { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; outline: none; padding: 0; color: var(--text); }
+.side-search input::placeholder { color: var(--text-3); }
+.side-search kbd { margin: 0; cursor: pointer; color: var(--text-2); }
+.home-nav .count { color: var(--text-3); font-size: 11px; }
+.home-nav.on .count { color: var(--text-3); }
+/* drop targets light up while something is dragged over them */
+.drop-over, .home-nav.drop-over, .crumb.drop-over { background: var(--accent-soft) !important; color: var(--accent) !important;
+  box-shadow: inset 0 0 0 1.5px var(--accent); }
+.card.dragging { opacity: .4; }
+body.dnd .card:not(.folder-card) .more { display: none; }
+
+/* home: title (or the folder path) and the actions where the search used to be */
+#home-title { display: flex; align-items: center; gap: 2px; min-width: 0; overflow: hidden; }
+#home-title h1 { font-size: 17px; margin: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+#home-title .crumb { height: 28px; padding: 0 6px; border: 0; border-radius: 6px; background: transparent; color: var(--text-2); font-size: 17px;
+  font-weight: 600; cursor: pointer; white-space: nowrap; flex: none; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+#home-title .crumb:first-child { margin-left: -6px; }
+#home-title .crumb:hover { background: var(--hover); color: var(--text); }
+#home-title .sep { color: var(--text-3); display: grid; place-items: center; flex: none; }
+.home-top { gap: 8px; }
+.home-top .btn { flex: none; }
+@container (max-width: 760px) { .home-top .btn.haptic .lbl { display: none; } .home-top .btn.haptic { width: 32px; padding: 0; justify-content: center; } }
+#home-folders-sec { margin-bottom: 26px; }
+#home-files-wrap { padding-top: 6px; }
+.cards.folders { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.folder-card { display: flex; align-items: center; gap: 12px; padding: 12px 40px 12px 12px; }
+.folder-card .fic { width: 38px; height: 38px; border-radius: 9px; display: grid; place-items: center; background: #353535; color: var(--text-2); flex: none; }
+.folder-card:hover .fic { color: var(--text); }
+.folder-card .meta { padding: 0; }
+.folder-card .more { top: 50%; margin-top: -12px; }
+.folder-card.drop-over .fic { background: var(--accent); color: #fff; }
+.card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.card-menu .danger { color: var(--danger); }
+.card-menu .danger:hover, .card-menu .danger.kb { background: #e5484d; color: #fff; }
+.card-menu .k svg.i { width: 12px; height: 12px; }
+.move-menu { min-width: 230px; max-height: 360px; overflow-y: auto; }
+.move-menu .head { color: var(--text-3); font-size: 11px; padding: 4px 10px 6px; cursor: default; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.move-menu .head:hover { background: transparent; color: var(--text-3); }
+.move-menu .opt .ol { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.move-menu .opt .ck { visibility: hidden; display: inline-flex; }
+.move-menu .opt.sel .ck { visibility: visible; }
+.move-menu svg.i { width: 14px; height: 14px; }
+#confirm-body { white-space: pre-line; color: var(--text-2); word-break: break-word; }
+
+/* the New file page: one centred column, like Figma's new tab */
+#newpage { position: fixed; left: 0; right: 0; bottom: 0; z-index: 45; background: var(--panel); overflow-y: auto; }
+.np-inner { max-width: 800px; margin: 0 auto; padding: 60px 32px 48px; }
+.np-starts { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
+.np-start { padding-left: 8px; }
+.np-start .ic { position: relative; width: 18px; height: 18px; border-radius: 4px; color: #fff; flex: none; }
+.np-start .ic svg.i { position: absolute; left: 3px; top: 3px; width: 12px; height: 12px; }
+.k2d { background: var(--accent); }
+.k3d { background: #7b61ff; }
+.kimp { background: #5a5a5a; }
+.np-search { display: flex; align-items: center; gap: 9px; height: 32px; margin: 24px 0 0; padding: 0 10px; border-radius: 6px;
+  background: #383838; border: 1px solid transparent; color: var(--text-2); cursor: text; }
+.np-search:hover { border-color: #444; }
+.np-search:focus-within { border-color: var(--accent); }
+.np-search svg.i { width: 14px; height: 14px; }
+.np-search input { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; outline: none; padding: 0; color: var(--text); }
+.np-search input::placeholder { color: var(--text-3); }
+.np-h { font-size: 13px; font-weight: 600; margin: 24px 0 8px; }
+.np-list { display: flex; flex-direction: column; margin: 0 -8px; }
+/* name and time in two columns, like Figma: thumbnail, name (flexible), when (fixed) */
+.np-row { display: grid; grid-template-columns: 86px minmax(0, 1fr) minmax(120px, 0.7fr); align-items: center; column-gap: 16px; height: 58px; padding: 0 8px;
+  border-radius: 8px; cursor: pointer; transition: transform 140ms var(--ease-out); }
+.np-row:hover { background: #333; }
+.np-row:active { transform: scale(0.99); }
+.np-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.np-row .th { position: relative; width: 86px; height: 50px; border-radius: 4px; overflow: hidden; display: grid; place-items: center;
+  background: repeating-conic-gradient(#303030 0 25%, #2a2a2a 0 50%) 0 0/10px 10px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+.np-row .th img { position: absolute; inset: 0; margin: auto; width: 76%; height: 76%; object-fit: contain; image-rendering: pixelated; }
+.np-row .kind { position: absolute; left: 4px; top: 4px; width: 16px; height: 16px; border-radius: 4px; color: #fff; z-index: 1; }
+.np-row .kind svg.i { position: absolute; left: 3px; top: 3px; width: 10px; height: 10px; }
+.np-row .t { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.np-row .when { color: var(--text-2); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.np-empty { color: var(--text-2); padding: 18px 8px; }
+.np-more { display: inline-flex; align-items: center; gap: 2px; margin: 10px 0 0 -6px; height: 28px; padding: 0 6px; border: 0; border-radius: 6px;
+  background: transparent; color: var(--text-2); font-weight: 500; cursor: pointer; transition: transform 120ms var(--ease-out); }
+.np-more:hover { color: var(--accent-hover); background: var(--accent-soft); }
+.np-more:active { transform: scale(0.97); }
+.np-more { color: var(--accent); line-height: 1; gap: 3px; }
+.np-more svg.i { width: 14px; height: 14px; margin-top: 1px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn.haptic, .np-more, .tb-home, .tb-add, .tab .x, .card, .np-row { transition: none; }
+  .btn.haptic:active:not(:disabled), .np-more:active, .tb-home:active, .tb-add:active, .tab .x:active, .card:active, .np-row:active { transform: none; }
+}
+
+/* Sidebar: the page you are on gets a background and the full foreground colour for its text and icon; the
+   others stay muted until hovered. */
+.home-nav.on { background: #3a3a3a; color: var(--text); }
+.home-nav:not(.on):hover { background: #313131; } /* hover stays a step below the page you are on */
+
+/* Empty states span the whole grid instead of sitting in its first cell. */
+.cards > .empty { grid-column: 1 / -1; }
+
+/* Cards are pressable: a slight squeeze (not when the press is on their … button). */
+.card { transition: transform 160ms var(--ease-out), border-color 120ms ease; }
+.card:active:not(:has(.more:active)) { transform: scale(0.985); }
+
+
+/* The 2D file icon's pixel is the accent colour, like the app icon's; on an accent badge (or the active tab, whose icon
+   is already the accent colour) it takes the icon's own colour so it stays visible. */
+svg.i .px { fill: var(--accent); }
+.k2d svg.i .px, .k3d svg.i .px, .tab.on svg.i .px, .menu-list div:hover svg.i .px, .menu-list > div.kb svg.i .px { fill: currentColor; }
+
+/* GitHub and X, quietly at the bottom of the home sidebar */
+.side-links { display: flex; gap: 2px; padding: 8px 2px 0; flex: none; }
+.side-link { width: 32px; height: 32px; display: grid; place-items: center; border: 0; border-radius: 7px; background: transparent;
+  color: var(--text-3); cursor: pointer; padding: 0; transition: transform 120ms var(--ease-out); }
+.side-link svg.i { width: 16px; height: 16px; }
+.side-link:hover { background: #313131; color: var(--text); }
+.side-link:active { transform: scale(0.94); }
+@media (prefers-reduced-motion: reduce) { .side-link { transition: none; } .side-link:active { transform: none; } }
+
+/* GitHub stars, at the right end of the tab bar: the bar's own 28px control, the count in tabular figures */
+.tb-stars { flex: none; margin-left: auto; height: var(--tab-h); display: inline-flex; align-items: center; gap: 6px; padding: 0 10px 0 8px;
+  border: 1px solid #2c2c2c; border-radius: 7px; background: #202020; color: var(--text-2); font-weight: 500;
+  font-variant-numeric: tabular-nums; cursor: pointer; white-space: nowrap; transition: transform 140ms var(--ease-out); }
+.tb-stars svg.i { width: 14px; height: 14px; }
+.tb-stars:hover { background: var(--tab-on); border-color: #383838; color: var(--text); }
+.tb-stars:active { transform: scale(0.96); }
+@media (prefers-reduced-motion: reduce) { .tb-stars { transition: none; } .tb-stars:active { transform: none; } }
+
+/* ======================================================= Liquid Glass
+   Three layers, like macOS 26:
+   1. Chrome sits on the window's own glass (a native sidebar-material view behind the page, the desktop blurred
+      through it): the tab bar, the editor's toolbar row and panels, the home sidebar. They have no fill of their
+      own and no lines between them, so the top of the window and the sidebar read as one piece.
+   2. Content sits on solid, rounded sheets on that glass: the canvas, the home pages, the New file page.
+   3. Floating things are frosted glass above everything: menus, dialogs, the colour picker, tooltips, the toast,
+      the drawing toolbar and the canvas chips. A light inner edge on top catches the "light". */
+:root {
+  --glass-fill: rgba(40, 40, 44, 0.62);
+  --glass-fill-strong: rgba(34, 34, 38, 0.78);
+  --glass-edge: rgba(255, 255, 255, 0.1);
+  --glass-shine: inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  --glass-blur: blur(24px) saturate(180%);
+  --on-glass: rgba(255, 255, 255, 0.07);       /* controls and hover on glass */
+  --on-glass-strong: rgba(255, 255, 255, 0.12); /* the selected one */
+  --sheet: #1c1c1e;
+  --sheet-edge: 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --tab-on: var(--on-glass-strong);
+  --tab-hover: var(--on-glass);
+}
+html, body { background: transparent; }
+
+/* 1 — chrome on the window's glass */
+#tabbar { background: transparent; box-shadow: none; }
+#top, #left, #right, #frames, .home-side { background: transparent; }
+#top { border-bottom: 0; }
+#left { border-right: 0; }
+#right { border-left: 0; }
+#frames { border-top: 0; }
+.sec { border-bottom-color: rgba(255, 255, 255, 0.06); }
+.home-side { border-right: 0; }
+#home { background: transparent; }
+.tb-stars { background: var(--on-glass); border-color: rgba(255, 255, 255, 0.06); }
+.tb-stars:hover { background: var(--on-glass-strong); border-color: rgba(255, 255, 255, 0.1); }
+.home-nav.on { background: var(--on-glass-strong); }
+.home-nav:not(.on):hover { background: var(--on-glass); }
+.side-search, .np-search { background: var(--on-glass); }
+.side-search:hover, .np-search:hover { border-color: rgba(255, 255, 255, 0.08); }
+.side-link:hover { background: var(--on-glass); }
+/* fields and controls in the glass panels */
+.layer:hover, .btn:hover:not(:disabled), .collapse-btn:hover { background: var(--on-glass); }
+
+/* 2 — content on solid rounded sheets */
+#stage { background: var(--sheet); border-radius: 12px; box-shadow: var(--sheet-edge); }
+.home-main { background: var(--sheet); border-radius: 12px; margin: 0 8px 8px 0; box-shadow: var(--sheet-edge); }
+.home-top { background: var(--sheet); }
+#newpage { left: 8px; right: 8px; bottom: 8px; border-radius: 12px; background: var(--sheet); box-shadow: var(--sheet-edge); }
+.np-row:hover { background: var(--on-glass); }
+.btn.haptic.outline { background: var(--on-glass); border-color: rgba(255, 255, 255, 0.1); box-shadow: var(--glass-shine); }
+.btn.haptic.outline:hover { background: var(--on-glass-strong); border-color: rgba(255, 255, 255, 0.14); }
+.btn.primary { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22); }
+
+/* 3 — floating glass */
+.menu-list, .popover, .modal, .tip, #toast, #toolbar, .chip-float {
+  background: var(--glass-fill); border-color: var(--glass-edge);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); }
+.menu-list, .popover { box-shadow: var(--glass-shine), 0 12px 32px rgba(0, 0, 0, 0.45); border-radius: 12px; }
+.menu-list div { border-radius: 7px; }
+.modal { background: var(--glass-fill-strong); border-radius: 18px; box-shadow: var(--glass-shine), 0 24px 70px rgba(0, 0, 0, 0.55); }
+.modal-bg { background: rgba(0, 0, 0, 0.32); }
+#toolbar { border-radius: 14px; box-shadow: var(--glass-shine), 0 10px 30px rgba(0, 0, 0, 0.4); }
+.tool { border-radius: 9px; }
+.chip-float { border-radius: 8px; }
+#toast { border-radius: 12px; box-shadow: var(--glass-shine), 0 8px 24px rgba(0, 0, 0, 0.4); }
+.tip { background: var(--glass-fill-strong); border-color: var(--glass-edge); box-shadow: var(--glass-shine), 0 6px 18px rgba(0, 0, 0, 0.4); }
+.tip::after { background: rgba(38, 38, 42, 0.92); border-color: var(--glass-edge) !important; }
+/* When Reduce Transparency is on, the floating glass turns solid. */
+@media (prefers-reduced-transparency: reduce) {
+  .menu-list, .popover, .modal, .tip, #toast, #toolbar, .chip-float { background: #262628; -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+/* GitHub stars line up with the page's right edge: 8px sheet margin + 32px page padding on the home screen and the
+   New file page; in the editor, with the toolbar row's Export button (8px). */
+#tabbar { padding-right: 40px; }
+body[data-view="editor"] #tabbar { padding-right: 8px; }
+/* The home screen and the New file page no longer paint over the editor (they are glass), so the editor steps away
+   while they show. visibility keeps its layout, so the canvas is ready the moment you go back. */
+body[data-view="home"] #app, body[data-view="new"] #app { visibility: hidden; }
+
+/* ======================================================= button type and icon sizes
+   One rule set, from measuring every button: labels are 11.5px; an icon beside a label is 14px (a step above the
+   text, as in the tabs and the stars button), an icon on its own is 16px (the drawing tools 18px), sidebar rows keep
+   16px like the Finder's; a disclosure chevron after a label is 12px. Labelled buttons are medium (500), the accent
+   buttons semibold (600). Measured centring: icons on the button's middle, labels' cap-height middle within 0.5px. */
+.btn:not(.icon) > svg.i, .btn.swapper > .swap > svg.i, .chip > svg.i { width: 14px; height: 14px; }
+.btn:not(.icon), .chip { font-weight: 500; }
+.btn.primary, .btn.haptic.primary { font-weight: 600; }
+[data-menu="file-menu"] { gap: 4px; padding-right: 6px; }
+[data-menu="file-menu"] > svg.i { width: 12px; height: 12px; color: var(--text-2); }
+/* Fold chevrons (Frames, Activity): 12px. ".chev" alone lost to "svg.i", so they were drawn at 16px. */
+svg.i.chev { width: 12px; height: 12px; }
+
+/* ======================================================= controls: one system for every button and input
+   Measured across every page, then set once:
+   - Heights by place: 32 page headers, the editor's toolbar row and dialogs; 28 the tab bar; 26 panel rows, the
+     frames bar and tables; 24 icon buttons in section heads. Controls side by side share one height and centre.
+   - One corner radius (7px), 6px on 24px icon buttons, 5px on the segments inside a segmented control.
+   - One fill per kind: ghost (no fill), secondary (white tint, hairline, a top shine), primary (accent), toggle on
+     (accent tint), and fields (inputs, steppers, dropdowns, search, segmented tracks: a lighter white tint). */
+:root { --field: rgba(255, 255, 255, 0.06); --secondary: rgba(255, 255, 255, 0.07); --hairline: rgba(255, 255, 255, 0.1); --r-ctl: 7px; }
+
+/* heights */
+#top .btn, #top .seg { height: 32px; }
+#top .btn.icon { width: 32px; }
+#top .seg { padding: 2px; }
+#top .seg button { height: 28px; padding: 0 12px; }
+#frames-bar .btn.small, #frames-bar .chip, #frames-bar .stepper, #frames-bar .collapse-btn { height: 26px; }
+#frames-bar .btn.small.icon { width: 26px; }
+#app.frames-closed { grid-template-rows: 44px 1fr 38px; }
+.agents .btn.small, .cmd .btn.small, .codebox .copy { height: 26px; }
+.modal footer .btn { height: 32px; padding: 0 14px; }
+.modal input.field { height: 32px; }
+
+/* radius */
+.btn, .chip, .dd-btn, .stepper, input.field, .seg, .side-search, .np-search, .collapse-btn { border-radius: var(--r-ctl); }
+.btn.small.icon { border-radius: 6px; }
+.seg button { border-radius: 5px; }
+
+/* fields */
+input.field, .stepper, .dd-btn, .seg, .side-search, .np-search { background: var(--field); }
+input.field, .stepper, .dd-btn, .side-search, .np-search { border: 1px solid transparent; }
+input.field:hover, .stepper:hover, .dd-btn:hover, .side-search:hover, .np-search:hover { border-color: var(--hairline); }
+input.field:focus, .stepper:focus-within, .dropdown.open .dd-btn, .side-search:focus-within, .np-search:focus-within { border-color: var(--accent); }
+
+/* secondary buttons and toggles */
+.btn.outline, .chip { background: var(--secondary); border-color: var(--hairline); box-shadow: var(--glass-shine); }
+.btn.outline:hover:not(:disabled), .chip:hover { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.14); color: var(--text); }
+.chip.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); box-shadow: none; }
+/* GitHub stars: a badge, fully rounded (the one pill in the tab bar, so it reads as a count, not a tab). */
+.tb-stars { border-radius: 999px; padding: 0 11px 0 9px; }
+
+/* ======================================================= home: show, sort, grid or list
+   A toolbar above the files: how many there are on the left; which kind to show, how to sort and grid or list on the
+   right. The list has columns (Name, Last modified, Size, Location) whose headers sort too. */
+.home-tools { display: flex; align-items: center; gap: 8px; margin: 0 0 16px; min-height: 26px; }
+.home-tools #home-count { font-size: 11.5px; }
+#home-filter, #home-sort { width: auto; flex: none; }
+.home-tools .dd-btn { width: auto; height: 26px; gap: 6px; padding: 0 8px 0 10px; font-weight: 500; }
+.home-tools .dd-btn .v { flex: none; }
+.view-seg { flex: none; }
+.view-seg button { width: 28px; height: 22px; padding: 0; display: grid; place-items: center; }
+.view-seg button svg.i { width: 14px; height: 14px; }
+
+/* cards: every preview the same 4:3 box with the picture centred inside; the kind as the file's own icon */
+.card .pv { position: relative; aspect-ratio: 4 / 3; min-height: 0; overflow: hidden; }
+.card .pv img { position: absolute; inset: 0; margin: auto; width: 72%; height: 72%; object-fit: contain; }
+.card .kind, .fl-item .kind { width: 18px; height: 18px; border-radius: 5px; color: #fff; flex: none; }
+.card .kind { position: absolute; left: 8px; top: 8px; }
+.fl-item .kind { position: relative; }
+.card .kind svg.i, .fl-item .kind svg.i { position: absolute; left: 3px; top: 3px; width: 12px; height: 12px; }
+.kfolder { background: #5a5a5a; }
+.card .meta .loc { color: var(--text-2); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 3px; }
+/* the … button shows for the keyboard too, not only on hover */
+.card:focus-within .more, .fl-item:hover .more, .fl-item:focus-within .more { opacity: 1; }
+
+/* list view */
+.file-list { display: flex; flex-direction: column; }
+.fl-row { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1.3fr) 26px; align-items: center;
+  column-gap: 16px; height: 44px; padding: 0 8px 0 12px; border-radius: 8px; }
+.fl-head { height: 32px; margin-bottom: 4px; border-radius: 0; box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.07); }
+.fl-col { justify-self: start; display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 6px; margin-left: -6px; border: 0;
+  border-radius: 6px; background: transparent; color: var(--text-2); font: inherit; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.fl-col:hover { color: var(--text); background: var(--on-glass); }
+.fl-col.on { color: var(--text); }
+.fl-col.static { cursor: default; }
+.fl-col.static:hover { background: transparent; color: var(--text-2); }
+.fl-col svg.i { width: 12px; height: 12px; }
+.fl-item { cursor: pointer; transition: transform 140ms var(--ease-out); }
+.fl-item:hover { background: var(--on-glass); }
+.fl-item:active:not(:has(.more:active)) { transform: scale(0.995); }
+.fl-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.fl-item .c-name { display: flex; align-items: center; gap: 10px; min-width: 0; font-weight: 600; }
+.fl-item .nm, .fl-item .c-when, .fl-item .c-size, .fl-item .c-loc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.fl-item .c-when, .fl-item .c-size, .fl-item .c-loc { color: var(--text-2); }
+.fl-item.missing .c-when { color: var(--danger); }
+.fl-item .more { opacity: 0; }
+.fl-item.dragging { opacity: .4; }
+@container (max-width: 640px) {
+  .fl-row { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 0.8fr) 26px; }
+  .fl-row .c-loc { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .fl-item { transition: none; } .fl-item:active { transform: none; } }
+
+/* the sidebar's pages are real buttons now */
+button.home-nav { width: 100%; border: 0; background: transparent; font: inherit; text-align: left; }
+
+/* ======================================================= contrast (WCAG 2.1 AA: 4.5:1 for text)
+   Measured against the sheets and the dark window glass. Secondary and faint text are a step lighter; white labels
+   sit on a deeper orange (the bright brand orange stays for icons, outlines and highlights); orange text on an
+   orange tint is lighter. */
+:root { --text-2: #b3b3b3; --text-3: #949494; --accent-strong: #d6390c; --accent-strong-hover: #c4320a; --accent-text: #ff8a66; }
+.btn.primary, .btn.haptic.primary { background: var(--accent-strong); }
+.btn.primary:hover:not(:disabled), .btn.haptic.primary:hover:not(:disabled) { background: var(--accent-strong-hover); }
+.btn.primary.danger { background: #c9343a; }
+.btn.primary.danger:hover:not(:disabled) { background: #b82f35; }
+.menu-list div:hover, .menu-list > div.kb, .dd-list .opt.kb, .tool.on, .act .who.agent { background: var(--accent-strong); }
+.card-menu .danger:hover, .card-menu .danger.kb { background: #c9343a; }
+.chip.on { color: var(--accent-text); }
+.pill.missing { color: #a3a3a3; background: #2f2f2f; }
+
+/* openpixel.dev: the app icon in its own colours, first of the sidebar links, so it stands out from the grey marks */
+.side-link.app-link img { width: 20px; height: 20px; display: block; border-radius: 5px; }
+.side-link.app-link:hover img { filter: brightness(1.12); }
+
+/* New 2D / 3D file dialog: page-tier controls (32px), labels in a left column, presets under the size */
+.newfile .content { padding-top: 4px; }
+.newfile .row { margin-top: 12px; }
+.newfile .row > label { width: 64px; color: var(--text-2); flex: none; }
+.newfile #nf-name { flex: 1; height: 32px; }
+.newfile .stepper { height: 32px; }
+.newfile .stepper button { height: 30px; width: 26px; }
+.newfile .stepper input { width: 46px; height: 30px; }
+.newfile .times { color: var(--text-2); }
+.newfile .nf-presets { margin-top: 8px; gap: 6px; }
+.newfile #nf-palette { flex: 1; }
+.newfile #nf-palette .dd-btn { height: 32px; }
+.newfile .nf-hint { margin: 12px 0 0 70px; color: var(--text-2); font-size: 11px; line-height: 1.45; min-height: 32px; }
+/* Menus and dropdown lists: mostly solid glass, so what is behind them (a dialog's buttons, the canvas) can't show
+   through their items and compete with the text. */
+.menu-list, .popover { background: rgba(34, 34, 38, 0.94); }
+
+/* Layer rows match the home sidebar's rows: inset 10px from the panel's edges, rounded, the icon 10px in and 9px
+   before the name (the sidebar's gap). */
+#layers { margin: 0 -2px; }
+.layer { padding: 0 6px 0 10px; border-radius: 6px; }
+.layer .lic { display: flex; margin-right: 5px; } /* + the row's 4px gap = 9px */
+
+/* ======================================================= empty states
+   The pixel-art scene over the message. The sheets are 12 frames of 32×32 side by side, shown with crisp pixels at
+   48px (3 screen pixels per art pixel on Retina; 32px when small) and played slowly in equal steps (280ms a frame;
+   the art holds frames for its pauses), so a loop takes 3.4s. With Reduce Motion on, the first frame stays still. */
+.empty.empty-state, .np-empty.empty-state { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 40px 24px 48px;
+  border: 0; border-radius: 0; text-align: center; color: var(--text-2); }
+.empty-state p { margin: 0; max-width: 360px; line-height: 1.5; }
+.pxa { --s: 48px; flex: none; width: var(--s); height: var(--s); background-repeat: no-repeat; background-size: calc(var(--s) * 12) var(--s);
+  image-rendering: pixelated; animation: pxa-play 3.36s steps(12) infinite; }
+.pxa-search { background-image: url(empty/search.png); }
+.pxa-archive { background-image: url(empty/archive.png); }
+.pxa-folder { background-image: url(empty/folder.png); }
+.pxa-files { background-image: url(empty/files.png); }
+@keyframes pxa-play { to { background-position: calc(var(--s) * -12) 0; } }
+/* small: beside its message, for a section that sits above the main list */
+.empty-state.small { flex-direction: row; justify-content: flex-start; gap: 14px; padding: 4px 0; text-align: left; }
+.empty-state.small .pxa { --s: 32px; }
+@media (prefers-reduced-motion: reduce) { .pxa { animation: none; } }
+
+/* Agents table: the "Other MCP app" row's status is a neutral tag, not a connection state */
+.pill.any { background: #2f2f2f; color: var(--text-2); }
+.pill.any::before { display: none; }
+
+/* Agents: the files list's rows (same header, hairline, 44px rows, hover), not a bordered table */
+.agent-list .fl-row { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) 140px; } /* a fixed last column, so the header lines up with the rows */
+.agent-row .c-name { display: flex; align-items: center; gap: 10px; min-width: 0; font-weight: 600; }
+.agent-row .aname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.agent-row .alogo { width: 26px; height: 26px; border-radius: 7px; }
+.agent-row .alogo svg, .agent-row .alogo img { width: 16px; height: 16px; }
+.agent-row .c-info { justify-self: end; }
+#agents-body .agent-row:hover { background: var(--on-glass); } /* helps the eye follow a row to its button */
+
+/* Agent guides. The prompt reads as step zero: no box of its own, the spark in the numbers' 24px gutter, a bold line
+   and a muted line like the steps' text, and the same code box. A hairline label divides it from the manual steps. */
+.setup-prompt { display: grid; grid-template-columns: 24px minmax(0, 1fr); margin: 4px 0 0; line-height: 1.5; }
+.setup-prompt .sp-mark { display: flex; align-items: center; height: 18px; color: var(--accent-text); }
+.setup-prompt .sp-mark svg.i { width: 14px; height: 14px; }
+.setup-prompt .sp-head { font-weight: 600; color: var(--text); }
+.setup-prompt .sp-text { color: var(--text-2); }
+.setup-prompt pre.code { max-height: 168px; overflow: auto; word-break: break-word; }
+.sp-or { display: flex; align-items: center; gap: 10px; margin: 18px 0 12px; color: var(--text-3); font-size: 11.5px; font-weight: 500; }
+.sp-or::after { content: ''; flex: 1; height: 1px; background: var(--hairline); }
+
+/* Toggle buttons that are on (Ghost, Edges, Bounds): the light accent reads at 4.5:1 on the tinted fill */
+.btn.on, .btn.on svg.i { color: var(--accent-text); }
+
+/* Folder cards: the three newest files inside, side by side on the checkerboard like file previews, then the folder
+   icon and name. No counts or dates; the … button sits on the name row. Dropping onto a folder lights its border. */
+.cards.folders { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+.folder-card { display: block; padding: 10px; }
+.folder-card .fprev { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.folder-card .ft { position: relative; aspect-ratio: 4 / 3; border-radius: 7px; overflow: hidden; border: 1px solid var(--hairline);
+  display: grid; place-items: center; color: var(--text-3);
+  background: repeating-conic-gradient(#303030 0 25%, #2a2a2a 0 50%) 0 0/10px 10px; }
+.folder-card .ft.empty { background: rgba(255, 255, 255, 0.03); }
+.folder-card .ft img { position: absolute; inset: 0; margin: auto; width: 72%; height: 72%; object-fit: contain; image-rendering: pixelated; }
+.folder-card .fmeta { display: flex; align-items: center; gap: 10px; min-width: 0; height: 24px; margin-top: 12px; padding: 0 34px 0 6px; }
+.folder-card .fic { width: auto; height: auto; background: none; border-radius: 0; color: var(--text-2); display: flex; }
+.folder-card .fmeta .t { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.folder-card .more { top: auto; right: 10px; bottom: 10px; margin-top: 0; } /* the row is as tall as the button, both end with the previews */
+.folder-card.drop-over { border-color: var(--accent); }
+.folder-card.drop-over .fic { background: none; color: var(--accent); }
+
+/* Editor left side, like Figma: a 64px rail (app menu, then Layers and Activity with their labels under the icons)
+   and the panel the active one fills, from the top of the window to the bottom. The top bar now spans the canvas and
+   the right panel only. With the panel hidden its column folds to nothing and the rail stays. */
+:root { --rail-w: 64px; }
+#app { grid-template-columns: var(--rail-w) var(--left-w) 1fr var(--right-w);
+  grid-template-areas: "rail left top top" "rail left stage right" "rail left frames right"; }
+#app.left-closed { --left-w: 0px; }
+#app.left-closed #left, #app.left-closed .resizer[data-resize="left"] { display: none; }
+.resizer[data-resize="left"] { left: calc(var(--rail-w) + var(--left-w) - 4px); top: 0; }
+#rail { grid-area: rail; position: relative; z-index: 50; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 8px 0; }
+#rail .menu-list { top: 0; left: calc(100% + 6px); min-width: 220px; }
+.rail-app { width: 40px; height: 40px; border: 0; border-radius: 10px; background: transparent; display: grid; place-items: center; cursor: pointer;
+  transition: background 120ms ease, transform 120ms var(--ease-out); }
+.rail-app img { width: 28px; height: 28px; display: block; border-radius: 7px; }
+.rail-app:hover, #file-menu.open .rail-app { background: var(--on-glass); }
+.rail-app:active { transform: scale(0.96); }
+.rail-sep { width: 28px; border: 0; border-top: 1px solid var(--hairline); margin: 4px 0; }
+.rail-btn { width: 56px; border: 0; background: none; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  color: var(--text-2); cursor: pointer; font-size: 11px; }
+.rail-btn .ri { position: relative; width: 40px; height: 36px; border-radius: 9px; display: grid; place-items: center;
+  transition: background 120ms ease, transform 120ms var(--ease-out); }
+.rail-btn .ri svg.i { width: 18px; height: 18px; }
+.rail-btn:hover { color: var(--text); }
+.rail-btn:hover .ri { background: var(--on-glass); }
+.rail-btn.on { color: var(--text); }
+.rail-btn.on .ri { background: var(--accent-soft); color: var(--accent-text); }
+.rail-btn:active .ri { transform: scale(0.95); }
+.rail-btn:focus-visible { outline: none; }
+.rail-btn:focus-visible .ri { outline: 2px solid var(--accent); outline-offset: 1px; }
+.rail-dot { position: absolute; top: 6px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px #1e1e20; }
+@media (prefers-reduced-motion: reduce) { .rail-app, .rail-btn .ri { transition: none; } .rail-app:active, .rail-btn:active .ri { transform: none; } }
+
+#left { border-right: 0; } /* glass: the rail, panel and canvas sit side by side without lines */
+.doc-head { padding: 6px 8px 6px 12px; flex: none; }
+.doc-row { display: flex; align-items: center; gap: 4px; height: 32px; }
+#left-collapse { flex: none; color: var(--text-2); }
+#left-collapse:hover { color: var(--text); }
+#left .pane { flex: 1; min-height: 0; display: flex; flex-direction: column; border-bottom: 0; }
+#left .pane[hidden] { display: none; }
+#activity-sec { max-height: none; }
+#activity-sec .sec-head { cursor: default; margin-bottom: 6px; }
+#activity { flex: 1; min-height: 0; }
+#top { padding-left: 12px; }
+
+/* The selected layer looks like the page you are on in the sidebar: a lighter fill, its icon and name in the
+   foreground colour, so it is clear which one Delete, Duplicate and Merge act on. */
+.layer.on { background: var(--on-glass-strong); }
+.layer.on:hover { background: var(--on-glass-strong); }
+.layer.on .lic { color: var(--text); }
+.layer.on .lname { color: var(--text); font-weight: 500; }
+
+/* Names that rename in place (file in the panel, tabs, cards, rows, folders): a field the size of the text it
+   replaces, in the accent outline layers use. */
+input.rename { font: inherit; color: var(--text); width: 100%; min-width: 60px; height: 24px; margin: -3px 0; padding: 0 6px;
+  background: var(--field); border: 1px solid var(--accent); border-radius: 5px; outline: none; }
+.tab .name input.rename { height: 22px; margin: 0; }
+.doc-row { gap: 2px; }
+.doc-name { min-width: 0; max-width: calc(100% - 76px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-weight: 600; font-size: 14px; color: var(--text); padding: 4px 4px 4px 0; cursor: default; }
+.doc-name:has(input.rename) { flex: 1; max-width: none; overflow: visible; }
+.doc-more { flex: none; width: 24px; height: 24px; color: var(--text-2); }
+.doc-more svg.i { width: 16px; height: 16px; }
+.doc-more:hover { color: var(--text); }
+.folder-card .fmeta .t:has(input.rename), .card .meta .t:has(input.rename), .fl-item .nm:has(input.rename) { overflow: visible; flex: 1; }
+
+/* The 2D/3D switch sits over the middle of the canvas, whatever the panels' widths (the top bar also spans the right
+   panel, so its own middle is off). The selected segment fills the track evenly: 2px all round, with a shadow that
+   doesn't weigh down one edge. */
+#top { position: relative; grid-template-columns: min-content 1fr; } /* the left part is empty now: no width */
+#mode-seg { position: absolute; top: 50%; left: calc((100% - var(--right-w)) / 2); transform: translate(-50%, -50%);
+  align-items: center; z-index: 1; }
+#mode-seg button { margin: 0; display: grid; place-items: center; line-height: 1; }
+#mode-seg button.on { box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.08), 0 1px 3px rgba(0, 0, 0, 0.25); }
+#top .right { justify-self: end; } /* only as wide as its buttons, at the end */
+
+/* The sidebar's first row reads as one line with the top bar: the app icon, the file name, its chevron and the
+   collapse button share the bar's middle (22px down), and the name starts where the Layers heading below does. */
+#rail { padding-top: 2px; }
+.doc-head { padding-left: 6px; padding-right: 12px; }
+/* The chevron and collapse buttons are the Layers buttons' size (24px, 16px icons); collapse sits over Delete. */
+/* The rail's divider lines up with the canvas's top edge (44px down, under the 40px app icon and its 2px). */
+.rail-sep { margin: -4px 0 4px; }
+
+/* Rail buttons are icons only (the name is a tooltip): one 40×40 square each, like the app icon above. */
+.rail-btn { width: 40px; gap: 0; }
+.rail-btn .ri { width: 40px; height: 40px; }
+
+/* --screenshot: the page paints the dark glass behind itself (the colour the window shows), so pictures never come out
+   see-through. */
+html.screenshot, html.screenshot body { background: #2b2b2e; }
+
+/* Update: a round button just before the GitHub stars, in the same glass, with the download icon and an accent dot
+   (like the Activity dot). It shows only when a newer version is out. */
+.tb-update { position: relative; flex: none; margin-left: auto; width: var(--tab-h); height: var(--tab-h); padding: 0;
+  display: grid; place-items: center; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--on-glass); color: var(--text); cursor: pointer; transition: transform 140ms var(--ease-out), background 120ms ease; }
+.tb-update svg.i { width: 16px; height: 16px; }
+.tb-update:hover { background: var(--on-glass-strong); border-color: rgba(255, 255, 255, 0.1); }
+.tb-update:active { transform: scale(0.96); }
+.tb-update .tb-dot { position: absolute; top: 3px; right: 3px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+  box-shadow: 0 0 0 2px #2b2b2e; }
+.tb-update:not([hidden]) + .tb-stars { margin-left: 0; } /* the bar's own gap between them */
+@media (prefers-reduced-motion: reduce) { .tb-update { transition: none; } .tb-update:active { transform: none; } }
+
+/* The rail is a frosted column the whole height of the sidebar, in the fill of the selected tab above it. Its icons
+   are the sidebar's size (16px); the open one is in the accent with no box behind it. The app menu is the app's own
+   icon (the 2D file mark, its pixel in the accent), as it is next to GitHub in the home sidebar. */
+#rail { background: var(--tab-on); } /* drawn exactly like the selected tab: the same fill on the same glass, no extra filter */
+.rail-app svg.i, .rail-btn .ri svg.i { width: 16px; height: 16px; }
+.rail-app { color: var(--text); }
+.rail-btn.on .ri { background: none; color: var(--accent); }
+.rail-btn.on:hover .ri { background: var(--on-glass); }
+.rail-dot { box-shadow: 0 0 0 2px #3a3a3d; }
+
+/* The rail floats like the selected tab: the tab's fill, inset 8px from the window's left and bottom edges and 4px
+   from the top and from the panel, 12px corners (the canvas sheet's). Inside, one 4px rhythm: 36px buttons with the
+   tab's 7px corners sit 8px from the rail's sides, so inner and outer corners nest (7 + 8 ≈ 12 + a hair of optical
+   room). The app icon's centre stays on the top bar's line (4 + 36/2 = 22px), and the divider on the canvas's top
+   edge (4 + 36 + 4 = 44px). */
+#rail { margin: 4px 4px 8px 8px; padding: 0 8px 8px; gap: 4px; border-radius: 12px; }
+.rail-app { width: 36px; height: 36px; border-radius: 7px; }
+.rail-sep { width: 24px; margin: 0 0 4px; }
+.rail-btn { width: 36px; }
+.rail-btn .ri { width: 36px; height: 36px; border-radius: 7px; }
+.rail-dot { top: 5px; right: 6px; box-shadow: 0 0 0 2px #3a3a3d; }
+
+/* Rail buttons fill the rail's width: no inset around the touch area, so the hover band runs edge to edge. The first
+   one (the app menu, at the rail's top) takes the rail's top corners; the File menu still opens beside the rail.
+   Heights and the 4px rhythm stay, so the icon and divider lines are unchanged. */
+#rail { padding: 0 0 8px; }
+#rail .menu { align-self: stretch; }
+.rail-app, .rail-btn { width: 100%; border-radius: 0; }
+.rail-btn .ri { width: 100%; border-radius: 0; }
+.rail-app { border-radius: 12px 12px 0 0; }
+
+/* The Layers button lines up with the Layers heading beside it (both centred 66px down): the divider (44px, level with
+   the canvas top) is followed by 3px instead of 4. */
+.rail-sep { margin-bottom: -1px; }
+
+/* A slimmer rail: 40px (8px from the window, 4px to the panel), still wider than its 36px-tall buttons. */
+:root { --rail-w: 52px; }
+
+/* Dragging a layer: the row being moved fades back; a 2px accent line shows where it lands (between two rows, or
+   under the last one for the back). */
+.layer { position: relative; }
+.layer.dragging { opacity: 0.4; }
+.layer.drop-above::after, .layer.drop-below::after, #layers.drop-end > .layer:last-child::after {
+  content: ""; position: absolute; left: 6px; right: 6px; height: 2px; border-radius: 1px; background: var(--accent); pointer-events: none; }
+.layer.drop-above::after { top: -1px; }
+.layer.drop-below::after, #layers.drop-end > .layer:last-child::after { bottom: -1px; }

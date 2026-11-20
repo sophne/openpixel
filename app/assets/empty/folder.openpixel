@@ -1,0 +1,143 @@
+{
+  "cels" : [
+    {
+      "data" : "Y2AYAoATK0BIc2AFcAWcLKxYwKg80fJcWAFCnoODDQMghz+h+CEkD3cTjvhngQGEGArA1DIKoAAA",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    },
+    {
+      "data" : "Y2AYAoATK0BIc2AFcAWcLKxYwKg80fJcWAFCnoODDQMghz+h+CEkD3cTjvhngQGEGArA1DIKoAAA",
+      "encoding" : "zlib-base64",
+      "frame" : 1,
+      "layer" : 0
+    },
+    {
+      "data" : "Y2AYAoATK0BIc2AFcAWcLKxYwKg80fJcWAFCnoODDQMghz+h+CEkD3cTjvhngQGEGArA1DIKoAAA",
+      "encoding" : "zlib-base64",
+      "frame" : 2,
+      "layer" : 0
+    },
+    {
+      "data" : "Y2AYAoATK0BIc2AFcAWcLKxYwKg8XJ4LK0DIc3CwYQDk8CUsjz9+CMnD3Ywj\/llgACGGAjC1jAIoAAA=",
+      "encoding" : "zlib-base64",
+      "frame" : 3,
+      "layer" : 0
+    },
+    {
+      "data" : "Y2AYAoATK0BIc2AFcAWcLKxYwAiS58IKEPIcHGwYADn8KJfHHz+E5OF+whH\/LDCAEEMBmFpGARQAAA==",
+      "encoding" : "zlib-base64",
+      "frame" : 4,
+      "layer" : 0
+    },
+    {
+      "data" : "Y2AYAoATK0BIc2AFcAWcLKxYwDCS58IKEPIcHGxQwA1jsCGHD0KenYA8ApAmjz9+CMnD\/Ywj\/llgACGGAjC1jAIoAAA=",
+      "encoding" : "zlib-base64",
+      "frame" : 5,
+      "layer" : 0
+    },
+    {
+      "data" : "Y2AYAoATK0BIc2AFcAWcLKxYwBCS58IKEPIcHGwYANn\/dJTnxi4PB+zY4gcj6tDk4WGCI\/5ZYAAhhgIwtYwCKAAA",
+      "encoding" : "zlib-base64",
+      "frame" : 6,
+      "layer" : 0
+    },
+    {
+      "data" : "Y2AYAoATK0BIc2AFcAWcLKxYwBCS58IKEPIcHGwYANn\/Ay+PP34IycPDhJOTG1v8s8AAJyc7QhgBkLRgkx7JAAA=",
+      "encoding" : "zlib-base64",
+      "frame" : 7,
+      "layer" : 0
+    },
+    {
+      "data" : "Y2AYAoATK0BIc2AFcAWcLKxYwBCS58IKEPIcHGwYANn\/Ay+PP34IycPDBEf8s8AAQgwFIGvBoQSulBu\/Ak52Qgbglx5sAAA=",
+      "encoding" : "zlib-base64",
+      "frame" : 8,
+      "layer" : 0
+    },
+    {
+      "data" : "Y2AYAoATK0BIc2AFcAWcLKxYwDCS58IKEPIcHGwYADl8aC+PP34IycP9jCP+WWAAIYYCMLWMAigAAA==",
+      "encoding" : "zlib-base64",
+      "frame" : 9,
+      "layer" : 0
+    },
+    {
+      "data" : "Y2AYAoATK0BIc2AFcAWcLKxYwAiS58IKEPIcHGwYADn8KJfHHz+E5OF+whH\/LDCAEEMBmFpGARQAAA==",
+      "encoding" : "zlib-base64",
+      "frame" : 10,
+      "layer" : 0
+    },
+    {
+      "data" : "Y2AYAoATK0BIc2AFcAWcLKxYwKg8XJ4LK0DIc3CwYQDk8CUsjz9+CMnD3Ywj\/llgACGGAjC1jAIoAAA=",
+      "encoding" : "zlib-base64",
+      "frame" : 11,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "empty-folder",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#ff9a78",
+    "#8f2508",
+    "#a3a3ab",
+    "#73737b",
+    "#2c2c31",
+    "#ff4a1c",
+    "#4a4a51",
+    "#141416",
+    "#d9d9df",
+    "#d6390c"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

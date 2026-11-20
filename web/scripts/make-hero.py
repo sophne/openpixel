@@ -7,13 +7,16 @@ Mediterranean illustration: peach marble, deep-to-pale Aegean blues, sage and pi
 
     python3 web/scripts/make-hero.py            preview only (a scratch PNG, path printed)
     python3 web/scripts/make-hero.py --write    draw it in OpenPixel, save the .openpixel and retake public/editor.png
+    python3 web/scripts/make-hero.py --shot     only retake public/editor.png from the saved .openpixel (after UI changes)
 """
 import json
 import math
 import os
 import random
+import shutil
 import subprocess
 import sys
+import tempfile
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 APP = os.path.join(ROOT, "app", "OpenPixel.app", "Contents", "MacOS", "OpenPixel")
@@ -936,7 +939,27 @@ def draw_in_openpixel(layers):
     agent.close()
 
 
+def screenshot(source, out, name):
+    """The editor showing `source`, as `out` (a 2880×1710 PNG of a 1440×855 window). The app shows the file's own
+    name in its tab and sidebar, so it opens a copy called `name`. --screenshot starts from the app's defaults and
+    leaves the person's Recents alone."""
+    with tempfile.TemporaryDirectory() as d:
+        copy = os.path.join(d, name + ".openpixel")
+        shutil.copyfile(source, copy)
+        r = subprocess.run([APP, "--screenshot", out, copy], capture_output=True, text=True, timeout=120)
+    print(r.stderr.strip()[-400:])
+    try:  # an opaque picture needs no alpha channel: a smaller file for the website
+        from PIL import Image
+        Image.open(out).convert("RGB").save(out, optimize=True)
+    except ImportError:
+        pass
+    print("wrote", out)
+
+
 def main():
+    if "--shot" in sys.argv:
+        screenshot(SOURCE, SHOT, "Temple of Athena")
+        return
     layers = build()
     if "--write" not in sys.argv:
         out = os.path.join(os.environ.get("TMPDIR", "/tmp"), "temple-preview.png")
@@ -946,9 +969,7 @@ def main():
         return
     draw_in_openpixel(layers)
     print("saved", SOURCE)
-    r = subprocess.run([APP, "--screenshot", SHOT, SOURCE], capture_output=True, text=True, timeout=120)
-    print(r.stderr.strip()[-400:])
-    print("wrote", SHOT)
+    screenshot(SOURCE, SHOT, "Temple of Athena")
 
 
 if __name__ == "__main__":

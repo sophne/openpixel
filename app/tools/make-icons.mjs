@@ -11,6 +11,7 @@ const NAMES = [
   'merge', 'trash', 'download', 'bot', 'scan-eye', 'box', 'grid-3x3', 'chevron-down', 'chevron-right', 'palette',
   'square-split-horizontal', 'square-split-vertical', 'ghost', 'image', 'folder-open', 'save', 'x', 'check', 'film', 'cuboid',
   'focus', 'zoom-in', 'zoom-out', 'file-plus', 'square-dashed', 'blend', 'arrow-up-down', 'frame', 'sparkles', 'clock', 'search', 'ellipsis', 'house', 'info', 'plug', 'external-link', 'terminal',
+  'folder', 'folders', 'folder-plus', 'folder-input', 'archive', 'archive-restore', 'trash-2', 'sparkle', 'github', 'layout-grid', 'list', 'arrow-up', 'arrow-down', 'panel-left', 'history',
 ];
 
 const dir = process.argv[2];

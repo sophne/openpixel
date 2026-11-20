@@ -486,25 +486,20 @@ html[data-scrolled="true"] .site-header {
   box-shadow: 0 40px 120px -40px rgba(0, 0, 0, 0.8);
 }
 
-.window-bar {
+/* The window buttons on the screenshot's own tab bar, where macOS puts them in a 1440-wide window: 12px circles,
+   20px apart from 20px in, on the 38px bar's middle. In container units (1cqw = 14.4px of that window), they scale
+   with the picture. */
+.window-body .lights {
+  position: absolute;
+  top: calc(13cqw / 14.4);
+  left: calc(20cqw / 14.4);
   display: flex;
-  align-items: center;
-  gap: 16px;
-  height: 38px;
-  padding: 0 14px;
-  background: var(--panel-2);
-  border-bottom: 1px solid var(--line-soft);
-  font-size: 12px;
-}
-
-.lights {
-  display: inline-flex;
-  gap: 7px;
+  gap: calc(8cqw / 14.4);
 }
 
 .lights i {
-  width: 11px;
-  height: 11px;
+  width: calc(12cqw / 14.4);
+  aspect-ratio: 1;
   border-radius: 50%;
   background: #ff5f57;
 }
@@ -517,24 +512,15 @@ html[data-scrolled="true"] .site-header {
   background: #28c840;
 }
 
-.window-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-3);
-}
-
-.window-title b {
-  color: var(--text);
-  font-weight: 600;
-}
-
-.window-title .saved::before {
-  content: "— ";
-}
-
 .window-body {
   position: relative;
+  container-type: inline-size;
+}
+
+.window-body img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 /* ---------- sprites */
@@ -1302,10 +1288,6 @@ html[data-scrolled="true"] .site-header {
 
   .hero {
     padding-top: 48px;
-  }
-
-  .window-title span {
-    display: none;
   }
 
 

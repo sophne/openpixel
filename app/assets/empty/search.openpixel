@@ -1,0 +1,143 @@
+{
+  "cels" : [
+    {
+      "data" : "7ZJBDsAgCAQbsQXC\/\/\/bqChI9dieuteZrAoexzfhkIivkFlg1KyFgb1hAoPjIhgFBhhGzqNk4lLScTM8l9ZNhMhJDcepH47G0XjFKTUhrTlzAWI3de+buBpuPr4foBnT+AhPLVUe9lOEash6e3oC0gOYULLF+j\/2+M9LuQE=",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZJBDsAgCAQbsQXC\/\/\/bqChI9dieuteZrAoexzfhkIivkFlg1KyFgb1hAoPjIhgFBhhGzqNk4lLScTM8l9ZNhMhJDcepH47G0XjFKTUhrTlzAWI3de+buBpuPr4foBnT+AhPLVUe9lOEash6e3oC0gOYULLF+j\/2+M9LuQE=",
+      "encoding" : "zlib-base64",
+      "frame" : 1,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZJBDsAgCAQbsQXC\/\/\/bqChI9dieuteZrAoexzfhkIivkFlg1KyFgb1hAoPjIhgFBhhGzqNk4lLScTM8l9ZNhMhJDcepH47G0XjFKTUhrTlzAWI3de+buBpuPr4foBnT+AhPLVUe9lOEash6e3oC0gOYULLF+j\/2+M9LuQE=",
+      "encoding" : "zlib-base64",
+      "frame" : 2,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZJBEsMgCEUdSQoM979vJUIDaJbtqn\/73gCCrf0mXFLxqyQLjJa98MHRuAUGjBEpAgME4zisSOIAopl4tslcZm0i7jZI4uTN0Tne\/Jy4K5G+8CEoZ1YkuOAhBG5vSQvkUB+u15b9Ep4+oPL1PkO4DNldr3kHpA1yQfOI7Yc843++kjc=",
+      "encoding" : "zlib-base64",
+      "frame" : 3,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZLBEoUgCAAbCIXh\/\/\/3BVIqz25Np\/biYTc1ddveQRJZl8QcSA3WwaXHogeCdaIU1TEQxLnY95K9F2qY9mWSR1D\/WJnbKtlzzK4xdk+XBujB8ANEzYMInH46ACJKPh1g8zE\/Zm33w5XODeLf\/VhxBF7oyrbA4LX1wLjV8Uju9cfz\/AA=",
+      "encoding" : "zlib-base64",
+      "frame" : 4,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZJBEoAgCAAbjIDx\/\/9NwFIxb02n9ro7jIrb9g0SiPoIjIFQ5Tm4dV+0QBINmM5Zmk9Tse\/H4K8iK0RFR5+gHCN7xFxmzD5xnW9Z8+geTAPUoLsAeqEeRMD88ABoRe\/DA6IW3fxpAVow4XXA6H2DJcCF9sYvyAutgbLU9Z+s9c\/LnA==",
+      "encoding" : "zlib-base64",
+      "frame" : 5,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZFJEsQgCABTEAIU\/\/9vVDAu0VtqTtPXbnE7jt+gE7O+JsZAOVgHj+6LtokiD0RgptXjojjPth67wjLc6fAI5Rjmkcj19mmG1CnMzZN7QCwaoATthkpeuAfVFNjwABTFxpeAcJg\/vbAXwlQP+PqiQgpoqWvlF5SNzkFmq2Ofvf7zKTc=",
+      "encoding" : "zlib-base64",
+      "frame" : 6,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZFJEsQgCABTEAIU\/\/9vVDAu0VtqTtPXbnE7jt+gE7O+JsZAOVgHj+6LtokiD0RgptXjojjPth67wjLc6fAI5Rjmkcj19mmG1CnMzZN7QCwaoATthkpeuAfVFNjwABTFxpeAcJg\/vbAXwlQP+PqiQgpoqWvlF5SNzkFmq2Ofvf7zKTc=",
+      "encoding" : "zlib-base64",
+      "frame" : 7,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZFJEsQgCABTEAIU\/\/9vVDAu0VtqTtPXbnE7jt+gE7O+JsZAOVgHj+6LtokiD0RgptXjojjPth67wjLc6fAI5Rjmkcj19mmG1CnMzZN7QCwaoATthkpeuAfVFNjwABTFxpeAcJg\/vbAXwlQP+PqiQgpoqWvlF5SNzkFmq2Ofvf7zKTc=",
+      "encoding" : "zlib-base64",
+      "frame" : 8,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZJBEoAgCAAbjIDx\/\/9NwFIxb02n9ro7jIrb9g0SiPoIjIFQ5Tm4dV+0QBINmM5Zmk9Tse\/H4K8iK0RFR5+gHCN7xFxmzD5xnW9Z8+geTAPUoLsAeqEeRMD88ABoRe\/DA6IW3fxpAVow4XXA6H2DJcCF9sYvyAutgbLU9Z+s9c\/LnA==",
+      "encoding" : "zlib-base64",
+      "frame" : 9,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZLBEoUgCAAbCIXh\/\/\/3BVIqz25Np\/biYTc1ddveQRJZl8QcSA3WwaXHogeCdaIU1TEQxLnY95K9F2qY9mWSR1D\/WJnbKtlzzK4xdk+XBujB8ANEzYMInH46ACJKPh1g8zE\/Zm33w5XODeLf\/VhxBF7oyrbA4LX1wLjV8Uju9cfz\/AA=",
+      "encoding" : "zlib-base64",
+      "frame" : 10,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZJBEsMgCEUdSQoM979vJUIDaJbtqn\/73gCCrf0mXFLxqyQLjJa98MHRuAUGjBEpAgME4zisSOIAopl4tslcZm0i7jZI4uTN0Tne\/Jy4K5G+8CEoZ1YkuOAhBG5vSQvkUB+u15b9Ep4+oPL1PkO4DNldr3kHpA1yQfOI7Yc843++kjc=",
+      "encoding" : "zlib-base64",
+      "frame" : 11,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "empty-search",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#d9d9df",
+    "#73737b",
+    "#ff4a1c",
+    "#a3a3ab",
+    "#2c2c31",
+    "#4a4a51",
+    "#ff9a78",
+    "#141416",
+    "#8f2508",
+    "#d6390c"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

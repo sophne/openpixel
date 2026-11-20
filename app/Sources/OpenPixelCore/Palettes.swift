@@ -8,6 +8,8 @@ public enum Palettes {
         "db16": "140c1c 442434 30346d 4e4a4e 854c30 346524 d04648 757161 597dce d27d2c 8595a1 6daa2c d2aa99 6dc2ca dad45e deeed6",
         "pico8": "000000 1d2b53 7e2553 008751 ab5236 5f574f c2c3c7 fff1e8 ff004d ffa300 ffec27 00e436 29adff 83769c ff77a8 ffccaa",
         "edg32": "be4a2f d87644 ead4aa e4a672 b86f50 743f39 3f2832 9e2835 e43b44 f77622 feae34 fee761 63c74d 3e8948 265c42 193c3e 124e89 0095e9 2ce8f5 ffffff c0cbdc 8b9bb4 5a6988 3a4466 262b44 ff0044 181425 68386c b55088 f6757a e8b796 c28569",
+        // No palette: one colour to draw with (index 1, black); colours picked later are added one by one.
+        "none": "000000",
         "grayscale": "000000 111111 222222 333333 444444 555555 666666 777777 888888 999999 aaaaaa bbbbbb cccccc dddddd eeeeee ffffff",
     ]
 

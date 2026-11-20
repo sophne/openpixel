@@ -7,6 +7,9 @@ const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const bridge = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.pc;
 const SCREENSHOT = window.OPENPIXEL_SCREENSHOT === true || new URLSearchParams(location.search).has('screenshot');
+// A --screenshot picture is of the page alone: it paints the glass's colour itself, so the picture looks like the window
+// wherever it was on screen (or behind another app).
+if (SCREENSHOT) document.documentElement.classList.add('screenshot');
 
 async function call(name, args = {}) {
   if (!bridge) throw new Error('OpenPixel engine is not connected');
@@ -86,7 +89,9 @@ function showTip(el, instant) {
   if (!tipEl.isConnected) document.body.appendChild(tipEl);
   tipEl.classList.add('on');
   const r = el.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
-  const above = r.top - h - 10 >= 4;
+  // The tab bar counts as the window's top edge: labels below it never cover the open files.
+  const bar = $('#tabbar'), ceiling = bar && !bar.contains(el) ? bar.getBoundingClientRect().bottom : 0;
+  const above = r.top - h - 10 >= ceiling + 4;
   const cx = r.left + r.width / 2;
   const x = Math.max(6, Math.min(window.innerWidth - w - 6, cx - w / 2));
   const ax = Math.max(10, Math.min(w - 10, cx - x));
@@ -168,6 +173,27 @@ function popIn(el, origin = '50% 50%', { scale = 0.96, duration = 150 } = {}) {
 }
 
 /* ---------------------------------------------------------------- icons (Lucide, ISC licence: web/LUCIDE-LICENSE.txt) */
+/* OpenPixel's own icons for files, drawn on Lucide's 24-unit grid so they sit with the others.
+   file-2d: the app icon at icon size: a rounded square, a thin pixel grid and one filled pixel (the accent colour,
+   like the app icon's orange pixel; white on an accent background).
+   file-3d: an isometric cube with the same 2-unit border: its top square filled with the accent colour (like the
+   2D pixel), both sides one shade of the text colour. */
+Object.assign(window.LUCIDE = window.LUCIDE || {}, {
+  'x-logo': [
+    ['path', { d: 'M4 4l11.733 16h4.267l-11.733-16z' }],
+    ['path', { d: 'M4 20l6.768-6.768m2.46-2.46L20 4' }],
+  ],
+  'file-2d': [
+    ['rect', { x: '3', y: '3', width: '18', height: '18', rx: '4' }],
+    ['path', { d: 'M7.5 3v18M12 3v18M16.5 3v18M3 7.5h18M3 12h18M3 16.5h18', 'stroke-width': '1', opacity: '.5' }],
+    ['rect', { class: 'px', x: '12', y: '7.5', width: '4.5', height: '4.5', fill: 'currentColor', stroke: 'none' }],
+  ],
+  'file-3d': [
+    ['path', { d: 'M3.5 7.5 12 12v9.25l-8.5-4.75ZM20.5 7.5 12 12v9.25l8.5-4.75Z', fill: 'currentColor', stroke: 'none', opacity: '.3' }],
+    ['path', { class: 'px', d: 'M12 2.75 20.5 7.5 12 12 3.5 7.5Z', fill: 'currentColor', stroke: 'none' }],
+    ['path', { d: 'M12 2.75 20.5 7.5v9L12 21.25 3.5 16.5v-9ZM3.5 7.5 12 12l8.5-4.5M12 12v9.25' }],
+  ],
+});
 function icon(name, size = 16) {
   const nodes = (window.LUCIDE || {})[name];
   if (!nodes) return '';
@@ -212,22 +238,31 @@ function hexToRgb(h) {
   return [(v >> 16) & 255, (v >> 8) & 255, v & 255];
 }
 
-let refreshing = false, refreshAgain = false;
+let refreshing = false, refreshAgain = false, refreshWaiters = [];
+/** Reads the open tabs and the active document's state. Resolves once the newest state is on screen. */
 async function refresh() {
-  if (refreshing) { refreshAgain = true; return; }
+  if (refreshing) { refreshAgain = true; return new Promise((resolve) => refreshWaiters.push(resolve)); }
   refreshing = true;
   try {
+    const t = await nativeAction('tabs');
+    if (t && Array.isArray(t.tabs)) {
+      if (t.active !== ui.active) S.revision = -1; // another file: fresh camera and canvas
+      applyTabs(t);
+    }
     const st = await call('ui_state', { onion: S.onionOn });
     applyState(st);
     refreshActivity();
   } catch (e) { toast(errorText(e)); }
   refreshing = false;
-  if (refreshAgain) { refreshAgain = false; refresh(); }
+  if (refreshAgain) { refreshAgain = false; await refresh(); }
+  refreshWaiters.splice(0).forEach((resolve) => resolve());
 }
 
 function applyState(st) {
   const [sx, sy, sz] = st.size;
-  const resized = sx !== S.sx || sy !== S.sy || sz !== S.sz || S.revision < 0;
+  const fresh = S.revision < 0;
+  const resized = sx !== S.sx || sy !== S.sy || sz !== S.sz || fresh;
+  if (fresh) $('#preview').removeAttribute('src'); // another file: no stale preview while the new one renders
   Object.assign(S, { sx, sy, sz });
   S.name = st.name; S.file = st.file; S.dirty = st.unsaved_changes;
   S.palette = st.palette; S.rgb = st.palette.map(hexToRgb);
@@ -241,7 +276,7 @@ function applyState(st) {
   S.isSprite = sprite;
   if (resized || kindChanged) {
     resetCamera();
-    if (kindChanged || S.revision < 0) {
+    if (kindChanged || fresh) {
       // 2D sprites open on the flat canvas with a front preview; 3D models open in the 3D view.
       S.previewYaw = sprite ? 0 : 45; S.previewPitch = sprite ? 0 : 30;
       setAxis('z');
@@ -261,8 +296,7 @@ function updatePanels() {
   renderPalette();
   renderLayers();
   renderFrames();
-  $('#doc-name').textContent = S.name;
-  $('#doc-kind').textContent = (S.isSprite ? `${S.sx}×${S.sy} sprite` : `${S.sx}×${S.sy}×${S.sz} model`) + (S.dirty ? ' · edited' : '');
+  updateDocHead();
   if (document.activeElement !== $('#duration')) $('#duration').value = S.frames[S.frame] ? S.frames[S.frame].duration_ms : 100;
   $('#undo').disabled = S.undo === 0;
   $('#redo').disabled = S.redo === 0;
@@ -297,13 +331,29 @@ function renderPalette() {
   updateFg();
 }
 
+/* Layers reorder by dragging (the top row is in front) or with ⌥↑ / ⌥↓. A line in the accent shows where the layer
+   lands; dropping below the last row sends it to the back. */
+let layerDrag = null;
+function layerDropTarget(li, above) {
+  // Above row `li`: right in front of that layer; below it: right behind it. Indexes as they are after the move.
+  const from = layerDrag;
+  let to = above ? (from < li ? li : li + 1) : (from < li ? li - 1 : li);
+  return Math.max(0, Math.min(S.layers.length - 1, to));
+}
+function clearLayerDrop() { $$('#layers .layer').forEach((r) => r.classList.remove('drop-above', 'drop-below')); $('#layers').classList.remove('drop-end'); }
+function moveLayer(from, to) {
+  if (from == null || to == null || from === to) return;
+  tool('move_layer', { layer: from, to });
+}
 function renderLayers() {
   const box = $('#layers');
+  if (layerDrag != null) return; // redrawn when the drag ends
   box.innerHTML = '';
   for (let li = S.layers.length - 1; li >= 0; li--) {
     const L = S.layers[li];
     const row = document.createElement('div');
     row.className = 'layer' + (li === S.layer ? ' on' : '') + (L.visible ? '' : ' hidden-layer');
+    if (li === S.layer) row.setAttribute('aria-current', 'true');
     row.innerHTML = `<span class="lic">${icon(S.isSprite ? 'image' : 'box', 14)}</span><span class="lname"></span>` +
       `<span class="tog ${L.locked ? 'set' : ''}" title="Lock / unlock">${icon(L.locked ? 'lock' : 'lock-open', 14)}</span>` +
       `<span class="tog ${L.visible ? '' : 'set'}" title="Show / hide">${icon(L.visible ? 'eye' : 'eye-off', 14)}</span>`;
@@ -311,12 +361,51 @@ function renderLayers() {
     name.textContent = L.name;
     name.title = 'Double-click to rename';
     const [lock, eye] = row.querySelectorAll('.tog');
+    pressable(row, `Layer ${L.name}${li === S.layer ? ', selected' : ''}${L.visible ? '' : ', hidden'}${L.locked ? ', locked' : ''}`);
+    pressable(lock, `${L.locked ? 'Unlock' : 'Lock'} ${L.name}`);
+    pressable(eye, `${L.visible ? 'Hide' : 'Show'} ${L.name}`);
     lock.onclick = (e) => { e.stopPropagation(); tool('set_layer', { layer: li, locked: !L.locked }); };
     eye.onclick = (e) => { e.stopPropagation(); tool('set_layer', { layer: li, visible: !L.visible }); };
     row.onclick = () => { if (li !== S.layer) setActive({ layer: li }); };
+    row.draggable = true;
+    row.addEventListener('dragstart', (e) => {
+      if (e.target.closest && e.target.closest('input')) { e.preventDefault(); return; }
+      layerDrag = li;
+      e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', L.name);
+      requestAnimationFrame(() => row.classList.add('dragging'));
+      hideTip();
+    });
+    row.addEventListener('dragend', () => { layerDrag = null; clearLayerDrop(); renderLayers(); });
+    row.addEventListener('dragover', (e) => {
+      if (layerDrag == null) return;
+      e.preventDefault(); e.stopPropagation();
+      const r = row.getBoundingClientRect(), above = e.clientY < r.top + r.height / 2;
+      clearLayerDrop();
+      if (li !== layerDrag) row.classList.add(above ? 'drop-above' : 'drop-below');
+    });
+    row.addEventListener('drop', (e) => {
+      if (layerDrag == null) return;
+      e.preventDefault(); e.stopPropagation();
+      const r = row.getBoundingClientRect(), from = layerDrag;
+      const to = li === from ? from : layerDropTarget(li, e.clientY < r.top + r.height / 2);
+      layerDrag = null; clearLayerDrop();
+      moveLayer(from, to);
+    });
+    row.addEventListener('keydown', (e) => {
+      if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+      e.preventDefault();
+      const to = li + (e.key === 'ArrowUp' ? 1 : -1); // up the list is towards the front
+      if (to >= 0 && to < S.layers.length) moveLayer(li, to);
+    });
     name.ondblclick = (e) => { e.stopPropagation(); renameLayer(name, li); };
     box.appendChild(row);
   }
+  // The layer buttons say which layer they act on.
+  const cur = S.layers[S.layer], cn = cur ? `“${cur.name}”` : 'the layer';
+  $('#layer-dup').title = `Duplicate ${cn} (⌘D)`;
+  $('#layer-merge').title = `Merge ${cn} down (⌘E)`;
+  $('#layer-del').title = `Delete ${cn} (⌘⌫)`;
+  for (const id of ['#layer-dup', '#layer-merge', '#layer-del']) $(id).setAttribute('aria-label', $(id).title.replace(/ \(.*\)$/, ''));
 }
 
 const thumbs = {};
@@ -332,11 +421,13 @@ function renderFrames() {
     d.innerHTML = `<div class="thumb"><img alt=""></div><div class="lbl mono">${i + 1} · ${f.duration_ms}ms</div>`;
     if (thumbs[i]) d.querySelector('img').src = thumbs[i];
     d.onclick = () => setActive({ frame: i });
+    pressable(d, `Frame ${i + 1}, ${f.duration_ms} milliseconds${i === S.frame ? ', selected' : ''}`);
     strip.appendChild(d);
   });
   const add = document.createElement('div');
   add.className = 'fr add'; add.title = 'New frame'; add.innerHTML = icon('plus', 16);
   add.onclick = () => tool('add_frame', { after: S.frame, copy: true });
+  pressable(add, 'New frame');
   strip.appendChild(add);
   clearTimeout(thumbTimer);
   thumbTimer = setTimeout(renderThumbs, 250);
@@ -359,8 +450,8 @@ function updateInfoChip() {
   const names = { x: 'Side', y: 'Top', z: 'Front' };
   let t;
   if (S.mode === '3d') t = `3D · ${S.ortho ? 'orthographic' : 'perspective'}`;
-  else if (S.isSprite) t = `Sprite · ${sv.zoom * 100}%`;
-  else t = `${names[S.axis]} slice ${S.slice}/${sliceSize().depth - 1} · ${sv.zoom * 100}%`;
+  else if (S.isSprite) t = `Sprite · ${Math.round(sv.zoom * 100)}%`;
+  else t = `${names[S.axis]} slice ${S.slice}/${sliceSize().depth - 1} · ${Math.round(sv.zoom * 100)}%`;
   $('#info-chip').textContent = t;
 }
 /* The Frames strip folds down to its bar (play, onion and duration stay at hand) to give the canvas more room. */
@@ -387,7 +478,7 @@ function updateViewPanel() {
   $('#view-3d').hidden = slice;
   $$('[data-axis]').forEach((b) => b.classList.toggle('on', b.dataset.axis === S.axis));
   $('#slice-index').textContent = `${S.slice}/${sliceSize().depth - 1}`;
-  $('#zoom-label').textContent = `${sv.zoom * 100}%`;
+  $('#zoom-label').textContent = `${Math.round(sv.zoom * 100)}%`;
   $$('[data-proj]').forEach((b) => b.classList.toggle('on', (b.dataset.proj === 'ortho') === S.ortho));
 }
 
@@ -542,9 +633,119 @@ async function refreshActivity() {
   const agentCalls = act.filter((e) => e.source === 'agent').length;
   $('#activity-count').textContent = agentCalls ? `${agentCalls} agent call${agentCalls > 1 ? 's' : ''}` : '';
   const last = act[act.length - 1];
+  const showing = leftSide.open && leftSide.pane === 'activity';
+  if (last && last.source === 'agent' && last.time > leftSide.seen && S.lastActivity && !showing) $('#activity-dot').hidden = false;
+  if (showing && last) leftSide.seen = last.time;
   if (last && last.time > S.lastActivity) {
     if (last.source === 'agent' && S.lastActivity) toast(`Agent: ${last.tool}`, true);
     S.lastActivity = last.time;
+  }
+}
+
+/* ---------------------------------------------------------------- left sidebar: rail, panel, file name
+   The rail picks what the panel shows (Layers or Activity); picking the open one again, the collapse button or ⌘\
+   hides the panel, and any rail button brings it back. Both choices are remembered. */
+const leftSide = { pane: 'layers', open: true, seen: 0 };
+try { Object.assign(leftSide, JSON.parse(localStorage.getItem('openpixel.leftSide') || '{}')); } catch (e) { /* defaults */ }
+if (!['layers', 'activity'].includes(leftSide.pane)) leftSide.pane = 'layers';
+function saveLeftSide() {
+  try { localStorage.setItem('openpixel.leftSide', JSON.stringify({ pane: leftSide.pane, open: leftSide.open })); } catch (e) { /* not saved */ }
+}
+function applyLeftSide() {
+  $('#app').classList.toggle('left-closed', !leftSide.open);
+  $$('#rail [data-pane]').forEach((b) => {
+    const on = leftSide.open && b.dataset.pane === leftSide.pane;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', String(on));
+    b.dataset.tip = b.getAttribute('aria-label'); // the name shows on hover (no label under the icon)
+  });
+  $$('#left .pane').forEach((s) => { s.hidden = s.dataset.pane !== leftSide.pane; });
+  $('#left-collapse').setAttribute('aria-expanded', String(leftSide.open));
+  if (leftSide.open && leftSide.pane === 'activity') { leftSide.seen = S.lastActivity || 0; $('#activity-dot').hidden = true; }
+  render3dDirty = true; sliceDirty = true;
+}
+function setLeftOpen(open) { leftSide.open = open; applyLeftSide(); saveLeftSide(); }
+function showLeftPane(pane) {
+  if (leftSide.open && leftSide.pane === pane) { setLeftOpen(false); return; }
+  leftSide.pane = pane; leftSide.open = true; applyLeftSide(); saveLeftSide();
+}
+
+/* The panel's head names the file like Figma does: the name (double-click renames it, like a layer) and, beside it,
+   the chevron button with the file's menu. The name is the file's own (what its tab shows). */
+const activeTabName = () => ((ui.tabs || []).find((t) => t.id === ui.active) || {}).name || S.name;
+function updateDocHead() {
+  const el = $('#doc-name');
+  if (el.querySelector('input.rename')) return; // being renamed
+  el.textContent = activeTabName();
+}
+
+/* Renaming in place, the same everywhere (layers, the file in the panel, tabs, cards and rows, folders): the text
+   becomes a field with the name selected; Return or clicking away keeps it, Escape goes back. `commit` answers true
+   or a message to show. */
+function inlineRename(el, current, commit) {
+  if (!el || el.querySelector('input.rename')) return;
+  const input = document.createElement('input');
+  input.className = 'rename'; input.value = current; input.spellcheck = false;
+  input.setAttribute('aria-label', `Rename ${current}`);
+  const before = el.textContent;
+  const drag = el.closest('[draggable="true"]');
+  if (drag) drag.draggable = false; // selecting text in the field must not start a drag
+  el.textContent = ''; el.appendChild(input);
+  input.focus(); input.select();
+  let finished = false;
+  const done = async (ok) => {
+    if (finished) return; finished = true;
+    const v = input.value.trim();
+    input.remove();
+    if (drag) drag.draggable = true;
+    if (!ok || !v || v === current) { el.textContent = before; return; }
+    el.textContent = v;
+    const r = await commit(v);
+    if (r !== true) { el.textContent = before; toast(typeof r === 'string' ? r : 'Could not rename it'); }
+  };
+  input.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); done(true); } else if (e.key === 'Escape') { e.preventDefault(); done(false); } };
+  input.onblur = () => done(true);
+  for (const t of ['click', 'mousedown', 'pointerdown', 'dblclick', 'contextmenu']) input.addEventListener(t, (e) => e.stopPropagation());
+}
+/** Renames a file on disk (by its path, or the one open in tab `tab`), then shows the new name everywhere. */
+async function renameFile(where, name) {
+  const r = await nativeAction('renameFile', { ...where, name });
+  if (r !== true) return r;
+  await refresh();
+  tabsDrawn = ''; renderTabs(); updateDocHead();
+  if (S.home) await loadHome();
+  return true;
+}
+async function renameFolderTo(f, name) {
+  const r = await nativeAction('renameFolder', { id: f.id, name });
+  await loadHome();
+  return r === true || r === undefined ? true : r;
+}
+function renameDoc() {
+  const id = ui.active;
+  inlineRename($('#doc-name'), activeTabName(), (v) => renameFile({ tab: id }, v));
+}
+async function openDocMenu() {
+  const m = $('#doc-menu'), anchor = $('#doc-title');
+  if (m.classList.contains('open')) { closeMenus(); return; }
+  closeMenus();
+  m.querySelector('[data-doc="reveal"]').hidden = !S.file;
+  m.querySelector('[data-doc="rename"]').hidden = ui.active == null;
+  m.querySelector('[data-doc="move"]').hidden = !S.file;
+  placeMenu(m, anchor);
+}
+async function docMenuAction(act) {
+  closeMenus();
+  if (act === 'rename') renameDoc();
+  else if (act === 'reveal') nativeAction('reveal', { path: S.file });
+  else if (act === 'saveAs') nativeAction('saveAs');
+  else if (act === 'close') { if (ui.active != null) closeTab(ui.active); }
+  else if (act === 'move') {
+    const lib = (await nativeAction('library')) || {};
+    home.files = lib.files || []; home.folders = lib.folders || [];
+    const item = home.files.find((f) => f.path === S.file);
+    if (!item) { toast('This file is not in your library yet'); return; }
+    openMoveMenu($('#doc-title'), { type: 'file', item });
   }
 }
 
@@ -737,9 +938,20 @@ const M = {
   },
 };
 
+/** The starting view: from the front right, a little above, standing back just far enough that the whole model
+    (its bounding sphere) fits the canvas, above the drawing toolbar and with a small margin. */
 function resetCamera() {
-  const m = Math.max(S.sx, S.sy, S.sz);
-  Object.assign(cam, { yaw: 45, pitch: 30, dist: m * 2.3, tx: S.sx / 2, ty: S.sy * 0.32, tz: S.sz / 2 });
+  const st = $('#stage'), tb = $('#toolbar');
+  const w = st.clientWidth || 1000, h = st.clientHeight || 600;
+  const sr = st.getBoundingClientRect(), tr = tb && tb.offsetHeight ? tb.getBoundingClientRect() : null;
+  const band = tr && sr.height ? Math.max(0, sr.bottom - tr.top + 8) : 0; // the toolbar and its gap, kept clear
+  const half = 20 * Math.PI / 180, tanH = Math.tan(half) * (w / h);
+  const r = 0.5 * Math.hypot(S.sx, S.sy, S.sz);
+  const room = Math.max(0.5, (h - band) / h);
+  const dist = Math.max(r / Math.sin(half) / room, r / Math.sin(Math.atan(tanH))) * 1.02;
+  // Lift the picture by half the toolbar band, so the model sits in the middle of the free space.
+  const lift = (band / 2) * (2 * dist * Math.tan(half) / h) / Math.cos(30 * Math.PI / 180);
+  Object.assign(cam, { yaw: 45, pitch: 30, dist, tx: S.sx / 2, ty: S.sy / 2 - lift, tz: S.sz / 2 });
   render3dDirty = true;
   buildStaticLines();
 }
@@ -921,6 +1133,7 @@ const sliceCanvas = $('#slice');
 const sctx = sliceCanvas.getContext('2d');
 const sv = { zoom: 16, panX: 0, panY: 0 };
 let sliceDirty = true;
+let zoomAnim = 0, settleTimer = 0; // a zoom gliding to its level, and the wait before a pinch settles
 
 function sliceSize(axis = S.axis) {
   if (axis === 'y') return { cols: S.sx, rows: S.sz, depth: S.sy };
@@ -937,6 +1150,7 @@ function fitSlice() {
   const w = sliceCanvas.clientWidth || 800, h = sliceCanvas.clientHeight || 500;
   let z = ZOOMS[0];
   for (const l of ZOOMS) if (cols * l <= w * 0.86 && rows * l <= h * 0.86) z = l;
+  cancelAnimationFrame(zoomAnim); clearTimeout(settleTimer);
   sv.zoom = z;
   sv.panX = Math.round((w - cols * z) / 2); sv.panY = Math.round((h - rows * z) / 2);
   sliceDirty = true;
@@ -959,7 +1173,8 @@ function drawSlice() {
   g.fillStyle = '#1e1e1e';
   g.fillRect(0, 0, sliceCanvas.clientWidth, sliceCanvas.clientHeight);
   const { cols, rows } = sliceSize();
-  const z = sv.zoom, ox = sv.panX, oy = sv.panY;
+  const z = sv.zoom, ox = Math.round(sv.panX * dpr) / dpr, oy = Math.round(sv.panY * dpr) / dpr;
+  const crisp = (v) => (Math.round(v * dpr) + 0.5) / dpr; // the middle of the device pixel a line falls on
   // checkered background (16x16 cells, grey 128/192)
   for (let cy = 0; cy < rows; cy += CHECK.size) for (let cx = 0; cx < cols; cx += CHECK.size) {
     g.fillStyle = ((cx + cy) / CHECK.size) % 2 ? CHECK.c2 : CHECK.c1;
@@ -998,8 +1213,8 @@ function drawSlice() {
     const a = Math.min(160, (z - 4) * 14) / 255;
     g.strokeStyle = PIXEL_GRID + a + ')'; g.lineWidth = 1 / dpr;
     g.beginPath();
-    for (let c = 0; c <= cols; c++) { g.moveTo(ox + c * z, oy); g.lineTo(ox + c * z, oy + rows * z); }
-    for (let r = 0; r <= rows; r++) { g.moveTo(ox, oy + r * z); g.lineTo(ox + cols * z, oy + r * z); }
+    for (let c = 0; c <= cols; c++) { const x = crisp(ox + c * z); g.moveTo(x, oy); g.lineTo(x, oy + rows * z); }
+    for (let r = 0; r <= rows; r++) { const y = crisp(oy + r * z); g.moveTo(ox, y); g.lineTo(ox + cols * z, y); }
     g.stroke();
   }
   g.strokeStyle = '#000'; g.lineWidth = 1;
@@ -1163,15 +1378,36 @@ window.addEventListener('mouseup', () => {
   if (drag && drag.kind === 'tool') endStroke();
   drag = null;
 });
+/* Trackpad and wheel, in both views: two fingers (or the wheel) move the picture, a pinch (or ⌘ + scroll) zooms
+   around the pointer, continuously. In 3D, ⌥ + two fingers orbits. WebKit reports a pinch as gesture events and
+   sometimes also as ctrl + wheel; while a gesture runs, the wheel copy is ignored. */
+const wheelPx = (e, el) => (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? el.clientHeight : 1);
+const wheelZoom = (e, el) => Math.exp(-e.deltaY * wheelPx(e, el) * (e.ctrlKey ? 0.01 : 0.002)); // pinch steps are small, wheel notches large
+let pinch = null; // { scale } while a trackpad pinch (gesture events) is under way
+let lastPointer = null; // where the pointer last was, for gesture events that carry no position
+window.addEventListener('mousemove', (e) => { lastPointer = { clientX: e.clientX, clientY: e.clientY }; }, { passive: true });
+const gesturePoint = (e) => (Number.isFinite(e.clientX) && (e.clientX || e.clientY) ? e : lastPointer || e);
+
+function zoomCamera(factor) {
+  cam.dist = Math.max(3, Math.min(2000, cam.dist / factor));
+  render3dDirty = true;
+}
 glCanvas.addEventListener('wheel', (e) => {
   e.preventDefault();
-  if (e.ctrlKey || Math.abs(e.deltaX) < 0.01) {
-    cam.dist = Math.max(3, Math.min(2000, cam.dist * Math.exp(e.deltaY * (e.ctrlKey ? 0.01 : 0.0015))));
-  } else {
-    cam.yaw -= e.deltaX * 0.25;
-  }
+  const px = wheelPx(e, glCanvas);
+  if (e.ctrlKey || e.metaKey) { if (!pinch) zoomCamera(wheelZoom(e, glCanvas)); return; }
+  if (e.altKey) {
+    cam.yaw -= e.deltaX * px * 0.25; cam.pitch = Math.max(-89, Math.min(89, cam.pitch - e.deltaY * px * 0.25));
+  } else panCamera(-e.deltaX * px, -e.deltaY * px);
   render3dDirty = true;
 }, { passive: false });
+glCanvas.addEventListener('gesturestart', (e) => { e.preventDefault(); pinch = { scale: 1 }; });
+glCanvas.addEventListener('gesturechange', (e) => {
+  e.preventDefault();
+  if (!pinch) pinch = { scale: 1 };
+  zoomCamera(e.scale / pinch.scale); pinch.scale = e.scale;
+});
+glCanvas.addEventListener('gestureend', (e) => { e.preventDefault(); pinch = null; });
 function panCamera(dx, dy) {
   const y = cam.yaw * Math.PI / 180, p = cam.pitch * Math.PI / 180;
   const r = [Math.cos(y), 0, -Math.sin(y)];
@@ -1250,22 +1486,65 @@ window.addEventListener('mouseup', () => {
   if (sdrag && sdrag.tool) endStroke();
   sdrag = null;
 });
+/* 2D zoom is continuous while pinching, with the cell under the fingers staying put. When the fingers stop it
+   settles, quickly, on whole screen pixels per cell below 8× (so every pixel is the same size) or on the nearest
+   zoom level when it is within 5% of one. */
+const ZOOM_MIN = ZOOMS[0], ZOOM_MAX = ZOOMS[ZOOMS.length - 1];
+function zoomSliceAt(mx, my, z) {
+  z = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z));
+  if (z === sv.zoom) return;
+  const cx = (mx - sv.panX) / sv.zoom, cy = (my - sv.panY) / sv.zoom;
+  sv.zoom = z;
+  sv.panX = mx - cx * z; sv.panY = my - cy * z;
+  sliceDirty = true; updateSliceLabel();
+}
+function settledZoom(z) {
+  if (z < 8) return Math.max(ZOOM_MIN, Math.round(z));
+  return ZOOMS.find((l) => Math.abs(z / l - 1) < 0.05) || z;
+}
+function animateSliceZoom(mx, my, to, ms) {
+  cancelAnimationFrame(zoomAnim);
+  const from = sv.zoom, t0 = performance.now();
+  if (to === from || matchMedia('(prefers-reduced-motion: reduce)').matches || ms <= 0) { zoomSliceAt(mx, my, to); return; }
+  const step = (now) => {
+    const t = Math.min(1, (now - t0) / ms), k = 1 - Math.pow(1 - t, 3); // ease-out: moves at once, lands softly
+    zoomSliceAt(mx, my, t < 1 ? from * Math.pow(to / from, k) : to);
+    if (t < 1) zoomAnim = requestAnimationFrame(step);
+  };
+  zoomAnim = requestAnimationFrame(step);
+}
+function settleSliceZoom(mx, my, wait = 140) {
+  clearTimeout(settleTimer);
+  settleTimer = setTimeout(() => animateSliceZoom(mx, my, settledZoom(sv.zoom), 140), wait);
+}
 sliceCanvas.addEventListener('wheel', (e) => {
   e.preventDefault();
   const [mx, my] = stageXY(e, sliceCanvas);
-  if (e.ctrlKey || Math.abs(e.deltaX) < 0.01) {
-    // Zoom through the levels, keeping the cell under the mouse in place.
-    let i = ZOOMS.indexOf(sv.zoom);
-    if (i < 0) i = 0;
-    const ni = Math.max(0, Math.min(ZOOMS.length - 1, i + (e.deltaY < 0 ? 1 : -1)));
-    if (ni === i) return;
-    const cx = (mx - sv.panX) / sv.zoom, cy = (my - sv.panY) / sv.zoom;
-    sv.zoom = ZOOMS[ni];
-    sv.panX = Math.round(mx - cx * sv.zoom); sv.panY = Math.round(my - cy * sv.zoom);
-    updateSliceLabel();
-  } else { sv.panX -= e.deltaX; sv.panY -= e.deltaY; }
-  sliceDirty = true;
+  if (e.ctrlKey || e.metaKey) {
+    if (pinch) return;
+    cancelAnimationFrame(zoomAnim);
+    zoomSliceAt(mx, my, sv.zoom * wheelZoom(e, sliceCanvas));
+    settleSliceZoom(mx, my);
+  } else {
+    const px = wheelPx(e, sliceCanvas);
+    sv.panX -= e.deltaX * px; sv.panY -= e.deltaY * px;
+    sliceDirty = true;
+  }
 }, { passive: false });
+sliceCanvas.addEventListener('gesturestart', (e) => { e.preventDefault(); cancelAnimationFrame(zoomAnim); clearTimeout(settleTimer); pinch = { scale: 1 }; });
+sliceCanvas.addEventListener('gesturechange', (e) => {
+  e.preventDefault();
+  if (!pinch) pinch = { scale: 1 };
+  const [mx, my] = stageXY(gesturePoint(e), sliceCanvas);
+  zoomSliceAt(mx, my, sv.zoom * e.scale / pinch.scale);
+  pinch.scale = e.scale; pinch.at = [mx, my];
+});
+sliceCanvas.addEventListener('gestureend', (e) => {
+  e.preventDefault();
+  const at = (pinch && pinch.at) || stageXY(gesturePoint(e), sliceCanvas);
+  pinch = null;
+  settleSliceZoom(at[0], at[1], 0);
+});
 
 function sliceFill(h) {
   // 2D bucket inside the slice, on the active layer.
@@ -1294,6 +1573,17 @@ const PRESETS = [
   { value: 'edg32', label: 'Endesga 32', colors: ['#be4a2f', '#d87644', '#feae34', '#63c74d', '#124e89', '#2ce8f5', '#b55088', '#e8b796'] },
   { value: 'grayscale', label: 'Grayscale', colors: ['#111111', '#333333', '#555555', '#777777', '#999999', '#bbbbbb', '#dddddd', '#ffffff'] },
 ];
+/** Puts a position: fixed element at window point (x, y). "Fixed" refers to the window unless an ancestor makes
+ *  itself the reference box (a glass dialog's backdrop-filter, a transform…), so the real start is measured: the
+ *  element goes to 0,0 first, and where that lands is the offset. Running animations around it (a dialog still
+ *  zooming open) are finished first, so the measurement isn't taken from a scaled box. */
+function placeFixed(el, x, y) {
+  for (let p = el.parentElement; p; p = p.parentElement) p.getAnimations().forEach((a) => a.finish());
+  el.style.left = '0px'; el.style.top = '0px';
+  const z = el.getBoundingClientRect();
+  el.style.left = `${Math.round(x - z.left)}px`;
+  el.style.top = `${Math.round(y - z.top)}px`;
+}
 function dropdown(el, options, { value = null, placeholder = '', onChange = null, keepLabel = false } = {}) {
   el.classList.add('dropdown', 'menu');
   el.innerHTML = `<button class="dd-btn" type="button"><span class="v"></span>${icon('chevron-down', 14)}</button><div class="menu-list dd-list"></div>`;
@@ -1318,12 +1608,17 @@ function dropdown(el, options, { value = null, placeholder = '', onChange = null
     if (!open) return;
     el.classList.add('open');
     list.querySelectorAll('.opt').forEach((d) => d.classList.toggle('sel', d.dataset.value === api.value));
-    // Fixed position so the list is never clipped by a scrolling panel.
+    // Fixed position so the list is never clipped by a scrolling panel. Worked out in window coordinates (placeFixed
+    // turns them into the right ones inside a glass dialog). A dialog still zooming open is finished first, so the
+    // button is measured where it ends up, not mid-zoom.
+    list.getAnimations().forEach((a) => a.cancel());
+    for (let p = el.parentElement; p; p = p.parentElement) p.getAnimations().forEach((a) => a.finish());
     const r = btn.getBoundingClientRect();
     list.style.minWidth = r.width + 'px';
-    list.style.left = Math.max(8, Math.min(r.left, window.innerWidth - list.offsetWidth - 8)) + 'px';
+    const x = Math.max(8, Math.min(r.left, window.innerWidth - list.offsetWidth - 8));
     const below = r.bottom + 4, h = list.offsetHeight;
-    list.style.top = (below + h > window.innerHeight - 8 ? Math.max(8, r.top - h - 4) : below) + 'px';
+    const y = below + h > window.innerHeight - 8 ? Math.max(8, r.top - h - 4) : below;
+    placeFixed(list, x, y);
     openedMenu(list, btn);
   };
   api.set(value);
@@ -1359,27 +1654,175 @@ function sizeThumbs() {
   st.classList.toggle('compact', !label);
 }
 
-/* ---------------------------------------------------------------- home screen */
-const home = { recents: [], samples: null, view: 'recents', card: null };
+/* ---------------------------------------------------------------- open files: the tab bar
+   Like Figma: Home on the left, one tab per open file (each with its own document and undo history in the app),
+   and + for the New file page, which shows as a tab of its own while it is open. `ui.view` says what fills the
+   window: the editor, the home screen or the New file page. */
+const ui = { view: 'editor', tabs: [], active: null, newOpen: false };
+const tabViews = new Map(); // per tab: 2D/3D mode, slice axis and position, restored when switching back
+
+function applyTabs(r) {
+  if (!r || !Array.isArray(r.tabs)) return;
+  ui.tabs = r.tabs; ui.active = r.active;
+  for (const id of [...tabViews.keys()]) if (!ui.tabs.some((t) => t.id === id)) tabViews.delete(id);
+  renderTabs();
+}
+let draggingTab = null, tabsDrawn = '';
+function renderTabs() {
+  document.body.dataset.view = ui.view; // styles that depend on the page shown (e.g. the tab bar's right padding)
+  const box = $('#tabs');
+  // Redrawn only when something changed (refresh runs after every edit; hover and drags must survive it).
+  const key = JSON.stringify([ui.tabs, ui.active, ui.view, ui.newOpen]);
+  if (draggingTab != null || key === tabsDrawn || box.querySelector('input.rename')) return; // not mid-drag or mid-rename
+  tabsDrawn = key;
+  box.replaceChildren();
+  const make = (cls, ic, name, on, onClose) => {
+    const el = document.createElement('div');
+    el.className = 'tab ' + cls; el.setAttribute('role', 'tab'); el.tabIndex = 0;
+    el.classList.toggle('on', on); el.setAttribute('aria-selected', String(on));
+    el.innerHTML = `${icon(ic, 14)}<span class="name"></span><button type="button" class="x" title="Close tab (⌘W)">${icon('x', 12)}</button>`;
+    el.querySelector('.name').textContent = name;
+    el.querySelector('.x').onclick = (e) => { e.stopPropagation(); onClose(); };
+    el.addEventListener('auxclick', (e) => { if (e.button === 1) onClose(); });
+    box.appendChild(el);
+    return el;
+  };
+  for (const t of ui.tabs) {
+    const el = make('file', t.kind === '3d' ? 'file-3d' : 'file-2d', t.name, ui.view === 'editor' && t.id === ui.active, () => closeTab(t.id));
+    el.dataset.tab = t.id;
+    el.classList.toggle('dirty', !!t.dirty);
+    if (t.path) el.title = t.path.replace(/^\/Users\/[^/]+/, '~');
+    el.onclick = () => switchTab(t.id);
+    const nm = el.querySelector('.name');
+    nm.title = 'Double-click to rename';
+    nm.ondblclick = (e) => { e.stopPropagation(); inlineRename(nm, t.name, (v) => renameFile({ tab: t.id }, v)); };
+    el.onkeydown = (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); switchTab(t.id); }
+      else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const next = e.key === 'ArrowRight' ? el.nextElementSibling : el.previousElementSibling;
+        if (next) next.focus();
+      }
+    };
+    // Tabs reorder by dragging.
+    el.draggable = true;
+    el.addEventListener('dragstart', (e) => { draggingTab = t.id; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', t.name); el.classList.add('dragging'); hideTip(); });
+    el.addEventListener('dragend', () => { draggingTab = null; tabsDrawn = ''; renderTabs(); });
+    el.addEventListener('dragover', (e) => {
+      if (draggingTab == null || draggingTab === t.id) return;
+      e.preventDefault();
+      const r = el.getBoundingClientRect(), after = e.clientX > r.left + r.width / 2;
+      $$('.tab.drop-before, .tab.drop-after').forEach((x) => x.classList.remove('drop-before', 'drop-after'));
+      el.classList.add(after ? 'drop-after' : 'drop-before');
+    });
+    el.addEventListener('drop', async (e) => {
+      if (draggingTab == null || draggingTab === t.id) return;
+      e.preventDefault();
+      const r = el.getBoundingClientRect(), after = e.clientX > r.left + r.width / 2;
+      const moving = draggingTab;
+      draggingTab = null;
+      const from = ui.tabs.findIndex((x) => x.id === moving);
+      let to = ui.tabs.findIndex((x) => x.id === t.id) + (after ? 1 : 0);
+      if (from < to) to -= 1;
+      tabsDrawn = '';
+      applyTabs(await nativeAction('moveTab', { id: moving, index: to }));
+    });
+  }
+  if (ui.newOpen) {
+    const el = make('new-tab', 'plus', 'New file', ui.view === 'new', closeNewPage);
+    el.onclick = () => openNewPage();
+  }
+  $('#tab-home').classList.toggle('on', ui.view === 'home');
+  $('#tab-home').setAttribute('aria-pressed', String(ui.view === 'home'));
+  const on = box.querySelector('.tab.on');
+  if (on) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  reportTitlebar();
+}
+/* The tab bar is the window's title bar: the app moves the window when its empty parts are dragged. It needs to
+   know where the controls are (Home, the tabs, +); while a dialog covers the bar, the bar doesn't move the window. */
+let titlebarSent = '';
+function reportTitlebar() {
+  const holes = ['#tab-home', '#tab-add', '#tab-update', '#tab-stars', ...$$('#tabs .tab').map((t) => t)].map((s) => typeof s === 'string' ? $(s) : s)
+    .filter((el) => el && !el.hidden).map((el) => { const r = el.getBoundingClientRect(); return [Math.floor(r.left), Math.ceil(r.right)]; });
+  const box = $('#tabs').getBoundingClientRect();
+  if ($('#tabs').scrollWidth > $('#tabs').clientWidth) holes.push([Math.floor(box.left), Math.ceil(box.right)]);
+  const msg = { holes, drag: !$$('.modal-bg.open').length };
+  const key = JSON.stringify(msg);
+  if (key === titlebarSent) return;
+  titlebarSent = key;
+  nativeAction('titlebar', msg);
+}
+window.addEventListener('resize', reportTitlebar);
+function rememberTabView() {
+  if (ui.active != null) tabViews.set(ui.active, { mode: S.mode, axis: S.axis, slice: S.slice });
+}
+function restoreTabView() {
+  const v = tabViews.get(ui.active);
+  if (!v) return;
+  S.axis = v.axis;
+  S.slice = Math.max(0, Math.min(sliceSize().depth - 1, v.slice));
+  setMode(v.mode);
+  sliceDirty = true; updateSliceLabel();
+}
+async function switchTab(id) {
+  closeMenus(); closePicker(); stopPlay();
+  if (id !== ui.active) {
+    rememberTabView();
+    await nativeAction('switchTab', { id });
+    await refresh();
+    restoreTabView();
+  }
+  showEditor();
+}
+async function closeTab(id) {
+  closeMenus(); stopPlay();
+  if (id === ui.active) rememberTabView();
+  const r = await nativeAction('closeTab', { id });
+  if (!r || r.closed === false) return;
+  tabViews.delete(id);
+  await refresh();
+  restoreTabView();
+  if (ui.view === 'editor' && ui.active == null) showHome();
+  else renderTabs();
+}
+function hidePages() {
+  $('#home').hidden = true; $('#newpage').hidden = true;
+  clearInterval(agentsState.timer);
+  closeMenus();
+}
+/** Shows the active file's editor (the home screen when no file is open). */
+function showEditor() {
+  if (ui.active == null) { showHome(); return; }
+  const was = ui.view;
+  ui.view = 'editor'; S.home = false;
+  hidePages();
+  render3dDirty = true; sliceDirty = true;
+  if (was !== 'editor') requestAnimationFrame(() => { if (S.mode === 'slice') fitSlice(); });
+  renderTabs();
+}
+
+/* ---------------------------------------------------------------- home screen: Recents, All folders, Archive, Agents
+   The library (files you opened or saved, the built-in samples, your folders and the archive) is kept by the app.
+   Folders and the archive only organise the list: files stay where they are on disk until deleted forever. */
+const home = { files: [], folders: [], view: 'recents', folder: null, menuFor: null };
+
 async function showHome(view) {
   stopPlay(); closeModals(); closePicker(); closeMenus();
   if (typeof view === 'string') home.view = view;
-  S.home = true;
+  if (ui.view === 'editor') rememberTabView();
+  ui.view = 'home'; S.home = true;
+  $('#newpage').hidden = true;
   $('#home').hidden = false;
+  renderTabs();
   await loadHome();
 }
-function hideHome() {
-  if (!S.home) return;
-  clearInterval(agentsState.timer);
-  S.home = false;
-  $('#home').hidden = true;
-  $('#card-menu').classList.toggle('open', false);
-  render3dDirty = true; sliceDirty = true;
-  requestAnimationFrame(() => { if (S.mode === 'slice') fitSlice(); });
-}
+/** Leaves the home screen for the active file, if one is open. */
+function hideHome() { if (ui.active != null) showEditor(); }
 async function loadHome() {
-  home.recents = (await nativeAction('recents')) || [];
-  if (!home.samples) home.samples = (await nativeAction('samples')) || [];
+  const lib = (await nativeAction('library')) || {};
+  home.files = lib.files || [];
+  home.folders = lib.folders || [];
+  if (home.folder && !folderById(home.folder)) home.folder = null;
   renderHome();
 }
 function timeAgo(t) {
@@ -1390,101 +1833,772 @@ function timeAgo(t) {
   if (s < 86400 * 30) return `${Math.round(s / 86400)} days ago`;
   return new Date(t * 1000).toLocaleDateString();
 }
-function card({ title, sub, folder, thumb, badge, missing }) {
+const byName = (a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+const byRecent = (a, b) => (b.touched || 0) - (a.touched || 0) || byName(a, b);
+function folderById(id) { return home.folders.find((f) => f.id === id) || null; }
+function fileById(id) { return home.files.find((f) => f.id === id) || null; }
+function childFolders(parent) { return home.folders.filter((f) => (f.parent || null) === (parent || null)).sort(byName); }
+function filesIn(folder) { return home.files.filter((f) => !f.archived && (f.folder || null) === (folder || null)).sort(byRecent); }
+/** The folder and all folders inside it. */
+function subtree(id) {
+  const out = new Set([id]);
+  let grew = true;
+  while (grew) { grew = false; for (const f of home.folders) if (!out.has(f.id) && f.parent && out.has(f.parent)) { out.add(f.id); grew = true; } }
+  return out;
+}
+function folderPath(id) {
+  const path = [];
+  for (let f = folderById(id); f && path.length < 64; f = folderById(f.parent)) path.unshift(f);
+  return path;
+}
+function plural(n, one, many = one + 's') { return `${n} ${n === 1 ? one : many}`; }
+function folderSummary(id) {
+  const inside = subtree(id);
+  const files = home.files.filter((f) => !f.archived && f.folder && inside.has(f.folder)).length;
+  const subs = childFolders(id).length;
+  return [plural(files, 'file'), subs ? plural(subs, 'folder') : ''].filter(Boolean).join(' · ');
+}
+function sizeText(f) { return f.kind === '2d' ? `${f.size[0]}×${f.size[1]}` : f.size.join('×'); }
+
+/* Files and folders show as a grid of cards or as a list (Name, Last modified, Size, Location), filtered by kind and
+   sorted. Both share one set of behaviours: open (click, Return or Space), the … menu (also right-click, the menu
+   key or ⇧F10), drag to a folder or the Archive, and a name for screen readers. View, filter and sort are remembered. */
+const SORTS = [
+  { value: 'modified', label: 'Last modified', dir: 'desc' },
+  { value: 'name', label: 'Name', dir: 'asc' },
+  { value: 'kind', label: 'File type', dir: 'asc' },
+  { value: 'size', label: 'Size', dir: 'desc' },
+];
+const FILTERS = [{ value: 'all', label: 'All files' }, { value: '2d', label: '2D files' }, { value: '3d', label: '3D files' }];
+const homePrefs = (() => {
+  const d = { layout: 'grid', filter: 'all', sort: 'modified', dir: 'desc' };
+  try { return { ...d, ...JSON.parse(localStorage.getItem('openpixel.homeView') || '{}') }; } catch (e) { return d; }
+})();
+function saveHomePrefs() { try { localStorage.setItem('openpixel.homeView', JSON.stringify(homePrefs)); } catch (e) { /* not saved */ } }
+let filterMenu = null, sortMenu = null;
+function setHomeLayout(layout) {
+  homePrefs.layout = layout === 'list' ? 'list' : 'grid'; saveHomePrefs();
+  $$('.view-seg button').forEach((b) => { const on = b.dataset.layout === homePrefs.layout; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); });
+  renderHome();
+}
+function setHomeSort(key, dir) {
+  const s = SORTS.find((x) => x.value === key) || SORTS[0];
+  homePrefs.sort = s.value; homePrefs.dir = dir || s.dir; saveHomePrefs();
+  if (sortMenu) sortMenu.set(s.value);
+  renderHome();
+}
+function sortFiles(list) {
+  const { sort, dir } = homePrefs, sign = dir === 'asc' ? 1 : -1;
+  const px = (f) => f.size.reduce((a, b) => a * b, 1);
+  const cmp = {
+    modified: (a, b) => (a.touched || 0) - (b.touched || 0),
+    name: (a, b) => byName(a, b),
+    kind: (a, b) => a.kind.localeCompare(b.kind),
+    size: (a, b) => px(a) - px(b),
+  }[sort] || (() => 0);
+  return list.slice().sort((a, b) => sign * cmp(a, b) || byName(a, b));
+}
+const kindOk = (f) => homePrefs.filter === 'all' || f.kind === homePrefs.filter;
+/* Empty states: a small animated pixel-art scene (drawn with OpenPixel by app/tools/make-empty-states.py, in the
+   accent orange and grays) over the message. The picture is decoration; the text says what is going on. */
+function emptyState(art, text, { small = false, cls = 'empty' } = {}) {
+  const e = document.createElement('div');
+  e.className = `${cls} empty-state${small ? ' small' : ''}`;
+  e.setAttribute('role', 'status');
+  const pic = document.createElement('span');
+  pic.className = `pxa pxa-${art}`; pic.setAttribute('aria-hidden', 'true');
+  const p = document.createElement('p');
+  p.textContent = text;
+  e.append(pic, p);
+  return e;
+}
+/** Where a file lives: its library folder, or the last two folders of its place on disk. */
+function locationText(f) {
+  if (f.archived && $('#home-search').value.trim()) return 'In the Archive'; // search results mix pages
+  if (f.sample) return 'Built into OpenPixel';
+  if (f.folder && !f.archived) { const fd = folderById(f.folder); if (fd) return `In ${fd.name}`; }
+  const parts = (f.dir || '').split('/').filter(Boolean);
+  return parts.length > 2 ? parts.slice(-2).join('/') : (f.dir || '');
+}
+function whenText(f) { return f.sample ? 'Sample' : f.exists ? timeAgo(f.touched) : 'File not found'; }
+function kindIcon(f, size = 12) { return `<span class="kind ${f.kind === '3d' ? 'k3d' : 'k2d'}" aria-hidden="true">${icon(f.kind === '3d' ? 'file-3d' : 'file-2d', size)}</span>`; }
+
+/** Shared behaviour for a file or folder card or row. */
+function wireItem(el, target, open, label, rename) {
+  el.tabIndex = 0;
+  el.setAttribute('role', 'button');
+  el.setAttribute('aria-label', label);
+  el.onclick = open;
+  // Double-clicking the name renames in place. A click on the name waits a moment, so a double-click doesn't open
+  // the file first; anywhere else on the card or row opens at once.
+  if (rename) {
+    let wait = 0;
+    el._rename = () => { clearTimeout(wait); inlineRename(rename.el, rename.current, rename.commit); };
+    rename.el.title = 'Double-click to rename';
+    el.onclick = (e) => {
+      if (e && rename.el.contains(e.target)) {
+        clearTimeout(wait);
+        if (e.detail < 2) wait = setTimeout(open, 260);
+        return;
+      }
+      open();
+    };
+    rename.el.addEventListener('dblclick', (e) => { e.preventDefault(); e.stopPropagation(); el._rename(); });
+  }
+  el.addEventListener('keydown', (e) => {
+    if (e.target !== el) return;
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+    else if (e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')) { e.preventDefault(); openCardMenu(el.querySelector('.more') || el, target); }
+  });
+  const more = document.createElement('button');
+  more.type = 'button'; more.className = 'btn small icon more'; more.innerHTML = icon('ellipsis', 16);
+  more.setAttribute('aria-label', `More for ${target.item.name}`); more.dataset.tip = 'More';
+  more.onclick = (e) => { e.stopPropagation(); openCardMenu(more, target); };
+  more.onkeydown = (e) => e.stopPropagation();
+  el.appendChild(more);
+  el.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); openCardMenu({ x: e.clientX, y: e.clientY }, target); });
+  draggableItem(el, { type: target.type, id: target.item.id, name: target.item.name });
+}
+function fileCard(f) {
   const c = document.createElement('div');
-  c.className = 'card' + (missing ? ' missing' : '');
-  c.innerHTML = `<div class="pv">${thumb ? `<img alt="" src="${thumb}">` : icon('image', 28)}</div>` +
-    `<div class="meta"><div class="t"></div><div class="s"></div>${folder ? '<div class="s path"></div>' : ''}</div>` +
-    (badge ? `<span class="badge">${badge}</span>` : '');
-  c.querySelector('.t').textContent = title;
-  c.querySelector('.s').textContent = sub;
-  if (folder) c.querySelector('.s.path').textContent = folder;
-  c.title = folder ? `${sub}\n${folder}` : sub;
+  c.className = 'card' + (f.exists || f.sample ? '' : ' missing');
+  c.innerHTML = `<div class="pv">${f.thumb ? `<img alt="" draggable="false" src="${f.thumb}">` : icon(f.kind === '3d' ? 'file-3d' : 'file-2d', 28)}${kindIcon(f)}</div>` +
+    '<div class="meta"><div class="t"></div><div class="s"></div></div>';
+  c.querySelector('.t').textContent = f.name;
+  // Name, then when and how big; where it lives is in the list view and the tooltip. Search results, which mix
+  // pages, still say when a file is in the Archive.
+  const archivedHit = f.archived && $('#home-search').value.trim();
+  c.querySelector('.s').textContent = [whenText(f), sizeText(f), archivedHit ? 'In the Archive' : ''].filter(Boolean).join(' · ');
+  c.title = f.sample ? 'Built into OpenPixel' : f.path;
+  c.dataset.id = f.id;
+  if (f.sample) c.dataset.sample = f.id;
+  if (f.path) c.dataset.path = f.path;
+  wireItem(c, { type: 'file', item: f }, () => openItem(f, c), `${f.name}, ${f.kind === '3d' ? '3D' : '2D'} file, ${whenText(f)}`, fileRename(f, c.querySelector('.t')));
   return c;
 }
+/** How a file's name renames in place: only real files that are there (samples keep their names). */
+function fileRename(f, el) {
+  return f.path && f.exists && !f.sample ? { el, current: f.name, commit: (v) => renameFile({ path: f.path }, v) } : null;
+}
+/** The newest files in a folder, its folders included (what its card shows). */
+function latestInFolder(id, n = 3) {
+  const inside = subtree(id);
+  return home.files.filter((f) => !f.archived && f.folder && inside.has(f.folder))
+    .sort((a, b) => (b.touched || 0) - (a.touched || 0)).slice(0, n);
+}
+/** A folder's card: its three newest files side by side (empty slots stay as quiet tiles), then its icon and name. */
+function folderCard(fd) {
+  const c = document.createElement('div');
+  c.className = 'card folder-card';
+  c.dataset.folder = fd.id; c.dataset.drop = fd.id;
+  const latest = latestInFolder(fd.id);
+  const tile = (f) => (f
+    ? `<div class="ft">${f.thumb ? `<img alt="" draggable="false" src="${f.thumb}">` : icon(f.kind === '3d' ? 'file-3d' : 'file-2d', 20)}</div>`
+    : '<div class="ft empty"></div>');
+  c.innerHTML = `<div class="fprev" aria-hidden="true">${[0, 1, 2].map((i) => tile(latest[i])).join('')}</div>` +
+    `<div class="fmeta"><span class="fic" aria-hidden="true">${icon('folder', 20)}</span><div class="t"></div></div>`;
+  c.querySelector('.t').textContent = fd.name;
+  wireItem(c, { type: 'folder', item: fd }, () => openFolder(fd.id), `Folder ${fd.name}`,
+    { el: c.querySelector('.fmeta .t'), current: fd.name, commit: (v) => renameFolderTo(fd, v) });
+  return c;
+}
+/** List view: a header whose columns sort, then folder rows, then file rows. */
+function fileList(folders, files) {
+  const list = document.createElement('div');
+  list.className = 'file-list';
+  const head = document.createElement('div');
+  head.className = 'fl-row fl-head';
+  const col = (label, key, cls) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = `fl-col ${cls}`; b.textContent = label;
+    const on = homePrefs.sort === key;
+    if (on) { b.classList.add('on'); b.insertAdjacentHTML('beforeend', icon(homePrefs.dir === 'asc' ? 'arrow-up' : 'arrow-down', 12)); }
+    b.setAttribute('aria-label', `Sort by ${label.toLowerCase()}${on ? `, ${homePrefs.dir === 'asc' ? 'ascending' : 'descending'}` : ''}`);
+    b.onclick = () => setHomeSort(key, on ? (homePrefs.dir === 'asc' ? 'desc' : 'asc') : undefined);
+    head.appendChild(b);
+  };
+  col('Name', 'name', 'c-name'); col('Last modified', 'modified', 'c-when'); col('Size', 'size', 'c-size');
+  const loc = document.createElement('span'); loc.className = 'fl-col c-loc static'; loc.textContent = 'Location'; head.appendChild(loc);
+  list.appendChild(head);
+  for (const fd of folders) {
+    const r = document.createElement('div');
+    r.className = 'fl-row fl-item folder-row';
+    r.dataset.folder = fd.id; r.dataset.drop = fd.id;
+    r.innerHTML = `<span class="c-name"><span class="kind kfolder" aria-hidden="true">${icon('folder', 12)}</span><span class="nm"></span></span>` +
+      '<span class="c-when">—</span><span class="c-size"></span><span class="c-loc"></span>';
+    r.querySelector('.nm').textContent = fd.name;
+    r.querySelector('.c-size').textContent = folderSummary(fd.id);
+    r.querySelector('.c-loc').textContent = fd.parent ? `In ${(folderById(fd.parent) || {}).name || 'a folder'}` : 'All folders';
+    wireItem(r, { type: 'folder', item: fd }, () => openFolder(fd.id), `Folder ${fd.name}, ${folderSummary(fd.id)}`,
+      { el: r.querySelector('.nm'), current: fd.name, commit: (v) => renameFolderTo(fd, v) });
+    list.appendChild(r);
+  }
+  for (const f of files) {
+    const r = document.createElement('div');
+    r.className = 'fl-row fl-item' + (f.exists || f.sample ? '' : ' missing');
+    r.dataset.id = f.id; if (f.sample) r.dataset.sample = f.id;
+    r.innerHTML = `<span class="c-name">${kindIcon(f)}<span class="nm"></span></span><span class="c-when"></span><span class="c-size"></span><span class="c-loc"></span>`;
+    r.querySelector('.nm').textContent = f.name;
+    r.querySelector('.c-when').textContent = whenText(f);
+    r.querySelector('.c-size').textContent = sizeText(f);
+    r.querySelector('.c-loc').textContent = locationText(f);
+    r.title = f.sample ? 'Built into OpenPixel' : f.path;
+    wireItem(r, { type: 'file', item: f }, () => openItem(f, r), `${f.name}, ${f.kind === '3d' ? '3D' : '2D'} file, ${whenText(f)}`, fileRename(f, r.querySelector('.nm')));
+    list.appendChild(r);
+  }
+  return list;
+}
+function openFolder(id) {
+  home.view = 'folders'; home.folder = id || null;
+  if ($('#home-search').value) { $('#home-search').value = ''; }
+  renderHome();
+  $('.home-main').scrollTop = 0;
+}
+
+function renderTitle(q) {
+  const t = $('#home-title');
+  t.replaceChildren();
+  const h = (text, cls = 'cur') => { const s = document.createElement('h1'); s.className = cls; s.textContent = text; t.appendChild(s); return s; };
+  if (q) { h(`Results for “${q}”`); return; }
+  if (home.view !== 'folders') { h({ recents: 'Recents', archive: 'Archive', agents: 'Agents' }[home.view] || 'Recents'); return; }
+  const path = folderPath(home.folder);
+  const crumb = (text, id, last) => {
+    if (t.children.length) { const sep = document.createElement('span'); sep.className = 'sep'; sep.setAttribute('aria-hidden', 'true'); sep.innerHTML = icon('chevron-right', 14); t.appendChild(sep); }
+    if (last) { h(text); return; }
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'crumb'; b.textContent = text;
+    b.dataset.drop = id || '';
+    b.onclick = () => openFolder(id);
+    t.appendChild(b);
+  };
+  crumb('All folders', null, !path.length);
+  path.forEach((f, i) => crumb(f.name, f.id, i === path.length - 1));
+}
+
 function renderHome() {
-  $$('.home-nav[data-home]').forEach((n) => n.classList.toggle('on', n.dataset.home === home.view));
-  $('#home-title').textContent = { samples: 'Samples', agents: 'Agents' }[home.view] || 'Recents';
-  const agentsView = home.view === 'agents';
-  $('#home-recents-wrap').hidden = home.view !== 'recents';
-  $('#home-samples-wrap').hidden = agentsView;
-  $('.home-actions').hidden = agentsView;
-  $('#home-search').hidden = agentsView;
+  const editing = $('#home .home-main input.rename');
+  if (editing && document.activeElement === editing) return; // a name is being edited; it redraws when that is done
+  const q = $('#home-search').value.trim();
+  const ql = q.toLowerCase();
+  $('#search-clear').hidden = !q;
+  $$('.home-nav[data-home]').forEach((n) => {
+    const on = !q && n.dataset.home === home.view && !(home.view === 'folders' && home.folder);
+    n.classList.toggle('on', on);
+    if (n.dataset.home === home.view && !q) n.setAttribute('aria-current', 'page'); else n.removeAttribute('aria-current');
+  });
+  const archived = home.files.filter((f) => f.archived);
+  renderTitle(q);
+  const agentsView = home.view === 'agents' && !q;
   $('#home-agents-wrap').hidden = !agentsView;
+  $('#home-files-wrap').hidden = agentsView;
+  // Header buttons only where they belong: making and opening files on Recents, folders on All folders,
+  // emptying the Archive on the Archive; none on Agents or search results.
+  $('#home-open').hidden = !(home.view === 'recents' && !q);
+  $('#home-create').hidden = !(home.view === 'recents' && !q);
+  $('#home-new-folder').hidden = !(home.view === 'folders' && !q);
+  $('#home-empty-archive').hidden = !(home.view === 'archive' && !q && archived.length);
   clearInterval(agentsState.timer);
   if (agentsView) {
     loadAgents();
     agentsState.timer = setInterval(() => { if (S.home && home.view === 'agents') loadAgents(); else clearInterval(agentsState.timer); }, 2500);
     return;
   }
-  const q = $('#home-search').value.trim().toLowerCase();
-  const box = $('#home-recents');
-  box.innerHTML = '';
-  const list = home.recents.filter((r) => !q || r.name.toLowerCase().includes(q) || r.path.toLowerCase().includes(q));
-  for (const r of list) {
-    const size = r.kind === '2d' ? `${r.size[0]}×${r.size[1]}` : r.size.join('×');
-    const c = card({
-      title: r.name, thumb: r.thumb, badge: r.kind === '2d' ? '2D' : '3D', missing: !r.exists,
-      sub: r.exists ? `${timeAgo(r.touched)} · ${size}` : 'File not found', folder: r.folder,
-    });
-    c.dataset.path = r.path;
-    c.onclick = () => openRecent(r, c);
-    const more = document.createElement('button');
-    more.className = 'btn small icon more'; more.title = 'More'; more.innerHTML = icon('ellipsis', 16);
-    more.onclick = (e) => { e.stopPropagation(); openCardMenu(more, r); };
-    c.appendChild(more);
-    box.appendChild(c);
+  let folders = [], files = [], filesTitle = '', empty = '', art = 'files';
+  const match = (s) => String(s || '').toLowerCase().includes(ql);
+  if (q) {
+    // The sidebar search looks through the whole library, whichever page it starts from: every file (archived
+    // ones too, marked as such) and every folder.
+    files = home.files.filter((f) => match(f.name) || match(f.path));
+    folders = home.folders.filter((f) => match(f.name));
+    empty = `Nothing matches “${q}”.`; art = 'search';
+  } else if (home.view === 'folders') {
+    // All folders lists folders only (files outside a folder are on Recents); a folder shows its folders and files.
+    folders = childFolders(home.folder);
+    files = home.folder ? home.files.filter((f) => !f.archived && f.folder === home.folder) : [];
+    filesTitle = 'Files';
+    empty = home.folder ? 'This folder is empty. Drag files here, or choose Move to… on a file.'
+      : 'No folders yet. Create one with New folder, then drag files into it or choose Move to… on a file.';
+    art = 'folder';
+  } else if (home.view === 'archive') {
+    files = archived;
+    empty = 'Nothing archived. Choose Move to Archive on a file, or drag it onto Archive in the sidebar.'; art = 'archive';
+  } else {
+    files = home.files.filter((f) => !f.archived);
+    empty = 'Files you save or open show up here, with a preview and where they are saved.';
   }
-  if (!list.length) {
-    box.innerHTML = `<div class="empty">${q ? 'No recent files match your search.' : 'Files you save or open show up here, with a preview and where they are saved.'}</div>`;
-  }
-  const sb = $('#home-samples');
-  sb.innerHTML = '';
-  for (const smp of home.samples || []) {
-    if (q && !smp.name.toLowerCase().includes(q)) continue;
-    const size = smp.kind === '2d' ? `${smp.size[0]}×${smp.size[1]}` : smp.size.join('×');
-    const c = card({ title: smp.name, thumb: smp.thumb, badge: smp.kind === '2d' ? '2D' : '3D', sub: `Built-in example · ${size}` });
-    c.dataset.sample = smp.id;
-    c.onclick = async () => { await nativeAction(smp.id); hideHome(); };
-    sb.appendChild(c);
-  }
+  const all = files.length;
+  files = sortFiles(files.filter(kindOk));
+  folders = folders.slice().sort((a, b) => (homePrefs.sort === 'name' && homePrefs.dir === 'desc' ? -1 : 1) * byName(a, b));
+  if (all && !files.length) { empty = `No ${homePrefs.filter.toUpperCase()} files here. Choose All files to see the other ${plural(all, 'file')}.`; art = 'search'; }
+  const onlyFolders = home.view === 'folders' && !home.folder && !q;
+  $('#home-count').textContent = onlyFolders ? plural(folders.length, 'folder')
+    : [folders.length ? plural(folders.length, 'folder') : '', plural(files.length, 'file')].filter(Boolean).join(' · ');
+  $('#home-filter').hidden = onlyFolders; // 2D or 3D is about files
+  // Screen readers hear each dropdown's question and its current answer ("Sort by: Last modified").
+  $('#home-filter .dd-btn').setAttribute('aria-label', `Show: ${(FILTERS.find((x) => x.value === homePrefs.filter) || FILTERS[0]).label}`);
+  $('#home-sort .dd-btn').setAttribute('aria-label', `Sort by: ${(SORTS.find((x) => x.value === homePrefs.sort) || SORTS[0]).label}, ${homePrefs.dir === 'asc' ? 'ascending' : 'descending'}`);
+  const list = homePrefs.layout === 'list';
+  const fbox = $('#home-folders');
+  const showFolders = !list && folders.length > 0;
+  fbox.replaceChildren(...(list ? [] : folders.map(folderCard)));
+  $('#home-folders-sec').hidden = !showFolders;
+  // Section headings only where a page has two kinds of things (folders and files).
+  $('#home-files-title').textContent = filesTitle;
+  $('#home-files-title').hidden = list || !filesTitle || !showFolders || !files.length;
+  $('#home-folders-sec .home-h2').hidden = !files.length; // a heading only when files follow
+  const box = $('#home-files');
+  box.classList.toggle('cards', !list);
+  if (list) box.replaceChildren(fileList(folders, files));
+  else box.replaceChildren(...files.map(fileCard));
+  if (!files.length && !folders.length) box.appendChild(emptyState(art, empty));
 }
-async function openRecent(r, cardEl) {
-  if (!r.exists) { openCardMenu((cardEl && cardEl.querySelector('.more')) || $('#home-search'), r); return; }
-  const res = await nativeAction('openPath', { path: r.path });
-  if (res === true) hideHome(); else toast(String(res || 'Could not open the file'));
+
+async function openItem(f, cardEl) {
+  if (f.sample) { await nativeAction(f.id); return; }
+  if (!f.exists) { openCardMenu((cardEl && cardEl.querySelector('.more')) || $('#home-search'), { type: 'file', item: f }); return; }
+  const res = await nativeAction('openPath', { path: f.path });
+  if (res !== true) toast(String(res || 'Could not open the file'));
 }
-function openCardMenu(anchor, r) {
-  const m = $('#card-menu');
-  home.card = r;
-  m.querySelector('[data-card="open"]').hidden = !r.exists;
-  m.querySelector('[data-card="reveal"]').hidden = !r.exists;
+
+/* Menus for a file or folder: from its … button or a right-click. "Move to…" lists the folders. */
+function placeMenu(m, anchor) {
   m.classList.add('open');
-  const a = anchor.getBoundingClientRect();
+  const a = anchor instanceof Element ? anchor.getBoundingClientRect() : { left: anchor.x, right: anchor.x, top: anchor.y, bottom: anchor.y };
   m.style.left = Math.max(8, Math.min(a.left, window.innerWidth - m.offsetWidth - 8)) + 'px';
-  m.style.top = Math.min(a.bottom + 4, window.innerHeight - m.offsetHeight - 8) + 'px';
-  openedMenu(m, anchor);
+  const below = a.bottom + 4;
+  m.style.top = (below + m.offsetHeight > window.innerHeight - 8 ? Math.max(8, a.top - m.offsetHeight - 4) : below) + 'px';
+  if (anchor instanceof Element) { openedMenu(m, anchor); return; }
+  // A right-click menu grows out of the pointer, wherever the menu had to shift or flip to fit.
+  menuTrigger = null;
+  const r = m.getBoundingClientRect();
+  const ox = Math.max(0, Math.min(r.width, anchor.x - r.left)), oy = Math.max(0, Math.min(r.height, anchor.y - r.top));
+  popIn(m, `${Math.round(ox)}px ${Math.round(oy)}px`, { duration: 140, scale: 0.97 });
+  m.querySelectorAll('.kb').forEach((d) => d.classList.toggle('kb', false));
+  if (lastInput === 'key') moveMenu(m, 1);
+}
+function openCardMenu(anchor, target) {
+  closeMenus();
+  const m = $('#card-menu');
+  home.menuFor = target;
+  const file = target.type === 'file' ? target.item : null;
+  const show = {
+    open: !file || file.exists || file.sample,
+    reveal: !!file && file.exists && !file.sample,
+    rename: !file || (!!file.path && file.exists && !file.sample),
+    move: !file || !file.archived,
+    archive: !!file && !file.archived,
+    restore: !!file && file.archived,
+    remove: !!file && !file.exists && !file.sample,
+    delete: !!file && (file.archived || file.exists || file.sample),
+    deleteFolder: !file,
+  };
+  for (const [k, v] of Object.entries(show)) m.querySelector(`[data-card="${k}"]`).hidden = !v;
+  m.dataset.anchor = '';
+  home.menuAnchor = anchor;
+  placeMenu(m, anchor);
+}
+function openMoveMenu(anchor, target) {
+  closeMenus();
+  const m = $('#move-menu');
+  const item = target.item;
+  const here = target.type === 'folder' ? (item.parent || null) : (item.folder || null);
+  const banned = target.type === 'folder' ? subtree(item.id) : new Set();
+  m.replaceChildren();
+  const head = document.createElement('div'); head.className = 'head'; head.textContent = `Move “${item.name}” to`; m.appendChild(head);
+  const row = (label, id, depth, ic) => {
+    const d = document.createElement('div');
+    d.className = 'opt' + (id === here ? ' sel' : '');
+    d.style.paddingLeft = `${10 + depth * 14}px`;
+    d.innerHTML = `${icon(ic, 14)}<span class="ol"></span><span class="ck">${icon('check', 14)}</span>`;
+    d.querySelector('.ol').textContent = label;
+    d.onclick = (e) => { e.stopPropagation(); closeMenus(); if (id !== here) moveTo(target, id); };
+    m.appendChild(d);
+  };
+  row('All folders (no folder)', null, 0, 'folders');
+  const add = (parent, depth) => { for (const f of childFolders(parent)) { if (banned.has(f.id)) continue; row(f.name, f.id, depth, 'folder'); add(f.id, depth + 1); } };
+  add(null, 1);
+  m.appendChild(document.createElement('hr'));
+  const nf = document.createElement('div');
+  nf.innerHTML = `${icon('folder-plus', 14)}<span>New folder…</span>`;
+  nf.onclick = async (e) => {
+    e.stopPropagation(); closeMenus();
+    const name = await askName('New folder', 'Create', '');
+    if (name == null) return;
+    const id = await nativeAction('createFolder', { name, parent: home.view === 'folders' ? home.folder : null });
+    if (typeof id === 'string') { await loadHome(); moveTo(target, id); }
+  };
+  m.appendChild(nf);
+  placeMenu(m, anchor);
+}
+async function moveTo(target, folderId) {
+  const ok = target.type === 'folder'
+    ? await nativeAction('moveFolder', { id: target.item.id, parent: folderId })
+    : await nativeAction('moveItem', { id: target.item.id, folder: folderId });
+  if (ok !== true) { toast('Could not move it there'); return; }
+  const dest = folderId ? (folderById(folderId) || {}).name : 'All folders';
+  toast(`Moved “${target.item.name}” to ${dest}`);
+  await loadHome();
+
+}
+async function archiveItem(f, archived) {
+  const ok = await nativeAction('archiveItem', { id: f.id, archived });
+  if (ok === true) toast(archived ? `“${f.name}” moved to the Archive` : `“${f.name}” restored`);
+  await loadHome();
+}
+async function deleteForever(files) {
+  if (!files.length) return;
+  const one = files.length === 1 ? files[0] : null;
+  const title = one ? `Delete “${one.name}” permanently?` : `Delete ${plural(files.length, 'archived item')} permanently?`;
+  const body = one
+    ? (one.sample ? 'The sample disappears from OpenPixel.' : `The file moves to the Trash:\n${one.path}`)
+    : 'Files move to the Trash; samples disappear from OpenPixel.';
+  if (!(await askConfirm(title, body, 'Delete permanently'))) return;
+  let failed = '';
+  for (const f of files) {
+    const r = await nativeAction('deleteItem', { id: f.id });
+    if (r !== true) failed = String(r || `Could not delete “${f.name}”`);
+  }
+  toast(failed || (one ? `“${one.name}” deleted permanently` : 'Archive emptied'));
+  await loadHome();
+}
+async function newFolder(parent) {
+  const name = await askName('New folder', 'Create', '');
+  if (name == null) return;
+  const id = await nativeAction('createFolder', { name, parent: parent || null });
+  if (typeof id !== 'string') { toast('Could not create the folder'); return; }
+  await loadHome();
+}
+async function renameFolder(f) {
+  const name = await askName('Rename folder', 'Rename', f.name);
+  if (name == null || name === f.name) return;
+  await nativeAction('renameFolder', { id: f.id, name });
+  await loadHome();
+}
+async function deleteFolder(f) {
+  const n = home.files.filter((x) => !x.archived && x.folder && subtree(f.id).has(x.folder)).length;
+  const subs = subtree(f.id).size - 1;
+  const body = (n ? `${plural(n, 'file')} inside ${n === 1 ? 'moves' : 'move'} to the Archive. ` : '') +
+    (subs ? `${plural(subs, 'folder')} inside ${subs === 1 ? 'is' : 'are'} deleted too. ` : '') + 'Files on your Mac are not touched.';
+  if (!(await askConfirm(`Delete the folder “${f.name}”?`, body, 'Delete folder'))) return;
+  await nativeAction('deleteFolder', { id: f.id });
+  if (home.view === 'folders' && home.folder && subtree(f.id).has(home.folder)) home.folder = f.parent || null;
+  await loadHome();
+}
+
+/* Small dialogs: a name (new folder, rename) and a confirmation (delete). */
+let dialogDone = null;
+function askName(title, okLabel, value) {
+  return new Promise((resolve) => {
+    $('#name-title').textContent = title;
+    $('#name-ok').textContent = okLabel;
+    const input = $('#name-input');
+    input.value = value || '';
+    input.placeholder = 'Folder name';
+    dialogDone = (v) => { dialogDone = null; resolve(v); };
+    openModal('#name-dialog');
+    setTimeout(() => { input.focus(); input.select(); }, 30);
+  });
+}
+function askConfirm(title, body, okLabel) {
+  return new Promise((resolve) => {
+    $('#confirm-title').textContent = title;
+    $('#confirm-body').textContent = body;
+    $('#confirm-ok').textContent = okLabel;
+    dialogDone = (v) => { dialogDone = null; resolve(v); };
+    openModal('#confirm-dialog');
+  });
+}
+function finishDialog(v) { const d = dialogDone; closeModals(); if (d) d(v); }
+
+/* Drag and drop: files and folders onto a folder (a card, the sidebar, a breadcrumb), All folders (top level)
+   or Archive. */
+let dragging = null;
+function draggableItem(el, item) {
+  el.draggable = true;
+  el.addEventListener('dragstart', (e) => {
+    dragging = item;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', item.name);
+    el.classList.add('dragging');
+    document.body.classList.add('dnd');
+    hideTip(); closeMenus();
+  });
+  el.addEventListener('dragend', endDrag);
+}
+function endDrag() {
+  dragging = null;
+  $$('.dragging').forEach((x) => x.classList.remove('dragging'));
+  $$('.drop-over').forEach((x) => x.classList.remove('drop-over'));
+  document.body.classList.remove('dnd');
+}
+function dropTarget(el) { return el && el.closest && el.closest('[data-drop], [data-drop-archive]'); }
+function canDrop(t, item = dragging) {
+  if (!item || !t) return false;
+  if (t.hasAttribute('data-drop-archive')) { const f = item.type === 'file' && fileById(item.id); return !!f && !f.archived; }
+  const dest = t.dataset.drop || null;
+  if (item.type === 'file') { const f = fileById(item.id); return !!f && (!!f.archived || (f.folder || null) !== dest); }
+  const fd = folderById(item.id);
+  return !!fd && !(dest && subtree(fd.id).has(dest)) && (fd.parent || null) !== dest;
+}
+async function dropOn(t, item) {
+  if (t.hasAttribute('data-drop-archive')) { const f = fileById(item.id); if (f) await archiveItem(f, true); return; }
+  const target = item.type === 'file' ? { type: 'file', item: fileById(item.id) } : { type: 'folder', item: folderById(item.id) };
+  await moveTo(target, t.dataset.drop || null);
+}
+document.addEventListener('dragover', (e) => {
+  if (!dragging) return;
+  const t = dropTarget(e.target);
+  $$('.drop-over').forEach((x) => { if (x !== t) x.classList.remove('drop-over'); });
+  if (!canDrop(t)) { e.dataTransfer.dropEffect = 'none'; return; }
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  t.classList.add('drop-over');
+});
+document.addEventListener('drop', (e) => {
+  if (!dragging) return;
+  const t = dropTarget(e.target), item = dragging;
+  e.preventDefault();
+  endDrag();
+  if (canDrop(t, item)) dropOn(t, item);
+});
+
+/* GitHub stars at the right end of the tab bar: the app keeps the last count and refreshes it from GitHub at most
+   hourly (PC.githubStars); clicking opens the repository. */
+function starsText(n) {
+  if (typeof n !== 'number' || !isFinite(n) || n < 0) return 'Star';
+  const short = (v, unit) => `${(Math.floor(v * 10) / 10).toFixed(1).replace(/\.0$/, '')}${unit}`;
+  return n < 1000 ? String(n) : n < 1e6 ? short(n / 1000, 'K') : short(n / 1e6, 'M');
+}
+function showStars(n) {
+  $('#stars-count').textContent = starsText(n);
+  const b = $('#tab-stars');
+  b.dataset.tip = typeof n === 'number' ? `${n.toLocaleString()} ${n === 1 ? 'star' : 'stars'} on GitHub` : 'OpenPixel on GitHub';
+  b.setAttribute('aria-label', b.dataset.tip);
+  requestAnimationFrame(reportTitlebar);
 }
 function wireHome() {
-  $('#home-btn').onclick = () => showHome('recents');
-  $('#home-back').onclick = hideHome;
+  filterMenu = dropdown($('#home-filter'), FILTERS, { value: homePrefs.filter, onChange: (v) => { homePrefs.filter = v; saveHomePrefs(); renderHome(); } });
+  sortMenu = dropdown($('#home-sort'), SORTS, { value: homePrefs.sort, onChange: (v) => setHomeSort(v) });
+  $('#home-filter .dd-btn').setAttribute('aria-label', 'Show');
+  $('#home-sort .dd-btn').setAttribute('aria-label', 'Sort by');
+  $$('.view-seg button').forEach((b) => {
+    b.onclick = () => setHomeLayout(b.dataset.layout);
+    const on = b.dataset.layout === homePrefs.layout; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on));
+  });
+  $('#tab-stars').onclick = () => nativeAction('openLink', { link: 'github' });
+  nativeAction('githubStars').then(showStars).catch(() => {});
+  $('#tab-home').onclick = () => showHome();
+  $('#tab-add').onclick = () => openNewPage();
   $('#home-open').onclick = () => nativeAction('open');
-  $$('[data-home]').forEach((n) => { n.onclick = () => { home.view = n.dataset.home; renderHome(); }; });
-  $$('[data-new]').forEach((t) => { t.onclick = () => openNewDialog(t.dataset.new); });
-  $('#home-search').addEventListener('input', renderHome);
-  $('#home-search').addEventListener('keydown', (e) => e.stopPropagation());
+  $('#home-create').onclick = () => openNewPage();
+  $('#home-new-folder').onclick = () => newFolder(home.folder);
+  // GitHub and X at the bottom of the sidebar: the app opens them (it knows the two addresses; the page only names one).
+  $$('.side-link').forEach((b) => { b.onclick = () => nativeAction('openLink', { link: b.dataset.link }); });
+  $('#home-empty-archive').onclick = () => deleteForever(home.files.filter((f) => f.archived));
+  $$('[data-home]').forEach((n) => {
+    n.onclick = () => {
+      home.view = n.dataset.home;
+      if (home.view === 'folders') home.folder = null;
+      $('#home-search').value = '';
+      renderHome();
+      $('.home-main').scrollTop = 0;
+    };
+  });
+  const search = $('#home-search');
+  search.addEventListener('input', () => {
+    if (home.view === 'agents' && search.value) home.view = 'recents';
+    renderHome();
+  });
+  search.addEventListener('keydown', (e) => {
+    e.stopPropagation();
+    if (e.key === 'Escape') { search.value = ''; search.blur(); renderHome(); }
+    if (e.key === 'Enter') { const c = $('#home-files .card, #home-folders .card'); if (c) c.focus(); }
+  });
+  $('#search-clear').onclick = () => { search.value = ''; renderHome(); search.focus(); };
   $$('#card-menu [data-card]').forEach((d) => {
     d.onclick = async (e) => {
       e.stopPropagation();
-      $('#card-menu').classList.toggle('open', false);
-      const r = home.card;
-      if (!r) return;
-      if (d.dataset.card === 'open') openRecent(r);
-      else if (d.dataset.card === 'reveal') nativeAction('reveal', { path: r.path });
-      else { await nativeAction('removeRecent', { path: r.path }); loadHome(); }
+      const t = home.menuFor;
+      if (!t) return;
+      const act = d.dataset.card;
+      if (act === 'move') { openMoveMenu(home.menuAnchor && home.menuAnchor.isConnected !== false ? home.menuAnchor : { x: 200, y: 200 }, t); return; }
+      closeMenus();
+      const it = t.item;
+      if (act === 'rename') {
+        const sel = t.type === 'folder' ? `[data-folder="${CSS.escape(it.id)}"]` : `[data-id="${CSS.escape(it.id)}"]`;
+        const el = $$(`#home ${sel}`).find((x) => x._rename && x.offsetParent);
+        if (el) { el._rename(); return; }
+        if (t.type === 'folder') renameFolder(it);
+        return;
+      }
+      if (t.type === 'folder') {
+        if (act === 'open') openFolder(it.id);
+        else if (act === 'deleteFolder') deleteFolder(it);
+        return;
+      }
+      if (act === 'open') openItem(it);
+      else if (act === 'reveal') nativeAction('reveal', { path: it.path });
+      else if (act === 'archive') archiveItem(it, true);
+      else if (act === 'restore') archiveItem(it, false);
+      else if (act === 'delete') deleteForever([it]);
+      else if (act === 'remove') { await nativeAction('removeRecent', { path: it.path }); loadHome(); }
     };
   });
-  document.addEventListener('click', () => $('#card-menu').classList.toggle('open', false));
+  $('#name-ok').onclick = () => { const v = $('#name-input').value.trim(); if (v) finishDialog(v); else $('#name-input').focus(); };
+  $('#name-input').addEventListener('keydown', (e) => {
+    e.stopPropagation();
+    if (e.key === 'Enter') $('#name-ok').click();
+    if (e.key === 'Escape') finishDialog(null);
+  });
+  $('#confirm-ok').onclick = () => finishDialog(true);
+  // Cancel buttons, the backdrop and Escape close these dialogs as "no".
+  for (const id of ['#name-dialog', '#confirm-dialog']) {
+    const bg = $(id);
+    new MutationObserver(() => { if (!bg.classList.contains('open') && dialogDone) { const d = dialogDone; dialogDone = null; d(id === '#name-dialog' ? null : false); } })
+      .observe(bg, { attributes: true, attributeFilter: ['class'] });
+  }
+  // Buttons that answer a press with a small spring and, on a Force Touch trackpad, a tap.
+  document.addEventListener('pointerdown', (e) => {
+    const b = e.target.closest && e.target.closest('.haptic, .tb-add');
+    if (b && !b.disabled) nativeAction('haptic');
+  });
+}
+
+/* ---------------------------------------------------------------- the New file page (the + in the tab bar) */
+/* The page shows the 10 files edited (opened or saved) most recently; a search looks through every file. */
+const NEW_RECENTS = 10;
+async function openNewPage() {
+  stopPlay(); closeModals(); closePicker(); closeMenus();
+  if (ui.view === 'editor') rememberTabView();
+  ui.newOpen = true; ui.view = 'new'; S.home = true;
+  $('#home').hidden = true;
+  $('#newpage').hidden = false;
+  clearInterval(agentsState.timer);
+  renderTabs();
+  $('#np-search').value = '';
+  renderNewRecents();
+  $('#np-search').focus();
+  const lib = (await nativeAction('library')) || {};
+  home.files = lib.files || home.files; home.folders = lib.folders || home.folders;
+  renderNewRecents();
+}
+function closeNewPage() {
+  ui.newOpen = false;
+  if (ui.view === 'new') { if (ui.active != null) showEditor(); else showHome(); } else renderTabs();
+}
+function renderNewRecents() {
+  const q = $('#np-search').value.trim().toLowerCase();
+  const box = $('#np-recents');
+  box.replaceChildren();
+  const all = home.files.filter((f) => f.exists || f.sample).sort(byRecent);
+  const files = q
+    ? all.filter((f) => f.name.toLowerCase().includes(q) || (f.path || '').toLowerCase().includes(q))
+    : all.filter((f) => !f.archived).slice(0, NEW_RECENTS);
+  $('#np-title').textContent = q ? (files.length ? `${plural(files.length, 'file')} found` : 'No results') : 'Recents';
+  // Browse all recent only when Recents holds more than this page lists (otherwise everything is already here).
+  $('#np-browse').hidden = !!q || all.filter((f) => !f.archived).length <= NEW_RECENTS;
+  for (const f of files) {
+    const r = document.createElement('div');
+    r.className = 'np-row'; r.tabIndex = 0; r.dataset.id = f.id; r.setAttribute('role', 'listitem');
+    r.innerHTML = `<div class="th">${f.thumb ? `<img alt="" draggable="false" src="${f.thumb}">` : ''}` +
+      `<span class="kind ${f.kind === '3d' ? 'k3d' : 'k2d'}">${icon(f.kind === '3d' ? 'file-3d' : 'file-2d', 11)}</span></div>` +
+      '<div class="t"></div><div class="when"></div>';
+    r.querySelector('.t').textContent = f.name;
+    r.querySelector('.when').textContent = f.archived ? 'In the Archive' : f.sample ? 'Sample' : timeAgo(f.touched);
+    r.title = f.sample ? 'Built into OpenPixel' : f.dir;
+    r.onclick = () => openItem(f, r);
+    r.onkeydown = (e) => {
+      if (e.key === 'Enter') openItem(f, r);
+      else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const next = e.key === 'ArrowDown' ? r.nextElementSibling : r.previousElementSibling;
+        if (next && next.classList.contains('np-row')) next.focus(); else if (e.key === 'ArrowUp') $('#np-search').focus();
+      }
+    };
+    box.appendChild(r);
+  }
+  if (!files.length) {
+    box.appendChild(q ? emptyState('search', `No file matches “${$('#np-search').value.trim()}”.`, { cls: 'np-empty' })
+      : emptyState('files', 'Files you open or save show up here.', { cls: 'np-empty' }));
+  }
+}
+/* New 2D / 3D file dialog: name, size (and depth for 3D), size presets and the palette, or no palette. The last
+   size and palette for each kind are remembered. */
+const NEW_PALETTES = [{ value: 'none', label: 'No palette', colors: [] }, ...PRESETS];
+const newFilePrefs = (() => {
+  const d = { '2d': { w: 32, h: 32, palette: 'db32' }, '3d': { w: 32, h: 32, d: 32, palette: 'db32' } };
+  try { const s = JSON.parse(localStorage.getItem('openpixel.newFile') || '{}'); return { '2d': { ...d['2d'], ...s['2d'] }, '3d': { ...d['3d'], ...s['3d'] } }; } catch (e) { return d; }
+})();
+let nfPalette = null, nfKind = '2d';
+function nfHint() {
+  const v = nfPalette ? nfPalette.value : 'db32';
+  $('#nf-hint').textContent = v === 'none'
+    ? 'Starts with one colour (black). Every colour you pick is added to the file\'s own palette.'
+    : `${(PRESETS.find((p) => p.value === v) || {}).label || 'This palette'}; you can add, change or replace colours later.`;
+  $$('.nf-presets [data-nf-size]').forEach((b) => {
+    const n = String(b.dataset.nfSize);
+    const on = $('#nf-x').value === n && $('#nf-y').value === n && (nfKind === '2d' || $('#nf-z').value === n);
+    b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on));
+  });
+}
+function openNewFileDialog(kind) {
+  nfKind = kind === '3d' ? '3d' : '2d';
+  const p = newFilePrefs[nfKind];
+  $('#newfile-title').textContent = nfKind === '3d' ? 'New 3D file' : 'New 2D file';
+  $('#nf-size-label').textContent = 'Size';
+  $$('#newfile-dialog .nf-3d').forEach((x) => { x.hidden = nfKind !== '3d'; });
+  $('#nf-name').value = 'Untitled';
+  $('#nf-x').value = p.w; $('#nf-y').value = p.h; $('#nf-z').value = p.d || 32;
+  nfPalette.set(p.palette);
+  nfHint();
+  openModal('#newfile-dialog');
+  setTimeout(() => { $('#nf-name').focus(); $('#nf-name').select(); }, 30);
+}
+async function createFromDialog() {
+  const clamp = (v) => Math.max(1, Math.min(256, parseInt(v, 10) || 32));
+  const w = clamp($('#nf-x').value), h = clamp($('#nf-y').value), dz = clamp($('#nf-z').value);
+  const palette = nfPalette ? nfPalette.value : 'db32';
+  const name = $('#nf-name').value.trim() || 'Untitled';
+  newFilePrefs[nfKind] = nfKind === '3d' ? { w, h, d: dz, palette } : { w, h, palette };
+  try { localStorage.setItem('openpixel.newFile', JSON.stringify(newFilePrefs)); } catch (e) { /* not saved */ }
+  const req = nfKind === '3d'
+    ? { tool: 'new_model', args: { name, palette, size_x: w, size_y: h, size_z: dz } }
+    : { tool: 'new_sprite', args: { name, palette, width: w, height: h } };
+  $('#nf-ok').disabled = true;
+  const r = await nativeAction('newDocument', req);
+  $('#nf-ok').disabled = false;
+  if (!r || typeof r === 'string') { toast(String(r || 'Could not create the file')); return; }
+  closeModals();
+  ui.newOpen = false;
+  await refresh();
+  showEditor();
+}
+function wireNewFileDialog() {
+  nfPalette = dropdown($('#nf-palette'), NEW_PALETTES, { value: 'db32', onChange: nfHint });
+  $('#nf-palette .dd-btn').setAttribute('aria-labelledby', 'nf-palette-label');
+  $('#nf-ok').onclick = createFromDialog;
+  $$('.nf-presets [data-nf-size]').forEach((b) => {
+    b.onclick = () => { ['#nf-x', '#nf-y', '#nf-z'].forEach((x) => { $(x).value = b.dataset.nfSize; }); nfHint(); };
+  });
+  for (const id of ['#nf-name', '#nf-x', '#nf-y', '#nf-z']) {
+    $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); createFromDialog(); } });
+    $(id).addEventListener('input', nfHint);
+    $(id).addEventListener('change', nfHint);
+  }
+}
+function wireNewPage() {
+  $('#np-2d').onclick = () => openNewFileDialog('2d');
+  $('#np-3d').onclick = () => openNewFileDialog('3d');
+  $('#np-import').onclick = () => nativeAction('open');
+  $('#np-browse').onclick = () => { ui.newOpen = false; showHome('recents'); };
+  const search = $('#np-search');
+  search.addEventListener('input', renderNewRecents);
+  search.addEventListener('keydown', (e) => {
+    e.stopPropagation();
+    if (e.key === 'Escape') { if (search.value) { search.value = ''; renderNewRecents(); } else closeNewPage(); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); const r = $('#np-recents .np-row'); if (r) r.focus(); }
+    else if (e.key === 'Enter') { const r = $('#np-recents .np-row'); if (r) r.click(); }
+  });
 }
 
 /* ---------------------------------------------------------------- Agents page */
@@ -1497,11 +2611,20 @@ const AGENTS = [
   { id: 'cursor', name: 'Cursor', by: 'Anysphere · code editor', logo: 'cursor.svg', mono: true },
   { id: 'openclaw', name: 'OpenClaw', by: 'Open-source personal agent', logo: 'openclaw-color.svg' },
   { id: 'hermes', name: 'Hermes Agent', by: 'Nous Research · open-source agent', logo: 'hermesagent.svg', mono: true },
+  { id: 'copilot', name: 'GitHub Copilot', by: 'GitHub · agent mode in VS Code', logo: 'githubcopilot.svg', mono: true },
+  { id: 'windsurf', name: 'Windsurf', by: 'Windsurf · code editor', logo: 'windsurf.svg', mono: true },
+  { id: 'gemini-cli', name: 'Gemini CLI', by: 'Google · terminal', logo: 'geminicli-color.svg' },
+  { id: 'cline', name: 'Cline', by: 'Open-source coding agent for VS Code', logo: 'cline.svg', mono: true },
+  { id: 'kiro', name: 'Kiro', by: 'AWS · code editor', logo: 'kiro-color.svg' },
+  { id: 'opencode', name: 'opencode', by: 'Open-source coding agent · terminal', logo: 'opencode.svg', mono: true },
+  { id: 'goose', name: 'Goose', by: 'Block · open-source agent', logo: 'goose.svg', mono: true },
+  { id: 'lm-studio', name: 'LM Studio', by: 'Local models · desktop app', logo: 'lmstudio.svg', mono: true },
+  { id: 'other-mcp', name: 'Other MCP app', by: 'Any app or agent that can add an MCP server', logo: null, generic: true },
 ];
 const agentsState = { data: null, timer: null };
 
 function agentLogo(a, big = false) {
-  const svg = (window.AGENT_LOGOS || {})[a.logo.replace(/\.svg$/, '')] || icon('bot', 18);
+  const svg = (window.AGENT_LOGOS || {})[a.logo.replace(/\.svg$/, '')] || icon('sparkle', 18);
   return `<div class="alogo${big ? ' big' : ''}${a.mono ? ' mono' : ''}" title="${escapeHtml(a.name)}">${svg}</div>`;
 }
 function exeCommand() { return (agentsState.data && agentsState.data.command) || '/Applications/OpenPixel.app/Contents/MacOS/OpenPixel'; }
@@ -1548,12 +2671,85 @@ function agentSteps(id) {
       { text: 'Restart Hermes so it loads the new server.' },
       { note: 'Hermes Agent changes quickly; if this key has moved, see the MCP section of its documentation. The command and argument stay the same.' },
     ];
-    default: return [{ text: 'Add an MCP server named openpixel that runs:', code: `${shq(exe)} --mcp` }];
+    case 'copilot': return [
+      { text: 'Run this once in Terminal (it adds OpenPixel to VS Code for your user; needs the <span class="mono">code</span> command from VS Code\'s Command Palette → <b>Shell Command: Install \'code\' command in PATH</b>):', code: `code --add-mcp '${JSON.stringify({ name: 'openpixel', command: exe, args: ['--mcp'] })}'` },
+      { text: 'Or open the Command Palette → <b>MCP: Open User Configuration</b> and add:', code: JSON.stringify({ servers: { openpixel: { type: 'stdio', command: exe, args: ['--mcp'] } } }, null, 2) },
+      { text: 'In Copilot Chat switch to <b>Agent</b> mode; OpenPixel\'s tools appear under the tools button.' },
+    ];
+    case 'windsurf': return [
+      { text: 'In Windsurf open <b>Settings → Cascade → MCP servers → View raw config</b>. This opens <span class="mono">~/.codeium/windsurf/mcp_config.json</span>.' },
+      { text: 'Add OpenPixel under <span class="mono">mcpServers</span>:', code: json },
+      { text: 'Press <b>Refresh</b> in the MCP panel, or restart Windsurf.' },
+    ];
+    case 'gemini-cli': return [
+      { text: 'Add OpenPixel to <span class="mono">~/.gemini/settings.json</span> (create the file if it isn\'t there):', code: json },
+      { text: 'Start <span class="mono">gemini</span> and type <span class="mono">/mcp</span>: openpixel and its tools are listed.' },
+    ];
+    case 'cline': return [
+      { text: 'In VS Code open Cline, click the <b>MCP Servers</b> icon, then <b>Configure MCP Servers</b>. This opens <span class="mono">cline_mcp_settings.json</span>.' },
+      { text: 'Add OpenPixel under <span class="mono">mcpServers</span>:', code: json },
+      { text: 'Save the file; Cline reloads it and shows openpixel in its MCP list.' },
+    ];
+    case 'kiro': return [
+      { text: 'Open <span class="mono">~/.kiro/settings/mcp.json</span> (in Kiro: Command Palette → <b>Kiro: Open user MCP config</b>) and add:', code: json },
+      { text: 'Kiro connects new servers right away; check the <b>MCP Servers</b> panel.' },
+    ];
+    case 'opencode': return [
+      { text: 'Add OpenPixel to <span class="mono">~/.config/opencode/opencode.json</span>:', code: JSON.stringify({ $schema: 'https://opencode.ai/config.json', mcp: { openpixel: { type: 'local', command: [exe, '--mcp'], enabled: true } } }, null, 2) },
+      { text: 'Restart opencode. The tools show up with the <span class="mono">openpixel_</span> prefix.' },
+    ];
+    case 'goose': return [
+      { text: 'Run <span class="mono">goose configure</span>, choose <b>Add Extension → Command-line Extension</b>, name it <b>openpixel</b> and give it this command:', code: `${shq(exe)} --mcp` },
+      { text: 'In the Goose desktop app it is <b>Settings → Extensions → Add custom extension</b>, with the same command.' },
+    ];
+    case 'lm-studio': return [
+      { text: 'In LM Studio open the <b>Program</b> tab in the right sidebar, then <b>Install → Edit mcp.json</b> (<span class="mono">~/.lmstudio/mcp.json</span>).' },
+      { text: 'Add OpenPixel under <span class="mono">mcpServers</span>:', code: json },
+      { text: 'Save, then turn on the openpixel tools in a chat. Use a model that supports tool calls.' },
+    ];
+    default: return [
+      { text: 'In the app\'s MCP (or tools) settings, add a server named <b>openpixel</b> that runs this command:', code: `${shq(exe)} --mcp` },
+      { text: 'If it takes a settings file instead, most use this shape:', code: json },
+      { note: 'You do this once. After that the app starts OpenPixel by itself whenever it needs it: with this window open, the edits show up here live and can be undone; with OpenPixel closed, it works in the background.' },
+    ];
   }
+}
+
+/* Every guide (but ChatGPT's, which can't change anything on this Mac) starts with a prompt to paste into the agent:
+   it then adds OpenPixel to its own settings. The hint says where that agent keeps them, or the one-line command. */
+const AGENT_HINTS = {
+  codex: (exe) => `Easiest: run \`codex mcp add openpixel -- ${shq(exe)} --mcp\` (or add it to ~/.codex/config.toml).`,
+  claude: () => 'Your settings file is ~/Library/Application Support/Claude/claude_desktop_config.json (under "mcpServers").',
+  'claude-code': (exe) => `Easiest: run \`claude mcp add --scope user openpixel -- ${shq(exe)} --mcp\``,
+  cursor: () => 'Your MCP settings are in ~/.cursor/mcp.json (under "mcpServers").',
+  openclaw: () => 'Use your MCP support (mcporter), or ~/.openclaw/openclaw.json.',
+  hermes: () => 'Your MCP settings are under "mcp_servers" in ~/.hermes/config.yaml.',
+  copilot: () => 'In VS Code this is the user mcp.json (Command Palette: "MCP: Open User Configuration"), under "servers", with type "stdio".',
+  windsurf: () => 'Your MCP settings are in ~/.codeium/windsurf/mcp_config.json (under "mcpServers").',
+  'gemini-cli': () => 'Your MCP settings are in ~/.gemini/settings.json (under "mcpServers").',
+  cline: () => 'Your MCP settings are in cline_mcp_settings.json (under "mcpServers").',
+  kiro: () => 'Your MCP settings are in ~/.kiro/settings/mcp.json (under "mcpServers").',
+  opencode: () => 'Your settings are in ~/.config/opencode/opencode.json: add it under "mcp" as a "local" server whose command is the program followed by --mcp.',
+  goose: () => 'Add it as a stdio extension under "extensions" in ~/.config/goose/config.yaml (or with goose configure).',
+  'lm-studio': () => 'Your MCP settings are in ~/.lmstudio/mcp.json (under "mcpServers").',
+};
+const AGENT_PROMPT_CAVEAT = {
+  claude: 'Claude needs access to files on your Mac for this (for example the Filesystem extension); otherwise follow the steps below.',
+  'lm-studio': 'This needs a model with file tools; otherwise follow the steps below.',
+};
+function agentPrompt(a) {
+  if (a.id === 'chatgpt' || a.id === 'other') return null;
+  const exe = exeCommand();
+  const hint = AGENT_HINTS[a.id] ? AGENT_HINTS[a.id](exe) : '';
+  return ['Please add the OpenPixel MCP server to your own MCP settings, for my user account:', '',
+    '- Name: openpixel', `- Command: ${exe}`, '- Argument: --mcp',
+    '- Type: local (stdio). It needs no API key or environment variables.', ...(hint ? [`- ${hint}`] : []), '',
+    'Keep every MCP server that is already there. When it is done, tell me how to reload you so the openpixel tools load, then call its get_model_info tool to check that it works.'].join('\n');
 }
 
 function agentStatus(a) {
   // Two states: Connected (OpenPixel is in the app's settings, or it is talking to this window now) and Disconnected.
+  if (a.generic) return { cls: 'any', label: 'Any app', act: 'Add the command once in its MCP settings' };
   const d = agentsState.data || {};
   const live = (d.sessions || []).filter((s) => s.open && s.agent === a.id);
   const setup = (d.setup || {})[a.id] || {};
@@ -1578,43 +2774,84 @@ async function loadAgents() {
 }
 function renderAgents() {
   const d = agentsState.data || {};
-  $('#agent-cmd').textContent = `${exeCommand()} --mcp`;
   const body = $('#agents-body');
-  body.innerHTML = '';
   const rows = AGENTS.map((a) => ({ a, st: agentStatus(a) }));
   // Clients OpenPixel doesn't know by name still show up while connected.
   for (const s of (d.sessions || []).filter((x) => x.open && !x.agent)) {
     rows.push({ a: { id: 'other', name: s.client === 'unknown' ? 'Unknown agent' : s.client, by: `MCP client ${s.version || ''} · ${s.transport}`, logo: null },
       st: { cls: 'connected live', label: 'Connected', act: s.calls ? `<b>${s.calls} call${s.calls === 1 ? '' : 's'}</b> · ${timeAgo(s.last_call || s.connected)}` : 'Ready, no calls yet' } });
   }
+  // This runs every 2.5 seconds while the page is open, so the rows are kept and only their statuses change.
+  // Rebuilding them dropped keyboard focus and hover, and the list's height for a moment, which threw the
+  // page's scroll back to the top.
+  const kept = new Map([...body.children].map((r) => [r.dataset.key, r]));
+  const seen = new Map();
+  let prev = null;
   for (const { a, st } of rows) {
-    const tr = document.createElement('tr');
-    tr.dataset.agent = a.id;
-    tr.innerHTML = `<td class="c-agent"><div class="agent-cell">${a.logo ? agentLogo(a) : `<div class="alogo">${icon('bot', 18)}</div>`}` +
-      `<div class="aname"></div></div></td>` +
-      `<td class="c-status"><span class="pill ${st.cls}">${st.label}</span></td>` +
-      `<td class="c-act"><div class="act-cell">${st.act}</div></td>` +
-      `<td class="c-info">${a.id === 'other' ? '' : `<button class="btn small outline info-btn" title="How to connect ${escapeHtml(a.name)}">${icon('info', 14)}<span class="lbl">How to connect</span></button>`}</td>`;
-    tr.querySelector('.aname').textContent = a.name;
-    const b = tr.querySelector('.info-btn');
-    if (b) b.onclick = () => showAgentInfo(a);
-    body.appendChild(tr);
+    let key = a.id === 'other' ? `other:${a.name}` : a.id;
+    const n = (seen.get(key) || 0) + 1; seen.set(key, n);
+    if (n > 1) key += `#${n}`;
+    let row = kept.get(key);
+    if (row) kept.delete(key); else { row = agentRow(a); row.dataset.key = key; }
+    setAgentStatus(row, st);
+    const at = prev ? prev.nextSibling : body.firstChild;
+    if (row !== at) body.insertBefore(row, at);
+    prev = row;
   }
-  const anyLive = (d.sessions || []).some((s) => s.open);
-  $('#nav-agent-dot').hidden = !anyLive;
-  const topDot = $('#agent-btn .dot');
-  if (topDot) topDot.style.background = anyLive ? 'var(--ok)' : '#777';
+  for (const r of kept.values()) r.remove();
+}
+/** A row of the files list's kind: logo and name, the status (what the agent last did is its tooltip), and
+    How to connect (the row's one action, so the keyboard reaches everything a pointer can). */
+function agentRow(a) {
+  const row = document.createElement('div');
+  row.className = 'fl-row agent-row'; row.setAttribute('role', 'row');
+  row.dataset.agent = a.id;
+  row.innerHTML = `<span class="c-name" role="cell">${a.logo ? agentLogo(a) : `<div class="alogo">${icon(a.generic ? 'plug' : 'sparkle', 16)}</div>`}<span class="aname"></span></span>` +
+    `<span class="c-status" role="cell"><span class="pill"></span></span>` +
+    `<span class="c-info" role="cell">${a.id === 'other' ? '' : `<button type="button" class="btn small outline info-btn" title="How to connect ${escapeHtml(a.name)}">${icon('info', 14)}<span class="lbl">How to connect</span></button>`}</span>`;
+  row.querySelector('.aname').textContent = a.name;
+  const b = row.querySelector('.info-btn');
+  if (b) b.onclick = () => showAgentInfo(a);
+  return row;
+}
+function setAgentStatus(row, st) {
+  const tmp = document.createElement('div'); tmp.innerHTML = st.act || '';
+  const activity = tmp.textContent.trim();
+  const pill = row.querySelector('.pill');
+  const cls = `pill ${st.cls}`;
+  if (pill.className !== cls) pill.className = cls;
+  if (pill.textContent !== st.label) pill.textContent = st.label;
+  pill.dataset.activity = activity;
+  if (activity) { pill.title = activity; pill.setAttribute('aria-label', `${st.label}: ${activity}`); }
+  else { pill.removeAttribute('title'); pill.removeAttribute('aria-label'); }
 }
 function showAgentInfo(a) {
   const t = document.createElement('template');
-  t.innerHTML = agentLogo(a, true);
+  t.innerHTML = a.logo ? agentLogo(a, true) : `<div class="alogo big">${icon('plug', 22)}</div>`;
   t.content.firstChild.id = 'ai-logo';
   $('#ai-logo').replaceWith(t.content.firstChild);
   $('#ai-title').textContent = `Connect ${a.name}`;
   $('#ai-sub').textContent = a.by;
   const st = agentStatus(a);
   const body = $('#ai-body');
-  body.innerHTML = `<p><span class="pill ${st.cls}">${st.label}</span></p><ol class="steps"></ol>`;
+  $('#ai-status').innerHTML = `<span class="pill ${st.cls}">${st.label}</span>`;
+  body.innerHTML = '<ol class="steps"></ol>';
+  const prompt = agentPrompt(a);
+  if (prompt) {
+    // Laid out like a step: the spark sits where the numbers do, so its text and code line up with the steps below.
+    const box = document.createElement('section');
+    box.className = 'setup-prompt';
+    box.innerHTML = `<span class="sp-mark">${icon('sparkle', 14)}</span><div><div class="sp-head"></div><div class="sp-text"></div><div class="codebox"><pre class="code"></pre><button class="btn small copy"></button></div></div>`;
+    box.querySelector('.sp-head').textContent = a.generic ? 'Let the app set it up' : `Let ${a.name} set it up`;
+    box.querySelector('.sp-text').textContent = `Paste this into a chat with ${a.generic ? 'the app' : a.name}. It adds OpenPixel to its own settings.` +
+      (AGENT_PROMPT_CAVEAT[a.id] ? ` ${AGENT_PROMPT_CAVEAT[a.id]}` : '');
+    box.querySelector('pre').textContent = prompt;
+    copyButton(box.querySelector('.copy'), prompt);
+    body.insertBefore(box, body.querySelector('ol.steps'));
+    const or = document.createElement('div');
+    or.className = 'sp-or'; or.textContent = 'Or set it up yourself';
+    body.insertBefore(or, body.querySelector('ol.steps'));
+  }
   const ol = body.querySelector('ol');
   for (const step of agentSteps(a.id)) {
     const li = document.createElement('li');
@@ -1653,16 +2890,21 @@ function showAgentInfo(a) {
   openModal('#agent-info');
 }
 function showAgentHelp() { return showHome('agents'); }
-/* The top bar's Agents button shows a green dot while any agent is connected (no settings files read here). */
-async function pollAgentDot() {
-  try {
-    const d = await nativeAction('agents', { setup: false });
-    const live = ((d && d.sessions) || []).filter((s) => s.open);
-    const dot = $('#agent-btn .dot');
-    if (dot) dot.style.background = live.length ? 'var(--ok)' : '#777';
-    $('#agent-btn').title = live.length ? `Agents: ${[...new Set(live.map((s) => s.client))].join(', ')} working` : 'Agents';
-    $('#nav-agent-dot').hidden = !live.length;
-  } catch (e) { /* not available */ }
+/* ---------------------------------------------------------------- keyboard access
+   Things drawn as plain boxes that act like buttons (tools, layers, frames, swatches, toggles) get focus, a role and a
+   name, and answer Return and Space like a button does. */
+function pressable(el, label, role = 'button') {
+  el.tabIndex = 0;
+  el.setAttribute('role', role);
+  if (label) el.setAttribute('aria-label', label);
+  if (!el.dataset.pressable) {
+    el.dataset.pressable = '1';
+    el.addEventListener('keydown', (e) => {
+      if (e.target !== el || (e.key !== 'Enter' && e.key !== ' ')) return;
+      e.preventDefault(); e.stopPropagation(); el.click();
+    });
+  }
+  return el;
 }
 
 /* ---------------------------------------------------------------- UI wiring */
@@ -1672,6 +2914,7 @@ function buildTools() {
     if (t.sep) { bar.appendChild(Object.assign(document.createElement('div'), { className: 'tb-sep' })); continue; }
     const d = document.createElement('div');
     d.className = 'tool'; d.dataset.tool = t.id; d.title = `${t.name} (${t.key})`;
+    pressable(d, t.name); d.setAttribute('aria-pressed', 'false');
     d.innerHTML = icon(t.icon, 18);
     d.onclick = () => setTool(t.id);
     bar.appendChild(d);
@@ -1679,13 +2922,14 @@ function buildTools() {
   bar.appendChild(Object.assign(document.createElement('div'), { className: 'tb-sep' }));
   const c = document.createElement('div');
   c.id = 'tb-color'; c.title = 'Current colour';
+  pressable(c, 'Add a colour');
   c.onclick = () => addColor(c);
   bar.appendChild(c);
   setTool('pencil');
 }
 function setTool(id) {
   S.tool = id;
-  $$('.tool').forEach((d) => d.classList.toggle('on', d.dataset.tool === id));
+  $$('.tool').forEach((d) => { d.classList.toggle('on', d.dataset.tool === id); d.setAttribute('aria-pressed', String(d.dataset.tool === id)); });
   lineBuffer('cursor', []);
   S.hover = null; render3dDirty = true; sliceDirty = true;
 }
@@ -1714,15 +2958,12 @@ function setBrush(b) {
   S.brush = Math.max(1, Math.min(16, b));
   $('#brush').value = S.brush; $('#brush-size').textContent = S.brush;
 }
-function zoomStep(dir) {
-  let i = ZOOMS.indexOf(sv.zoom);
-  if (i < 0) i = 0;
-  const ni = Math.max(0, Math.min(ZOOMS.length - 1, i + dir));
-  const w = sliceCanvas.clientWidth / 2, h = sliceCanvas.clientHeight / 2;
-  const cx = (w - sv.panX) / sv.zoom, cy = (h - sv.panY) / sv.zoom;
-  sv.zoom = ZOOMS[ni];
-  sv.panX = Math.round(w - cx * sv.zoom); sv.panY = Math.round(h - cy * sv.zoom);
-  sliceDirty = true; updateSliceLabel();
+/** The next zoom level up (1) or down (-1), around the middle of the canvas. A button glides there; keys jump. */
+function zoomStep(dir, animate = false) {
+  const z = sv.zoom;
+  const to = dir > 0 ? (ZOOMS.find((l) => l > z * 1.001) || ZOOM_MAX) : ([...ZOOMS].reverse().find((l) => l < z / 1.001) || ZOOM_MIN);
+  clearTimeout(settleTimer);
+  animateSliceZoom(sliceCanvas.clientWidth / 2, sliceCanvas.clientHeight / 2, to, animate ? 160 : 0);
 }
 
 let playTimer = null;
@@ -1769,6 +3010,7 @@ function openModal(id) {
   const bg = $(id);
   if (!bg.classList.contains('open')) modalReturnFocus = document.activeElement;
   bg.classList.add('open');
+  reportTitlebar();
   popIn(bg, '50% 50%', { scale: 1, duration: 160 }); // the dimmed backdrop only fades
   popIn(bg.querySelector('.modal'), '50% 50%', { scale: 0.96, duration: 200 });
   // Keyboard users land inside the dialog; pointer users keep their place.
@@ -1777,9 +3019,21 @@ function openModal(id) {
     if (first) first.focus();
   }
 }
+window.addEventListener('keydown', (e) => {
+  if (e.key !== 'Tab') return;
+  const bg = $('.modal-bg.open');
+  if (!bg) return;
+  const items = [...bg.querySelectorAll('button, input, [tabindex]:not([tabindex="-1"]), a[href]')].filter((x) => !x.disabled && x.getClientRects().length);
+  if (!items.length) return;
+  const first = items[0], last = items[items.length - 1];
+  if (!bg.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+  else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+}, true);
 function closeModals() {
   const wasOpen = $$('.modal-bg.open').length > 0;
   $$('.modal-bg').forEach((m) => m.classList.toggle('open', false));
+  reportTitlebar();
   if (wasOpen && modalReturnFocus && document.contains(modalReturnFocus) && modalReturnFocus.focus) modalReturnFocus.focus();
   modalReturnFocus = null;
 }
@@ -1842,7 +3096,7 @@ function initResizers() {
       r.classList.add('active');
       document.body.classList.add(which === 'bottom' ? 'resizing-row' : 'resizing-col');
       const move = (ev) => {
-        const px = which === 'left' ? ev.clientX : which === 'right' ? window.innerWidth - ev.clientX : window.innerHeight - ev.clientY;
+        const px = which === 'left' ? ev.clientX - $('#rail').getBoundingClientRect().right : which === 'right' ? window.innerWidth - ev.clientX : window.innerHeight - ev.clientY;
         saved[which] = setSize(which, px);
       };
       const up = () => {
@@ -1870,7 +3124,7 @@ function wire() {
   });
   document.addEventListener('click', closeMenus);
   $$('[data-action]').forEach((d) => {
-    d.onclick = () => { closeMenus(); if (d.dataset.action === 'new') openNewDialog(S.isSprite ? '2d' : '3d'); else nativeAction(d.dataset.action); };
+    d.onclick = () => { closeMenus(); if (d.dataset.action === 'new') openNewPage(); else nativeAction(d.dataset.action); };
   });
   $$('[data-export]').forEach((d) => {
     d.onclick = () => {
@@ -1882,8 +3136,6 @@ function wire() {
   $('#undo').onclick = () => tool('undo');
   $('#redo').onclick = () => tool('redo');
   $('#review-btn').onclick = showReview;
-  $('#agent-btn').onclick = showAgentHelp;
-  copyButton($('#agent-cmd-copy'), () => $('#agent-cmd').textContent);
   $$('[data-close]').forEach((b) => { b.onclick = closeModals; });
   $$('.modal-bg').forEach((m) => m.addEventListener('mousedown', (e) => { if (e.target === m) closeModals(); }));
   $$('[data-mode]').forEach((b) => { b.onclick = () => setMode(b.dataset.mode); });
@@ -1893,8 +3145,8 @@ function wire() {
   $('#ghost-btn').onclick = () => { S.ghost = !S.ghost; $('#ghost-btn').classList.toggle('on', S.ghost); sliceDirty = true; };
   $('#pixel-grid-btn').onclick = () => setPixelGrid(!S.pixelGrid);
   setPixelGrid(S.pixelGrid);
-  $('#zoom-in').onclick = () => zoomStep(1);
-  $('#zoom-out').onclick = () => zoomStep(-1);
+  $('#zoom-in').onclick = () => zoomStep(1, true);
+  $('#zoom-out').onclick = () => zoomStep(-1, true);
   $('#zoom-fit').onclick = fitSlice;
   $$('[data-proj]').forEach((b) => { b.onclick = () => { S.ortho = b.dataset.proj === 'ortho'; render3dDirty = true; updateViewPanel(); updateInfoChip(); }; });
   $('#edges-btn').onclick = () => { S.edges = !S.edges; $('#edges-btn').classList.toggle('on', S.edges); render3dDirty = true; };
@@ -1913,7 +3165,6 @@ function wire() {
     if (r && r.indexes) { setFg(r.indexes[0]); $('#fg-hex').blur(); }
   });
   dropdown($('#preset'), PRESETS, { placeholder: 'Palette preset…', keepLabel: true, onChange: (v) => tool('set_palette', { preset: v }) });
-  newPalette = dropdown($('#new-palette'), PRESETS, { value: 'db32' });
   $$('[data-pview]').forEach((b) => {
     b.onclick = () => {
       if (b.dataset.pview === 'front') { S.previewYaw = 0; S.previewPitch = 0; } else { S.previewYaw = 45; S.previewPitch = 30; }
@@ -1928,39 +3179,52 @@ function wire() {
   $('#layer-del').onclick = () => tool('delete_layer', { layer: S.layer });
   $('#layer-dup').onclick = () => tool('duplicate_layer', { layer: S.layer });
   $('#layer-merge').onclick = () => tool('merge_layer_down', { layer: S.layer });
+  $('#layers').addEventListener('dragover', (e) => {
+    if (layerDrag == null) return;
+    e.preventDefault(); clearLayerDrop(); $('#layers').classList.add('drop-end');
+  });
+  $('#layers').addEventListener('drop', (e) => {
+    if (layerDrag == null) return;
+    e.preventDefault();
+    const from = layerDrag; layerDrag = null; clearLayerDrop();
+    moveLayer(from, 0);
+  });
   $('#frame-add').onclick = () => tool('add_frame', { after: S.frame, copy: true });
   $('#frame-del').onclick = () => tool('delete_frame', { frame: S.frame });
   $('#play').onclick = togglePlay;
   $('#onion').onclick = () => { S.onionOn = !S.onionOn; refresh(); };
-  $('#activity-head').onclick = () => $('#activity-sec').classList.toggle('closed');
+  $$('#rail [data-pane]').forEach((b) => { b.onclick = () => showLeftPane(b.dataset.pane); });
+  $('#left-collapse').onclick = () => setLeftOpen(false);
+  $('#doc-title').onclick = (e) => { e.stopPropagation(); openDocMenu(); };
+  $('#doc-name').ondblclick = (e) => { e.preventDefault(); renameDoc(); };
+  $$('#doc-menu [data-doc]').forEach((d) => { d.onclick = (e) => { e.stopPropagation(); docMenuAction(d.dataset.doc); }; });
+  applyLeftSide();
+  pressable($('#fg'), 'Edit the current colour');
+  // Stepper − and + get names (their glyphs say nothing to a screen reader).
+  $$('.stepper button[data-step]').forEach((b) => b.setAttribute('aria-label', b.dataset.step === '1' ? 'Increase' : 'Decrease'));
   $('#frames-toggle').onclick = () => setFramesOpen($('#app').classList.contains('frames-closed'));
   setFramesOpen(!(() => { try { return localStorage.getItem('openpixel.framesClosed') === '1'; } catch (e) { return false; } })());
   $('#duration').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') e.target.blur(); });
   $('#duration').onchange = () => { const v = parseInt($('#duration').value, 10); if (v > 0) tool('set_frame_duration', { frame: S.frame, duration_ms: v }); };
-  $$('.presets [data-size]').forEach((b) => { b.onclick = () => { ['#new-x', '#new-y', '#new-z'].forEach((s) => { $(s).value = b.dataset.size; }); }; });
-  $$('[data-kind]').forEach((b) => { b.onclick = () => setNewKind(b.dataset.kind); });
-  $('#new-ok').onclick = async () => {
-    const common = { name: $('#new-name').value || 'Untitled', palette: newPalette ? newPalette.value : 'db32' };
-    const r = ($('#new-dialog').dataset.kind || '2d') === '2d'
-      ? await tool('new_sprite', { ...common, width: +$('#new-x').value, height: +$('#new-y').value })
-      : await tool('new_model', { ...common, size_x: +$('#new-x').value, size_y: +$('#new-y').value, size_z: +$('#new-z').value });
-    if (r) closeModals();
-  };
+  wireNewPage();
+  wireNewFileDialog();
   $('#extrude-btn').onclick = () => tool('extrude_to_3d', { depth: Math.max(1, +$('#extrude-depth').value || 4) });
   $$('input').forEach((i) => { if (i.type !== 'range') i.addEventListener('keydown', (e) => e.stopPropagation()); });
   wirePicker();
   wireSteppers();
   wireHome();
   new ResizeObserver(sizeThumbs).observe($('#strip'));
-  pollAgentDot();
-  setInterval(pollAgentDot, 4000);
 
   window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
     if (e.metaKey) return; // menu shortcuts are handled by the Mac menu bar
     if (e.key === 'Enter' && e.target.tagName === 'BUTTON') return; // the focused button handles Return itself
     if (e.key === ' ') { spaceDown = true; e.preventDefault(); return; }
-    if (e.key === 'Escape') { if (S.home && !$$('.modal-bg.open').length) hideHome(); closeModals(); closeMenus(); closePicker(); return; }
+    if (e.key === 'Escape') {
+      if (!$$('.modal-bg.open').length && !openMenuList()) { if (ui.view === 'new') closeNewPage(); else if (ui.view === 'home') hideHome(); }
+      closeModals(); closeMenus(); closePicker(); return;
+    }
+    if (ui.view === 'home' && e.key === '/' && !$$('.modal-bg.open').length) { e.preventDefault(); $('#home-search').focus(); return; }
     if (S.home) return;
     if (e.key === 'Tab') { e.preventDefault(); setMode(S.mode === '3d' ? 'slice' : '3d'); return; }
     if (e.shiftKey && (e.key === 'X' || e.key === 'Z' || e.key === 'Y')) { $(`[data-mirror="${e.key.toLowerCase()}"]`).click(); return; }
@@ -2008,39 +3272,45 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-let newPalette = null;
-function setNewKind(kind) {
-  $$('[data-kind]').forEach((x) => x.classList.toggle('on', x.dataset.kind === kind));
-  $('#new-depth-field').hidden = kind !== '3d';
-  $('#new-dialog').dataset.kind = kind;
-}
-function openNewDialog(kind = '2d') { setNewKind(kind); openModal('#new-dialog'); }
 
 /* ---------------------------------------------------------------- updates
    The app asks Sparkle on every open whether a newer version exists (in the background, nothing is downloaded).
-   When there is one, an Update button shows at the bottom of the home and editor sidebars; it opens Sparkle's
-   install dialog. */
+   When there is one, a round download button with an accent dot shows in the tab bar, before the GitHub stars, on
+   every page; it opens Sparkle's install dialog. */
 function showUpdate(version) {
-  $$('.update-slot').forEach((slot) => {
-    slot.hidden = !version;
-    if (!version) return;
-    const b = slot.querySelector('.update-btn');
-    b.querySelector('.lbl').textContent = `Update to ${version}`;
-    b.title = `OpenPixel ${version} is available: install it`;
-  });
+  const b = $('#tab-update');
+  b.hidden = !version;
+  if (version) {
+    const say = `Update to OpenPixel ${version}`;
+    b.dataset.tip = say; b.setAttribute('aria-label', say);
+  }
+  titlebarSent = ''; reportTitlebar(); // the bar has one more (or one less) control to click
 }
-$$('.update-btn').forEach((b) => { b.onclick = () => nativeAction('checkUpdates'); });
+$('#tab-update').onclick = () => nativeAction('checkUpdates');
 nativeAction('version').then((v) => { if (v && v.available) showUpdate(v.available); }).catch(() => {});
 
 window.PC = {
   updateAvailable: (version) => showUpdate(version),
   refresh: (toolName) => {
     // Opening or starting a model from anywhere (menu, home, an agent) leaves the home screen.
-    if (S.home && ['open_model', 'new_model', 'new_sprite'].includes(toolName)) hideHome();
-    refresh();
+    const opened = ['open_model', 'new_model', 'new_sprite'].includes(toolName);
+    if (opened && ui.view === 'new') ui.newOpen = false;
+    refresh().then(() => {
+      if (opened && S.home) showEditor();
+      else if (ui.view === 'editor' && ui.active == null) showHome();
+    });
   },
-  showNewDialog: () => openNewDialog(S.isSprite ? '2d' : '3d'),
+  showNewDialog: () => openNewPage(),
+  githubStars: (n) => showStars(n),
+  /** Full screen hides the window buttons, so the tab bar starts at the edge. */
+  fullScreen(on) { document.body.classList.toggle('fullscreen', !!on); requestAnimationFrame(reportTitlebar); },
   showHome,
+  /** ⌘W: closes the active tab (or the New file page). False when there is nothing to close here. */
+  closeActiveTab() {
+    if (ui.view === 'new') { closeNewPage(); return true; }
+    if (ui.view === 'editor' && ui.active != null) { closeTab(ui.active); return true; }
+    return ui.view === 'home';
+  },
   showAgentHelp,
   command(cmd) {
     if (cmd === 'shortcuts') { showShortcuts(); return; }
@@ -2062,6 +3332,7 @@ window.PC = {
     else if (cmd === 'onion') press('#onion');
     else if (cmd === 'pixelGrid') setPixelGrid(!S.pixelGrid);
     else if (cmd === 'frames') press('#frames-toggle');
+    else if (cmd === 'sidebar') setLeftOpen(!leftSide.open);
     else if (cmd === 'zoomIn') zoomStep(1);
     else if (cmd === 'zoomOut') zoomStep(-1);
   },
@@ -2105,7 +3376,7 @@ wire();
 setAxis('z');
 setMode('slice');
 refresh().then(async () => {
-  if (window.OPENPIXEL_START === 'home') await showHome();
+  if (window.OPENPIXEL_START === 'home' || ui.active == null) await showHome(); else showEditor();
   sizeThumbs();
   stateReady = true; frameCount = 0;
 });

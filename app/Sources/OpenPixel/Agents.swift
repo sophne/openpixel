@@ -77,6 +77,14 @@ final class AgentRegistry {
         if c.contains("codex") { return "codex" }
         if c.contains("openclaw") || c.contains("mcporter") || c.contains("clawd") { return "openclaw" }
         if c.contains("hermes") { return "hermes" }
+        if c.contains("cline") { return "cline" }
+        if c.contains("windsurf") || c.contains("codeium") { return "windsurf" }
+        if c.contains("gemini") { return "gemini-cli" }
+        if c.contains("kiro") { return "kiro" }
+        if c.contains("opencode") { return "opencode" }
+        if c.contains("goose") { return "goose" }
+        if c.contains("lm studio") || c.contains("lmstudio") { return "lm-studio" }
+        if c.contains("visual studio code") || c.contains("vscode") || c.contains("copilot") { return "copilot" }
         if c.contains("openai") || c.contains("chatgpt") { return "chatgpt" }
         return nil
     }
@@ -109,6 +117,16 @@ final class AgentRegistry {
         ("cursor", [".cursor/mcp.json"], ["Cursor.app"], ["cursor"], [".cursor"]),
         ("openclaw", [".openclaw/openclaw.json", ".mcporter/mcporter.json", ".openclaw/mcp.json"], [], ["openclaw", "mcporter"], [".openclaw"]),
         ("hermes", [".hermes/config.yaml"], [], ["hermes"], [".hermes"]),
+        ("copilot", ["Library/Application Support/Code/User/mcp.json", "Library/Application Support/Code/User/settings.json"],
+         ["Visual Studio Code.app"], ["code"], []),
+        ("windsurf", [".codeium/windsurf/mcp_config.json"], ["Windsurf.app"], ["windsurf"], [".codeium/windsurf"]),
+        ("gemini-cli", [".gemini/settings.json"], [], ["gemini"], [".gemini"]),
+        ("cline", ["Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json"], [], [],
+         ["Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev"]),
+        ("kiro", [".kiro/settings/mcp.json"], ["Kiro.app"], ["kiro"], [".kiro"]),
+        ("opencode", [".config/opencode/opencode.json", ".config/opencode/config.json"], [], ["opencode"], [".config/opencode"]),
+        ("goose", [".config/goose/config.yaml"], ["Goose.app"], ["goose"], [".config/goose"]),
+        ("lm-studio", [".lmstudio/mcp.json"], ["LM Studio.app"], [], [".lmstudio"]),
     ]
 
     static func detectSetup() -> [String: Any] {
