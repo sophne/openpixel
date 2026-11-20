@@ -86,7 +86,7 @@ function CardVisual({ v }: { v: Visual }) {
 function Buttons() {
   return (
     <div className="cmp-buttons">
-      <a className="cmp-btn primary" href="/downloads/mac">
+      <a className="cmp-btn primary" href="/downloads/mac" data-download="compare">
         Download
       </a>
       <a className="cmp-btn" href={REPO_URL} target="_blank" rel="noopener noreferrer">

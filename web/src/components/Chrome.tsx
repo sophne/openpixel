@@ -54,7 +54,7 @@ export function Header() {
           <a className="icon-link" href={X_URL} target="_blank" rel="noopener noreferrer" aria-label="OpenPixel on X">
             <XIcon />
           </a>
-          <a className="button small primary" href="/downloads/mac" aria-label="Download OpenPixel for macOS">
+          <a className="button small primary" href="/downloads/mac" data-download="header" aria-label="Download OpenPixel for macOS">
             Download<span className="for-mac">for macOS</span>
           </a>
         </nav>

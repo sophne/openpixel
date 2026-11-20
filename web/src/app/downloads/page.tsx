@@ -71,12 +71,12 @@ export default async function Download() {
                   {version ? <span>{version}</span> : null}
                 </div>
                 <Row label="For Apple silicon Macs">
-                  <a className="pill" href="/downloads/mac">
+                  <a className="pill" href="/downloads/mac" data-download="downloads-apple-silicon">
                     Download
                   </a>
                 </Row>
                 <Row label="For Intel Macs">
-                  <a className="pill" href="/downloads/mac">
+                  <a className="pill" href="/downloads/mac" data-download="downloads-intel">
                     Download
                   </a>
                 </Row>

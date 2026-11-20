@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { OG_IMAGE, SITE_NAME, SITE_URL, TWITTER_IMAGE, X_HANDLE } from "@/lib/seo";
 import CookieBanner from "@/components/CookieBanner";
+import DownloadTracking from "@/components/DownloadTracking";
 import "./globals.css";
 
 // Fonts are downloaded at build time and served from this site: visitors make no requests to Google.
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {children}
         <CookieBanner />
+        <DownloadTracking />
       </body>
     </html>
   );

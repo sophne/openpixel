@@ -88,7 +88,7 @@ export default async function Home() {
             <Dock />
             <Headline as="h1" lead="OpenPixel is an agentic pixel editor" rest="for sprites and voxel worlds." />
             <PromptBar />
-            <a className="button primary large" href="/downloads/mac">
+            <a className="button primary large" href="/downloads/mac" data-download="home-hero">
               Download for macOS
             </a>
             <p className="hero-note">
@@ -365,7 +365,7 @@ export default async function Home() {
             <Headline lead="Start drawing" rest="your ideas today." />
             <p className="lead-text">Draw with agents, refine every pixel, and ship it straight to your game.</p>
             <div className="row-buttons center">
-              <a className="button primary large" href="/downloads/mac">
+              <a className="button primary large" href="/downloads/mac" data-download="home-bottom">
                 Download for macOS
               </a>
               <Link className="button large" href="/compare">

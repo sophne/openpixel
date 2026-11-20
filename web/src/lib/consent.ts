@@ -72,6 +72,16 @@ export function loadAnalytics() {
   document.head.appendChild(s);
 }
 
+/**
+ * Sends an event to Tag Manager, only when the visitor has allowed analytics and Tag Manager is loaded.
+ * Without consent nothing is queued or sent.
+ */
+export function trackEvent(event: string, params: Record<string, string> = {}) {
+  if (!GTM_ID || storedChoice() !== "granted" || !document.getElementById("gtm-script")) return;
+  const w = window as W;
+  (w.dataLayer ||= []).push({ event, ...params });
+}
+
 /** Withdraws consent: tells Google's tag to stop and deletes the Analytics cookies it set. */
 export function stopAnalytics() {
   if (document.getElementById("gtm-script")) gtag()("consent", "update", { analytics_storage: "denied" });

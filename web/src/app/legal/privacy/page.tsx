@@ -92,7 +92,8 @@ export default function Privacy() {
               loaded and no cookie is set. Declining is as easy as allowing, and the site works the same either way.
             </li>
             <li>
-              <strong>What is collected.</strong> The pages you visit, the page you came from, how long you stay, and
+              <strong>What is collected.</strong> The pages you visit, the page you came from, how long you stay, which
+              download button you click (if any), and
               your browser, device type, screen size, language and approximate location (country and city, worked out
               from your IP address). Google Analytics doesn&apos;t store IP addresses. We don&apos;t use advertising
               features, Google Signals or remarketing, and we don&apos;t combine this with anything else.
