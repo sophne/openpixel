@@ -21,6 +21,16 @@ git fetch --quiet origin main --tags
 [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || { echo "error: main differs from origin/main — pull or push first" >&2; exit 1; }
 if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then echo "error: $TAG already exists" >&2; exit 1; fi
 
+# Installed apps only update to a higher build number, and the build number is the commit count
+# (scripts/release.sh). Tagging the commit of the last release again would give the same number, so installed
+# copies would never be offered it. (A beta and its final release may share a commit: betas reach nobody.)
+LAST_STABLE="$(git tag -l 'v*' --sort=-v:refname | grep -v -e '-' | head -1 || true)"
+if [ -n "$LAST_STABLE" ] && [ "$(git rev-list --count HEAD)" -le "$(git rev-list --count "$LAST_STABLE")" ]; then
+  echo "error: no new commits since $LAST_STABLE, so $TAG would get the same build number and installed apps" >&2
+  echo "       would never be offered it. Merge a pull request first." >&2
+  exit 1
+fi
+
 # No CI check here: main only changes through pull requests that passed CI, and the release workflow runs the
 # app's self-test before it publishes anything.
 

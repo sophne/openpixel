@@ -44,6 +44,13 @@ jobs:
           esac
           # Only commits that went through review on main can be released.
           git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo "::error::$TAG is not on main"; exit 1; }
+          # The build number is the commit count, and installed apps only update to a higher one (scripts/tag-release.sh
+          # checks this too; this catches tags pushed by hand).
+          LAST_STABLE="$(git tag -l 'v*' --sort=-v:refname | grep -v -e '-' | grep -vx "$TAG" | head -1 || true)"
+          if [ -n "$LAST_STABLE" ] && [ "$(git rev-list --count "$GITHUB_SHA")" -le "$(git rev-list --count "$LAST_STABLE")" ]; then
+            echo "::error::no new commits since $LAST_STABLE: $TAG would get the same build number and installed apps would never be offered it"
+            exit 1
+          fi
           VERSION="${TAG#v}"
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           case "$VERSION" in *-*) echo "PRERELEASE=--prerelease" >> "$GITHUB_ENV" ;; *) echo "PRERELEASE=--latest" >> "$GITHUB_ENV" ;; esac

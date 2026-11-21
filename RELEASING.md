@@ -12,7 +12,9 @@ Add `TITLE="Faster exports"` to name the release "OpenPixel 1.2.0: Faster export
 That checks you're on a clean, up-to-date `main` with green CI, shows what changed since the last release, and
 pushes the tag `v1.2.0`. The [release workflow](.github/workflows/release.yml) then:
 
-1. builds a universal app (Apple silicon and Intel) with build number = commit count,
+1. builds a universal app (Apple silicon and Intel) with build number = commit count. Installed apps only update
+   to a higher build number, so a release needs at least one new commit since the last one (the tag script and
+   the workflow refuse otherwise; a beta and its final release may share a commit),
 2. packs `OpenPixel.dmg`. With a Developer ID set up it also signs with the hardened runtime, notarizes and
    staples; without one the app is ad-hoc signed (see [Launching without a Developer ID](#launching-without-a-developer-id)),
 3. signs the update for Sparkle and writes `appcast.xml`,
