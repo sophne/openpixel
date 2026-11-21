@@ -9,7 +9,7 @@ export const metadata: Metadata = pageMeta({
   path: "/explore",
   title: "Explore pixel art",
   description:
-    "Characters, scenes and game assets drawn in OpenPixel by an AI agent. Free to download as PNG, GIF, HTML or MagicaVoxel .vox.",
+    "Characters, scenes, game assets and OpenPixel's own assets, drawn in OpenPixel by an AI agent. Free to download as PNG, GIF, HTML or MagicaVoxel .vox.",
 });
 
 export default function Explore() {

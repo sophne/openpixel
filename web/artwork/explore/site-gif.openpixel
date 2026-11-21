@@ -1,0 +1,143 @@
+{
+  "cels" : [
+    {
+      "data" : "zZLhDoAgCISZst2q93\/fFCUD4W+L6aZ8B5od0W8ChD7ajHFB6aPNSNCzWh8ITG4XSAZ2u2HOBGOHiwGbMuvGmWMBPZyhPeL6FidcveNDsLiuHi4CHKvec7llev7ENTt\/tHtx930m6etX0+oF9n1fmIL\/Y7AKUmyeM8Kk\/hKPBZimP5H5k8TfJff31HwcNw==",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    },
+    {
+      "data" : "zVJJDoAwCCSVZKL+\/79C91KINyNpD52lYB2i3xQIumT7dELSJdsTKNr8jmDBdkFGsB43miNBOeFmdBTnJhaexxU4JgF1ntHu8P1SF4zf8EUw+DZr57Ng9ls+Txn2r3TYH3Y+830LaP3++zjvO9H09n+aIKQNEgVI2wf5oppPRPmknO8U57tqPq4H",
+      "encoding" : "zlib-base64",
+      "frame" : 1,
+      "layer" : 0
+    },
+    {
+      "data" : "zZJbDsUgCESJJSG33f9+i\/hkhN\/mEk0aZsCKh+hvQkjq0h3LRUpduiNDzY7632lwRXKhweSVREOTOTO05vKwzOxu6GerzhwbaOoso0dcr3EL1IPeDEsfV5+6GfZ61O0v0\/O7vAYKemu3D9zfzyWxHptu336+DoLzfYARfN8DIc9HQFjnyxjLAFQ2JeOTjO+S8909H8cL",
+      "encoding" : "zlib-base64",
+      "frame" : 2,
+      "layer" : 0
+    },
+    {
+      "data" : "zZJZCsAgDESDCkPb+9+3Gvc4+S0NFTRvslQj8huDoHx5cRwQAq4YEZkg4xFPBAXPwyFQPJ1WUHHyBDU5noThXQWtduZpplgbqjvlCT0Hj892w8QbXgWT993gKljjLdcu3foNu\/Vh+zP\/tzltPL8fcr\/re5L32XAXuNh4Tix9vnTGCJY2n2VRLDrfwZ\/vpvnYXg==",
+      "encoding" : "zlib-base64",
+      "frame" : 3,
+      "layer" : 0
+    },
+    {
+      "data" : "zZLdDoAgCIWZsZ1V7\/++ib+BUHctJpvwHcQMot8YCLKy+3jDJiu7J8A+6x0BEoJgZqDDBXMkqBFOBnRK7TNn9gU0OKOf4ddnO2DqDa+Cyftu8CK411tebhn2bzjsD3s\/830qaesfHjB8X3r7P10QYpNZcc1Je5kvBxdBShB3MZX5TvF8N83HdgE=",
+      "encoding" : "zlib-base64",
+      "frame" : 4,
+      "layer" : 0
+    },
+    {
+      "data" : "zZLbDoQwCEQJkkzU\/\/\/fpdiLyzL7aCQ1KZyhN0fkNQFBG\/7VeMPmQxVaCRzP\/kLQ8Ep+BIFXMQsubEyAvWU4DbN6F\/S5c7NaIJMbxhp1v8eB1J\/4JVh8zCYPwb0\/8zgl3b9juj\/y+dL9voq5\/88D0vftGf8\/Q0BxqpQG0vCXEH+FwL0J5k8Jfyv3d9c8HB8=",
+      "encoding" : "zlib-base64",
+      "frame" : 5,
+      "layer" : 0
+    },
+    {
+      "data" : "zZLhDoAgCISZsd2q93\/fFDXsgr8tppvyHaR2Ir8JCNqoM8YFpY06IwE2rw8EDfvmJTDsSRZ0rJmgN8epuLOrYHy7ctVYIDdXzB5xfY0DVE+8C5xjX\/tPwVrP3E75uqzzZ3\/m4PPR\/R5Jro\/fx9bp+45d\/n+mIMWUCQ1UzF+S+EuGP5H5U8zfJff30HwcFw==",
+      "encoding" : "zlib-base64",
+      "frame" : 6,
+      "layer" : 0
+    },
+    {
+      "data" : "zZJLDoAgDEQbbDJR739fafmXNu6MBBbMm1LEIfrNAEFmXj5OSDLz8gyitnrHsGi7QRWs2w1zZMAhO9yMrs6GgoUz+wbqnNHO8OvzuGDqDS+GwSseXA1zveV6y7B\/xWF\/2PuZ71tEW++\/z4nC\/felt\/\/TDCE2ShQgaR\/ki2o+EeWTNN8pznf1fDwe",
+      "encoding" : "zlib-base64",
+      "frame" : 7,
+      "layer" : 0
+    },
+    {
+      "data" : "zVLtDoAgCGTGdqve\/31D1BSEvy2mW94HGR3RbwqEumTHdEGpS3YkqOjwBwKD7QJFYI8bzZmgnXAzYCHzLDxzLKCXZ4wesV\/qgvM7vgkmj2PtPwSr3\/N6y+X9h+3Ptr\/n4e\/nvs+A3h\/PRwXpfLsg\/z9DkNJzSAkt2Kn5oiRf1POJLJ+k+S55vrvm43oA",
+      "encoding" : "zlib-base64",
+      "frame" : 8,
+      "layer" : 0
+    },
+    {
+      "data" : "zZJRDsQgCAVJJXlp9\/73XUVxF8r7bWpsosxQrEXkNQOCMftT4wPHmP2phBH1\/EIIsbtgEcTtDSsT5g4fBWIorDtXrQXZXOHvqPP7uJDyE5\/Cj\/tqcxP+8zO3U9L6C9P6yOdL3xeCOb++n4bJ6\/tdAv8\/LlDsJSiewihP+suE1gDWn2L9ffL+Xs7D4ws=",
+      "encoding" : "zlib-base64",
+      "frame" : 9,
+      "layer" : 0
+    },
+    {
+      "data" : "zZLhDoAgCIRZsN2q93\/fFLUCof61mGx636FmEP0mQKijZIwXLHWUjAxVHfWBwWizQRXY5YQlM7QVdgGsZOaFi8QGOrlg7BHXl9jg6h1vhouP2cnVcK\/3XG+Znt9xej78\/dz3GdHXPzxg+r709n+GIcVOCRuItb+0x9YZq4EZNTnCpP3NeX93z8dxAA==",
+      "encoding" : "zlib-base64",
+      "frame" : 10,
+      "layer" : 0
+    },
+    {
+      "data" : "zZJRDsQgCERJJZns9v73XaViCx32synRRHmDWDsirwkIxuiT4w3bGH0ywch6PRGE3F1gGcTtDWslOHbYFYipsO5clQtkcYWfwet7fJHqEz8EJ\/fV4ia41mdutyz7T1z2R75f+r6QzPV\/HjC+7+fEQv5Pu2IXlDi2I1jcX+YxgmX6E61xLObvVvt7ah6OHw==",
+      "encoding" : "zlib-base64",
+      "frame" : 11,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "feature-gif",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#4a4a51",
+    "#a3a3ab",
+    "#ff4a1c",
+    "#73737b",
+    "#2c2c31",
+    "#141416",
+    "#8f2508",
+    "#d9d9df",
+    "#d6390c",
+    "#ff9a78"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

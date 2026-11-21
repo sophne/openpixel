@@ -1,0 +1,143 @@
+{
+  "cels" : [
+    {
+      "data" : "7ZJbDsQgCEWJjwzg\/vc7QMloFW0XMPenKed4sUkB3gSDjPgTZBCi40MD5nQv1Bcd\/njGlJIr8mitoQ67DyqYolCwDccIMcXO3pFSQGZBpjDzJGC+aqmU4osmQSAzKSdiEfIsIHZegxuAcc2y3Xl1YcNVuHCNuW5gWj+uc9nAB24F+3rne2wLDtgKTviZ12P98lP88wU=",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    },
+    {
+      "data" : "xZHLDsMgDAQtIKpZ\/v9\/u3ZRwiukh0rdSxTPsMGKyDfRRVr8WqQRVsebBo2hL7QXG548agihKnyUUtSGly8muGKQ2IdtSFzxsz0yKgoQuQJgEDTW2pxS\/dAgEALZeMqgEEdBj4vjmG8gFMgtxBP9CLrBFKAwfoMrn5brOHBbzws4vz3PJfdc9v2+4g6bsMXTX\/9xHso1Pwl7\/Ie8AQ==",
+      "encoding" : "zlib-base64",
+      "frame" : 1,
+      "layer" : 0
+    },
+    {
+      "data" : "3c7LEoQgDERRikcZmv\/\/X9NBGWQAZz3ZWHKuQed+GZlMz8dkumD2ebdBgn8u5AsPmwfx3l+JPkopwsNP7xhYQlS2w35ULLFvn0R1AihZAmAIJNS1OcZ4XTQEikCm5wwNwhiIpOaY\/IEm6hwgTZRegwXf\/vXzzRPqLJwL9l4XLK6\/gzXbDTum7\/jd09412Lt74b+bEw==",
+      "encoding" : "zlib-base64",
+      "frame" : 2,
+      "layer" : 0
+    },
+    {
+      "data" : "7dJLDsMgDARQi486mPvftx5DUkIgavedTRTeYIgUkW+CRUZ+LTIUVtuHCYjhOpAvXDw9IoTQK\/aotYKLn76w4BWisS+OMfGK770SVaBq5BVVnQqIbWxKqfSDpoKhaqGjqBXiXADcC10XNxBkLYx5visL3W+3O5wDDHfuA+jr8XQGOz58x823u7vvmR\/w6FbID+Ol\/Tj\/\/JI3",
+      "encoding" : "zlib-base64",
+      "frame" : 3,
+      "layer" : 0
+    },
+    {
+      "data" : "zZLLDsQgCEWNjwzg\/\/9vgZJqFbXLuZumnOPFJg3hS8BJj39OOsE73jVAiu9CeZHhwxPEGE3hR60VZNj8IIIqAhnrsA8TVfTsGwkNQMRIFSIaBEh3LeacbdEgMCRC4YjEQhoFgMaLc4OgXDJtN15MWHARblx8LhsI549rnDfQhmvBut74GuuCDdaCHT7zsq2ffgrPOGA8CXv8b7kA",
+      "encoding" : "zlib-base64",
+      "frame" : 4,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZFbDsMgDAQtIKpZ7n\/frl2U8G4P0P2J8IwdLER+iS7S4tcijbBqbyZoDP1AO1jx5lFDCFXhp5SiVnx8McEVg8RebEPiivf2yKgoQOQKgEHQWMfmlOqPBoEQyMZTBoU4Cno9HNd8A6FAbiGe6EfQA6YAhfENrnxaruPAdjwv4HzbzyXPXM7zfcUTNuGIp1f\/50ve",
+      "encoding" : "zlib-base64",
+      "frame" : 5,
+      "layer" : 0
+    },
+    {
+      "data" : "3c7LEoQgDERRikcZmv\/\/X9NBGWQAZz3ZWHKuQed+GZlMz8dkumD2ebdBgn8u5AsPmwfx3l+JPkopwsNP7xhYQlS2w35ULLFvn0R1AihZAmAIJNS1OcZ4XTQEikCm5wwNwhiIpOaY\/IEm6hwgTZRegwXf\/vXzzRPqLJwL9l4XLK6\/gzXbDTum7\/jd09412Lt74b+bEw==",
+      "encoding" : "zlib-base64",
+      "frame" : 6,
+      "layer" : 0
+    },
+    {
+      "data" : "vdLbEsIgDATQDJcxCf\/\/v2YDrZQC9UX3xZGzbOuMRN+EJ+n5NUlXmF3vFjiG6yC+4PD0yCGEVrGPUgrj8NMnFLwCNPbDPiZe8btXghKrGnlFVYcCxzqbUpL2oKFgqCpwFrVCHAvM7gLXyRsQZxXEPN8Vhea3tzscA4Yr9wH4fB6O8IoPX3H15e3ma8YP2LoV8mae6h\/np3mYZ3kq7Pn\/eQM=",
+      "encoding" : "zlib-base64",
+      "frame" : 7,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZJbDsQgCEWJjwzg\/vc7QMloFW0XMPenKed4sUkB3gSDjPgTZBCi40MD5nQv1Bcd\/njGlJIr8mitoQ67DyqYolCwDccIMcXO3pFSQGZBpjDzJGC+aqmU4osmQSAzKSdiEfIsIHZegxuAcc2y3Xl1YcNVuHCNuW5gWj+uc9nAB24F+3rne2wLDtgKTviZ12P98lP88wU=",
+      "encoding" : "zlib-base64",
+      "frame" : 8,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZFbDsMgDAQtIKpZ7n\/frl2U8G4P0P2J8IwdLER+iS7S4tcijbBqbyZoDP1AO1jx5lFDCFXhp5SiVnx8McEVg8RebEPiivf2yKgoQOQKgEHQWMfmlOqPBoEQyMZTBoU4Cno9HNd8A6FAbiGe6EfQA6YAhfENrnxaruPAdjwv4HzbzyXPXM7zfcUTNuGIp1f\/50ve",
+      "encoding" : "zlib-base64",
+      "frame" : 9,
+      "layer" : 0
+    },
+    {
+      "data" : "zY5bDsMgDAQRD9Us979vvSYhJAW3n11FimDGa0L4JbLIjF+LTMJqfGqQFO+FPPBy8CQxxkPRX2tNeHn5gYIphIrtco4SU2z2jkiDAIpMAfAQJPXamnM+Fj0EhUAlrxUqpKcgUgbH4gWqKGeAsqDkXdjgk388fvCCng1ngc97wWb9KeyxbfAwuYe\/8+JzFdz19u1x9cvd4T\/NGw==",
+      "encoding" : "zlib-base64",
+      "frame" : 10,
+      "layer" : 0
+    },
+    {
+      "data" : "7dJLDsMgDARQi486mPvftx5DUkIgavedTRTeYIgUkW+CRUZ+LTIUVtuHCYjhOpAvXDw9IoTQK\/aotYKLn76w4BWisS+OMfGK770SVaBq5BVVnQqIbWxKqfSDpoKhaqGjqBXiXADcC10XNxBkLYx5visL3W+3O5wDDHfuA+jr8XQGOz58x823u7vvmR\/w6FbID+Ol\/Tj\/\/JI3",
+      "encoding" : "zlib-base64",
+      "frame" : 11,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "feature-campfire",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#73737b",
+    "#a3a3ab",
+    "#d9d9df",
+    "#d6390c",
+    "#8f2508",
+    "#2c2c31",
+    "#141416",
+    "#ff9a78",
+    "#ff4a1c",
+    "#4a4a51"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

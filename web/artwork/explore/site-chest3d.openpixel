@@ -1,0 +1,44 @@
+{
+  "cels" : [
+    {
+      "data" : "3ZLbEoUgCEUbFPaZ+v\/\/PQKVmuJzE4+uBW4v2\/aqAtaUJDaARCTCc6P0knOZzFBa+WBAUctZWsFG57wrx8lbwflvT4YQcO\/X0Zjx48j3\/hi5WD7mM193gLKj509cKshHyi5j5AYao+c3qEYXwNY643HBD2P2QtWIXtiN5Q8Jequxoh+sPw==",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 280
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "feature-chest3d",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#4a4a51",
+    "#a3a3ab",
+    "#ff4a1c",
+    "#73737b",
+    "#2c2c31",
+    "#141416",
+    "#8f2508",
+    "#d9d9df",
+    "#d6390c",
+    "#ff9a78"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

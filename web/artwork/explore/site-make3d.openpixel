@@ -1,0 +1,143 @@
+{
+  "cels" : [
+    {
+      "data" : "7ZA7DgAgCMVc\/MD9D2wUE\/MQmJyMXVsCmtIlGnDqChhBPL+aXDw3bWYuTiF2YBXbmgXYVYDmAwyItFcLVGFduAvvhVJEP0SBlSKyn+fo",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZA7DgAgCMVc\/MD9D2wUE\/MQmJyMXVsCmtIlGnDqChhBPL+aXDw3bWYuTiF2YBXbmgXYVYDmAwyItFcLVGFduAvvhVJEP0SBlSKyn+fo",
+      "encoding" : "zlib-base64",
+      "frame" : 1,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZA7DgAgCMVc\/MD9D2wUE\/MQmJyMXVsCmtIlGnDqChhBPL+aXDw3bWYuTiF2YBXbmgXYVYDmAwyItFcLVGFduAvvhVJEP0SBlSKyn+fo",
+      "encoding" : "zlib-base64",
+      "frame" : 2,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZAxEoAwCATTgIH\/P9gxjFEQrkqRwm13YRJaW0R3fPXhSAI8P6vKmCVGs0TEXBTDkiqnxW0vkuJlZxG0OnzQgx2FWyASfXhAKLIfPEV1ASvQBQVYK5D92Y4T",
+      "encoding" : "zlib-base64",
+      "frame" : 3,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZG7DsAgCABdoML\/f7AJqC0PmRx76x2JQmuX6IaoH0MS1PO7Ohm1gNUsACAeCrHis2La6UOxLDDjKhLNQgz6x+7CeTZ4zwH7ACLv3QdckW3gLU4b1KK6ABVWi8r+XGcA",
+      "encoding" : "zlib-base64",
+      "frame" : 4,
+      "layer" : 0
+    },
+    {
+      "data" : "7dE7FoAgDERRmqBk\/wvWA5iY31SWTnsfBdDaRzvNIh9mSYDPS1XJUuroLBH1XhRTp2fF1u2heFT8LlJWfwfqzMh5rnKWZc5m3jnMXmAM7+4BXJG9oBbVD6wC\/eAAugqk\/8Iu",
+      "encoding" : "zlib-base64",
+      "frame" : 5,
+      "layer" : 0
+    },
+    {
+      "data" : "3dIxFsAgCERBG0zY+x84eWJUEKissu18G7WUQ7vVdr7UnCA\/P6pIRKlmZ4mo1qBo2twrunbfik+Hv4XL09fgnAOZoy1yjHkONevYpi+A2bq5QFN4LzCL6AWlyH4AJypFpj\/cAw==",
+      "encoding" : "zlib-base64",
+      "frame" : 6,
+      "layer" : 0
+    },
+    {
+      "data" : "1dIxEsAgCERRG0jc+x84GTEqCFSZzGTb923UUl7aqbbzoeYE+flRRSJKnJ0lIuagaNrcK7p234pHh9+Fy9PX4DsHMkdb5BjzHGrWsU1fUK3WzQWbwnuhWUQvLEX2Q2qiUmT6w10=",
+      "encoding" : "zlib-base64",
+      "frame" : 7,
+      "layer" : 0
+    },
+    {
+      "data" : "1dIxEsAgCERRG0jc+x84GTEqCFSZzGTb923UUl7aqbbzoeYE+flRRSJKnJ0lIuagaNrcK7p234pHh9+Fy9PX4DsHMkdb5BjzHGrWsU1fUK3WzQWbwnuhWUQvLEX2Q2qiUmT6w10=",
+      "encoding" : "zlib-base64",
+      "frame" : 8,
+      "layer" : 0
+    },
+    {
+      "data" : "1dIxEsAgCERRG0jc+x84GTEqCFSZzGTb923UUl7aqbbzoeYE+flRRSJKnJ0lIuagaNrcK7p234pHh9+Fy9PX4DsHMkdb5BjzHGrWsU1fUK3WzQWbwnuhWUQvLEX2Q2qiUmT6w10=",
+      "encoding" : "zlib-base64",
+      "frame" : 9,
+      "layer" : 0
+    },
+    {
+      "data" : "1dIxEsAgCERRG0jc+x84GTEqCFSZzGTb923UUl7aqbbzoeYE+flRRSJKnJ0lIuagaNrcK7p234pHh9+Fy9PX4DsHMkdb5BjzHGrWsU1fUK3WzQWbwnuhWUQvLEX2Q2qiUmT6w10=",
+      "encoding" : "zlib-base64",
+      "frame" : 10,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZG7DsAgCABdoML\/f7AJqC0PmRx76x2JQmuX6IaoH0MS1PO7Ohm1gNUsACAeCrHis2La6UOxLDDjKhLNQgz6x+7CeTZ4zwH7ACLv3QdckW3gLU4b1KK6ABVWi8r+XGcA",
+      "encoding" : "zlib-base64",
+      "frame" : 11,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "feature-make3d",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#73737b",
+    "#a3a3ab",
+    "#d9d9df",
+    "#d6390c",
+    "#8f2508",
+    "#2c2c31",
+    "#141416",
+    "#ff9a78",
+    "#ff4a1c",
+    "#4a4a51"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

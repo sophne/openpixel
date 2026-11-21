@@ -1,0 +1,44 @@
+{
+  "cels" : [
+    {
+      "data" : "7dKxDoAwCARQorQX7f\/\/b6XRQRqODo7e2HuFBZGlYMq7rlMcYP\/dMB+oUoCmfAKw1WTFIoj3DAA9Y8BrE2ldSH\/Vxx4DG44YoNluBsY7ATf7wQOSg0ICJKk\/Sgc=",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 280
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "feature-sword",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#4a4a51",
+    "#a3a3ab",
+    "#ff4a1c",
+    "#73737b",
+    "#2c2c31",
+    "#141416",
+    "#8f2508",
+    "#d9d9df",
+    "#d6390c",
+    "#ff9a78"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

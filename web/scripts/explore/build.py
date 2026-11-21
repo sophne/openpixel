@@ -63,10 +63,38 @@ KEYWORDS = {
     "item-bow": "archery weapon, ranged, hunting",
     "item-barrel": "wooden cask, keg, container",
     "item-ramen": "noodle soup, food, japanese, hot meal",
+    "site-chest": "treasure box with an orange lock, loot, gray and orange, openpixel style",
+    "site-person": "character waving hello, greeting, person in an orange shirt",
+    "site-appletree": "round tree with orange apples, fruit, nature",
+    "site-voxtree": "isometric tree on a grass block, cubes, 3d",
+    "site-mushroom": "isometric toadstool house with an orange cap, door and window, cottage",
+    "site-chest3d": "isometric treasure box, cubes, loot, 3d",
+    "site-slime": "orange jelly blob bouncing, squash and stretch, cute monster",
+    "site-coin": "orange coin spinning, money, gold, collectible",
+    "site-campfire": "fire burning on crossed logs, flames, camping, embers",
+    "site-sword": "blade with an orange guard and pommel, weapon, steel",
+    "site-potion": "round glass flask of orange liquid with a cork, elixir, magic drink",
+    "site-house": "isometric cottage with a stepped orange roof, chimney, lit window, home",
+    "site-crystal": "orange gem shards growing from a gray rock, isometric, mineral, treasure",
+    "site-heart": "orange heart beating, pulse, health, love, life",
+    "site-ghost": "white spooky spirit floating up and down, halloween, cute phantom",
+    "site-native": "app window with a lightning bolt, fast, speed, power",
+    "site-layers": "three stacked sheets, the top one lifting, stack, levels",
+    "site-onion": "bouncing ball with faint earlier frames, motion trail, animation",
+    "site-mirror": "heart drawn on both sides of a mirror line, symmetry, love",
+    "site-palettes": "colour swatches with a moving selection, paint, colors",
+    "site-iso": "isometric cube floating over its shadow, box, 3d",
+    "site-sheets": "grid of frames lighting up in turn, tiles, animation strip",
+    "site-gif": "play button inside a looping arrow, repeat, video",
+    "site-vox": "cube dropping onto a stack of cubes, blocks, building",
+    "site-import": "picture dropping into a frame, photo, image, upload",
+    "site-make3d": "flat tile rising into a cube, extrude, 3d",
+    "site-agent": "sparkle drawing a heart on a canvas, ai, magic, star",
+    "site-voxagent": "sparkle building a stack of cubes, ai, magic, blocks",
 }
 
-ORDER = ["characters", "assets", "scenes"]
-TITLES = {"characters": "Characters", "scenes": "Scenes", "assets": "Assets"}
+ORDER = ["characters", "assets", "scenes", "site"]
+TITLES = {"characters": "Characters", "scenes": "Scenes", "assets": "Assets", "site": "OpenPixel Assets"}
 
 entries = []
 for path in sorted(glob.glob(os.path.join(common.MANIFESTS, "*.json"))):
@@ -118,7 +146,7 @@ export type ExploreItem = {
   title: string;
   /** Words describing the piece, for the semantic search. */
   keywords: string;
-  collection: "characters" | "scenes" | "assets";
+  collection: "characters" | "scenes" | "assets" | "site";
   /** sprite: a still 2D picture; animation: an animated GIF; voxel: an isometric render of a 3D model. */
   kind: ExploreKind;
   /** The picture shown on the page, and its size in picture pixels. */

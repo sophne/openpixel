@@ -62,7 +62,7 @@ function Card({ item, wide }: { item: ExploreItem; wide: boolean }) {
   );
 }
 
-const SINGULAR = { characters: "character", scenes: "scene", assets: "game asset" } as const;
+const SINGULAR = { characters: "character", scenes: "scene", assets: "game asset", site: "OpenPixel asset" } as const;
 
 const FORM = { sprite: "pixel art sprite", animation: "animated pixel art", voxel: "3D voxel model" } as const;
 

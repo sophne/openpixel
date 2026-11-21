@@ -561,6 +561,7 @@ enum SelfTest {
             _ = try? demo.execute("export_sheet", ["path": dir + "/sample-sheet.png", "scale": 2])
             print("Pictures written to \(dir)")
         }
+        ChatSelfTest.run { check($0, $1) }
         print(ok ? "All checks passed." : "Some checks failed.")
         return ok
     }

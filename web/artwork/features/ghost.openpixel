@@ -1,0 +1,143 @@
+{
+  "cels" : [
+    {
+      "data" : "Y2AgFrAjAWzSbEgAqwL8+ikF7CAbEBhDmpOdnROKmZkxVQAlYIAZBNAV0FEerIQceRaIJAu5+jnZYATF8vjClybyqAqwpj\/80kgKcCVPGqbeAQMA",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    },
+    {
+      "data" : "Y2AgFrAjAWzSbEgAqwL8+mkPQNbCMRZZTk4IZmYGYnQFQBkYYAaBAZQHKyFHngUiyUKufk42GEGxPEb4o9lPdXlUBVjTJ35pJAW4ku+Apm4yAQA=",
+      "encoding" : "zlib-base64",
+      "frame" : 1,
+      "layer" : 0
+    },
+    {
+      "data" : "zZLbCgAQEETVyrT\/\/8NuKbsuCcWp9XJmI40xi0DQaifoBOb774mPqkdrZuQhgEgHgipQ5KFPkR1vs7S7++zKceyb\/1f3X\/cy0Osn5roKjNr9Y\/k9",
+      "encoding" : "zlib-base64",
+      "frame" : 2,
+      "layer" : 0
+    },
+    {
+      "data" : "Y2AgErCjAExpNhSARQF+\/QMOQG5CxujSnJzscMzMjKEAKA4DzCCAroCO8mAl5MizQCRZyNXPyQYjKJbHF740kUdVgC19suOXRlKAK3UPxsQPAA==",
+      "encoding" : "zlib-base64",
+      "frame" : 3,
+      "layer" : 0
+    },
+    {
+      "data" : "Y2AgErCjAExpNhSARQF+\/QMO2EFORGAMaU52dk4oZmbGVAGUgAFmEEBXQEd5sBJy5Fkgkizk6udkgxEUy+MLX5rIoyrAlj7Z8UsjKcCVugdj4gcA",
+      "encoding" : "zlib-base64",
+      "frame" : 4,
+      "layer" : 0
+    },
+    {
+      "data" : "Y2AgFrAjAWzSbEgAqwL8+mkPQNbCMRZZTk4IZmYGYnQFQBkYYAaBAZQHKyFHngUiyUKufk42GEGxPEb4o9lPdXlUBVjTJ35pJAW4ku+Apm4yAQA=",
+      "encoding" : "zlib-base64",
+      "frame" : 5,
+      "layer" : 0
+    },
+    {
+      "data" : "xZJZCgAgCAUDI\/H+F24jMDOJFhqwn3kWxHNuFWRoOjDUgL1\/TL6Vj9REWAcQAWQgqQZkPvoS2fG+Sr+7T6Edx374f\/H+dd8H1P7ZmgVm9XzZ3l9E",
+      "encoding" : "zlib-base64",
+      "frame" : 6,
+      "layer" : 0
+    },
+    {
+      "data" : "Y2AgGrDDAXZpNjjAoQC\/fgIApAsZo0tzcrLDMTMzhgKgOAwwgwC6AjrKg5WQI88CkWQhVz8nG4ygWB5f+NJEHlUBthTEjl8aSQGu9EdJ8hyqAAA=",
+      "encoding" : "zlib-base64",
+      "frame" : 7,
+      "layer" : 0
+    },
+    {
+      "data" : "Y2AgGrDDAXZpNjjAoQCvfnaQAgTGkOZkZ+eEYmZmTBVACRhgBgF0BXSUByshR54FIslCrn5ONhhBsTy+8KWJPKoCbCmEHb80kgLs0ogEiEN6RAIA",
+      "encoding" : "zlib-base64",
+      "frame" : 8,
+      "layer" : 0
+    },
+    {
+      "data" : "Y2AgGrDDAXZpNjjAoQC\/fgaQOBxjkeXkhGBmZiBGVwCUgQFmEBhAebAScuRZIJIs5OrnZIMRFMtjhD+a\/VSXR1WALYWw45dGUoAjfTHgT34jEwAA",
+      "encoding" : "zlib-base64",
+      "frame" : 9,
+      "layer" : 0
+    },
+    {
+      "data" : "Y2AgGrDDAXZpNjjAoYCAfnZUjC7NyckOwczs7MzM6AqAUjDADAIDKA9WQo48C0SShVz9nGwwgmJ5jPBHs5\/q8qgKsKUQdvzSSAqwSyMSIA7pEQkA",
+      "encoding" : "zlib-base64",
+      "frame" : 10,
+      "layer" : 0
+    },
+    {
+      "data" : "Y2AgGrDDAXZpNjjAoQC\/fgIApAsZo0tzcrLDMTMzhgKgOAwwgwC6AjrKg5WQI88CkWQhVz8nG4ygWB5f+NJEHlUBthTEjl8aSQGu9EdJ8hyqAAA=",
+      "encoding" : "zlib-base64",
+      "frame" : 11,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    },
+    {
+      "duration" : 150
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "feature-ghost",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#4a4a51",
+    "#a3a3ab",
+    "#ff4a1c",
+    "#73737b",
+    "#2c2c31",
+    "#141416",
+    "#8f2508",
+    "#d9d9df",
+    "#d6390c",
+    "#ff9a78"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

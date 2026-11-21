@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import AppWindow from "@/components/AppWindow";
 import Sprite from "@/components/Sprite";
 import { Footer, Header } from "@/components/Chrome";
-import { art } from "@/lib/art";
+import { featureArt } from "@/lib/feature-art";
 import { CHECKED, COMPETITORS, bySlug, type Cell, type Visual } from "@/lib/compare";
 import { REPO_URL } from "@/lib/github";
 import JsonLd from "@/components/JsonLd";
@@ -27,11 +27,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   });
 }
 
-const DB32 =
-  "000000 222034 45283c 663931 8f563b df7126 d9a066 eec39a fbf236 99e550 6abe30 37946e 4b692f 524b24 323c39 3f3f74 306082 5b6ee1 639bff 5fcde4 cbdbfc ffffff 9badb7 847e87 696a6a 595652 76428a ac3232 d95763 d77bba 8f974a 8a6f30".split(
-    " ",
-  );
-
 function Mark({ cell, us }: { cell: Cell; us?: boolean }) {
   const label = { yes: "Supported", partial: "Limited", no: "Unavailable" }[cell.v];
   return (
@@ -50,36 +45,25 @@ function Mark({ cell, us }: { cell: Cell; us?: boolean }) {
   );
 }
 
+// Every card picture is drawn in the app's empty-state style (web/scripts/make-feature-art.py), like the home page's.
 function CardVisual({ v }: { v: Visual }) {
   switch (v) {
     case "import":
-      return <Sprite art={art.chest} scale={6} />;
+      return <Sprite art={featureArt.import} scale={5} label="A picture dropping into the canvas" />;
     case "palettes":
-      return (
-        <div className="swatches big" aria-hidden="true">
-          {DB32.map((c) => (
-            <i key={c} style={{ background: `#${c}` }} />
-          ))}
-        </div>
-      );
+      return <Sprite art={featureArt.palettes} scale={5} label="A palette of swatches, the selection moving between them" />;
     case "make3d":
-      return (
-        <div className="make3d">
-          <Sprite art={art.chest} scale={3} />
-          <span className="arrow" aria-hidden="true" />
-          <Sprite art={art.chest3d} scale={1} />
-        </div>
-      );
+      return <Sprite art={featureArt.make3d} scale={5} label="A flat tile rising into a cube" />;
     case "animate":
-      return <Sprite art={art.campfire} scale={9} />;
+      return <Sprite art={featureArt.layers} scale={5} label="Three stacked layers, the top one lifting" />;
     case "agent":
-      return <Sprite art={art.human} scale={9} />;
+      return <Sprite art={featureArt.agent} scale={5} label="An agent's sparkle drawing a heart on a canvas" />;
     case "vox":
-      return <Sprite art={art.mushroom} scale={2} />;
+      return <Sprite art={featureArt.vox} scale={5} label="A voxel dropping onto a stack of voxels" />;
     case "iso":
-      return <Sprite art={art.tree} scale={2} />;
+      return <Sprite art={featureArt.iso} scale={5} label="An isometric cube floating over its shadow" />;
     case "voxagent":
-      return <Sprite art={art.robot3d} scale={2} />;
+      return <Sprite art={featureArt.voxagent} scale={5} label="An agent's sparkle building voxels" />;
   }
 }
 

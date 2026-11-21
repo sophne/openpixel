@@ -77,7 +77,7 @@ class Collection:
     """Collects the entries one script publishes and writes its manifest."""
 
     def __init__(self, script, collection):
-        assert collection in ("characters", "scenes", "assets")
+        assert collection in ("characters", "scenes", "assets", "site")
         self.script, self.collection, self.entries = script, collection, []
 
     def publish(self, a, slug, title, kind, voxel_view="iso", voxel_scale=None, gif_scale=None, gif_view="iso"):

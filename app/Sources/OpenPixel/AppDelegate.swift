@@ -99,6 +99,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         } else if screenshotPath == nil {
             startBridge()
             NSApp.activate(ignoringOtherApps: true)
+            if demoConfig != nil {
+                // A demo recording: the size of the website's window shots, kept above other windows so WebKit never
+                // stops drawing it while it is covered.
+                window.setContentSize(NSSize(width: 1440, height: 855))
+                window.center()
+                window.level = .floating
+            }
             window.makeKeyAndOrderFront(nil)
         } else {
             // Checks must never take focus from what the person is doing.
@@ -128,7 +135,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         }
     }
 
-    func applicationWillTerminate(_ note: Notification) { bridge?.stop() }
+    func applicationWillTerminate(_ note: Notification) { bridge?.stop(); chatRunner?.stopAll() }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard !headless else { return .terminateNow }
@@ -301,6 +308,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
                 }
             } catch { return "Could not rename it: \(error.localizedDescription)" }
             recents.renamePath(old.path, to: new.path)
+            // Its Agent Chat history follows the new name (on disk, and in the open page).
+            chat().moveHistory(from: old.path, to: new.path)
+            web?.evaluateJavaScript("window.PC && PC.chatMoved && PC.chatMoved(\(Self.jsString(old.path)), \(Self.jsString(new.path)))", completionHandler: nil)
         }
         if let t = tab { t.engine.rename(to: new, name: clean); autosave(t) }
         scheduleRefresh("rename")
@@ -351,6 +361,50 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
 
     lazy var agents = AgentRegistry(folder: recents.folder)
 
+    // MARK: - Chat panel (the person's own agents, run headless)
+
+    var chatRunner: ChatRunner?
+    func chat() -> ChatRunner {
+        if let c = chatRunner { return c }
+        let c = ChatRunner(mcpCommand: Bundle.main.executablePath ?? CommandLine.arguments[0],
+                           workDir: recents.folder.appendingPathComponent("Chat", isDirectory: true)) { [weak self] e in
+            guard let self, let web = self.web, let d = try? JSONSerialization.data(withJSONObject: Self.jsonSafe(e)) else { return }
+            web.evaluateJavaScript("window.PC && PC.chatEvent && PC.chatEvent(\(String(decoding: d, as: UTF8.self)))", completionHandler: nil)
+        }
+        chatRunner = c
+        return c
+    }
+
+    /// Chat messages from the page. Finding the tools runs a login shell and asks Cursor for its models, so it
+    /// answers from a background queue; starting and stopping a run is quick.
+    func handleChat(_ body: [String: Any], _ reply: @escaping (Any?, String?) -> Void) {
+        guard uiTestFolder == nil || body["action"] as? String == "providers" else { reply(false, nil); return }
+        let c = chat()
+        switch body["action"] as? String ?? "" {
+        case "providers":
+            if uiTestFolder != nil { reply([], nil); return } // UI tests never look for or start the person's agents
+            DispatchQueue.global(qos: .userInitiated).async {
+                let list = c.providersForPage()
+                DispatchQueue.main.async { reply(Self.jsonSafe(list), nil) }
+            }
+        case "send":
+            DispatchQueue.global(qos: .userInitiated).async {
+                let r = c.start(body)
+                DispatchQueue.main.async { reply(r, nil) }
+            }
+        case "stop": c.stop(body["chat"] as? String ?? ""); reply(true, nil)
+        case "skills":
+            DispatchQueue.global(qos: .userInitiated).async {
+                let list = c.skillsForPage(body["provider"] as? String ?? "")
+                DispatchQueue.main.async { reply(Self.jsonSafe(list), nil) }
+            }
+        case "login": reply(c.login(body["provider"] as? String ?? ""), nil)
+        case "history": reply(c.loadHistory(body["key"] as? String ?? ""), nil)
+        case "saveHistory": reply(c.saveHistory(body["key"] as? String ?? "", body["data"]), nil)
+        default: reply(nil, "unknown chat action")
+        }
+    }
+
     func startBridge() {
         let server = BridgeServer { [weak self] line, conn in
             guard let self else { return "{}" }
@@ -395,6 +449,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         #endif
         var flags = "window.OPENPIXEL_START = \(Self.jsString(tabs.isEmpty ? "home" : "editor"));"
         if let f = uiTestFolder { flags += " window.OPENPIXEL_UITEST = { folder: \(Self.jsString(f)) };" }
+        if let d = demoConfig { flags += " window.OPENPIXEL_DEMO = \(d);" }
         config.userContentController.addUserScript(WKUserScript(source: flags, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         if screenshotPath != nil {
             // Pictures start from the app's defaults (sidebar open, panel widths), not from what the person set.
@@ -604,6 +659,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
             }
         case "native":
             replyHandler(runNative(body["action"] as? String ?? "", body), nil)
+        case "chat":
+            handleChat(body, replyHandler)
         case "snap":
             // UI test: save a picture of the window under a name, then answer.
             let name = (body["name"] as? String ?? "snap").replacingOccurrences(of: "/", with: "-")
@@ -647,6 +704,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
             for (p, _) in testAgents { p.terminate() }
             replyHandler(true, nil)
             finishUITest(body["report"] as? [String: Any] ?? [:])
+        case "demo":
+            demoMessage(body, replyHandler)
         case "frames":
             trace("page drew \(body["count"] ?? 0) frames")
             replyHandler(true, nil)
@@ -726,7 +785,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
                 closeTab(t.id, force: true)
                 scheduleRefresh("close_tab")
             }
-            return recents.deleteForever(id) ?? true
+            if let why = recents.deleteForever(id) { return why }
+            // A file deleted for good takes its Agent Chat history with it.
+            if !Recents.sampleIDs.contains(id) { chat().deleteHistory(id) }
+            return true
         case "tabs": return tabsForPage()
         case "switchTab":
             if let id = body["id"] as? Int, let t = tabs.first(where: { $0.id == id }) { activate(t) }
@@ -828,6 +890,68 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
 
     func showError(_ error: Error) {
         let a = NSAlert(); a.messageText = "OpenPixel"; a.informativeText = "\(error)"; a.runModal()
+    }
+
+    // MARK: - demo recordings (website hero)
+
+    var recordFolder: String?
+    var demoConfig: String?
+    var recordTimer: Timer?
+    var recordBusy = false
+    var recordFrames: [[String: Any]] = []
+    var recordMarks: [[String: Any]] = []
+    var recordStart = Date()
+
+    /// The page's demo script asks to record at a frame rate, to mark moments, and to stop (with a final picture).
+    func demoMessage(_ body: [String: Any], _ reply: @escaping (Any?, String?) -> Void) {
+        let ms = { Int(Date().timeIntervalSince(self.recordStart) * 1000) }
+        switch body["action"] as? String ?? "" {
+        case "record":
+            guard let folder = recordFolder else { reply(false, nil); return }
+            try? FileManager.default.createDirectory(atPath: folder, withIntermediateDirectories: true)
+            if recordTimer == nil { recordStart = Date() }
+            recordTimer?.invalidate()
+            let fps = max(0.2, body["fps"] as? Double ?? 10)
+            recordTimer = Timer.scheduledTimer(withTimeInterval: 1 / fps, repeats: true) { [weak self] _ in self?.recordFrame() }
+            RunLoop.main.add(recordTimer!, forMode: .common)
+            reply(true, nil)
+        case "mark":
+            recordMarks.append(["name": body["name"] as? String ?? "", "ms": ms(), "frame": recordFrames.count])
+            reply(true, nil)
+        case "stop":
+            recordTimer?.invalidate(); recordTimer = nil
+            recordMarks.append(["name": "stop", "ms": ms(), "frame": recordFrames.count])
+            let folder = recordFolder ?? NSTemporaryDirectory()
+            let manifest: [String: Any] = ["frames": recordFrames, "marks": recordMarks]
+            if let d = try? JSONSerialization.data(withJSONObject: manifest, options: .prettyPrinted) {
+                try? d.write(to: URL(fileURLWithPath: folder).appendingPathComponent("manifest.json"))
+            }
+            let final = body["screenshot"] as? String ?? URL(fileURLWithPath: folder).appendingPathComponent("final.png").path
+            web.takeSnapshot(with: nil) { img, _ in
+                if let img, let d = Self.pngData(img) { try? d.write(to: URL(fileURLWithPath: final)) }
+                reply(true, nil)
+                if body["quit"] as? Bool ?? true { DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { NSApp.terminate(nil) } }
+            }
+        default: reply(nil, "unknown demo action")
+        }
+    }
+
+    /// One frame of the recording: the window's page at full resolution, written off the main thread.
+    func recordFrame() {
+        guard !recordBusy, let folder = recordFolder else { return }
+        recordBusy = true
+        let t = Int(Date().timeIntervalSince(recordStart) * 1000), n = recordFrames.count
+        recordFrames.append(["n": n, "ms": t])
+        web.takeSnapshot(with: nil) { [weak self] img, _ in
+            guard let self else { return }
+            guard let img, let tiff = img.tiffRepresentation else { self.recordBusy = false; return }
+            DispatchQueue.global(qos: .userInitiated).async {
+                if let rep = NSBitmapImageRep(data: tiff), let png = rep.representation(using: .png, properties: [:]) {
+                    try? png.write(to: URL(fileURLWithPath: folder).appendingPathComponent(String(format: "f%06d.png", n)))
+                }
+                DispatchQueue.main.async { self.recordBusy = false }
+            }
+        }
     }
 
     // MARK: - screenshots

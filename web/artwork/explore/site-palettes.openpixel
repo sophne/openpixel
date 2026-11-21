@@ -1,0 +1,143 @@
+{
+  "cels" : [
+    {
+      "data" : "3dIxDsAgDENR5BIo9P73rQV0NDBUkdo35i8ZHMLnZalnSPmtnug5GgEH+XVht5dm0k8qqAREAi7y64v\/lN5NGgOZ7+ffbg==",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    },
+    {
+      "data" : "3dIxDsAgDENR5BIo9P73rQV0NDBUkdo35i8ZHMLnZalnSPmtnug5GgEH+XVht5dm0k8qqAREAi7y64v\/lN5NGgOZ7+ffbg==",
+      "encoding" : "zlib-base64",
+      "frame" : 1,
+      "layer" : 0
+    },
+    {
+      "data" : "3dJBDoAgEENRUkUYuP99aQR2VkNCSPAt529mUee2F6SaIYVZ\/aJ+9AQctK4LY91ujz0SLJHhJCDTuv71n1C7l9pA3vfzbwU=",
+      "encoding" : "zlib-base64",
+      "frame" : 2,
+      "layer" : 0
+    },
+    {
+      "data" : "3dJBCsAgEENRSWt19P73NVTdFNKCiGDfcv5mFnFue0GqGVKY1S\/qR0\/AQeu6MNLt9uiRgESwkwyZ1vWv\/4TavdQG8r6ffys=",
+      "encoding" : "zlib-base64",
+      "frame" : 3,
+      "layer" : 0
+    },
+    {
+      "data" : "3dI7CsAgFERRmfiJcf\/7dYjGbhSCCHrKd5tXjDHbC1LJkMKs7uk7OgIuWteF\/z2+Wr8JeAiwhJhoXR\/9J5TupDqQ\/n7OlgE=",
+      "encoding" : "zlib-base64",
+      "frame" : 4,
+      "layer" : 0
+    },
+    {
+      "data" : "3dI7CsAgFERRmfiJcf\/7dYjGbhSCCHrKd5tXjDHbC1LJkMKs7uk7OgIuWteF\/z2+Wr8JeAiwhJhoXR\/9J5TupDqQ\/n7OlgE=",
+      "encoding" : "zlib-base64",
+      "frame" : 5,
+      "layer" : 0
+    },
+    {
+      "data" : "3dI7DsAgFANB5PDn\/veNlQAF6AFKgUSm3caFlTqeE70ZIve5h0ftlkoyhHDRvt5p9gmWuycgEqAJSLSvz\/YNuxHlg4z\/8283",
+      "encoding" : "zlib-base64",
+      "frame" : 6,
+      "layer" : 0
+    },
+    {
+      "data" : "3dI7DsAgFANB5PDn\/veNlQAF6AFKgUSm3caFlTqeE70ZIve5h0ftlkoyhHDRvt5p9gmWuycgEqAJSLSvz\/YNuxHlg4z\/8283",
+      "encoding" : "zlib-base64",
+      "frame" : 7,
+      "layer" : 0
+    },
+    {
+      "data" : "3dJLCsAgFENRSf27\/\/02tAoiPpUOBHumd5JBlDqeE70ZIvehh0fTLZVuKOCifb3S3SdY7p6ASIAmING+Pts37EaUDzL+z7\/d",
+      "encoding" : "zlib-base64",
+      "frame" : 8,
+      "layer" : 0
+    },
+    {
+      "data" : "3dI5DoAwFAPRaEjIdv\/7YgVKfpYmErx2Ghd27vOi6c6Y4lLPzWs\/hZYyQeCQfX20zzDdk0AR8AJV9vXRvm4Ppucg\/f\/82wU=",
+      "encoding" : "zlib-base64",
+      "frame" : 9,
+      "layer" : 0
+    },
+    {
+      "data" : "3dI7EoAgEARRqgX5eP\/7OgUa7kJElb60kwkmhM\/LppEx5cVeO6ef8vYkcMi+PtlnWe5FoAlEgUv29dk+tyfTcxD\/P\/92Aw==",
+      "encoding" : "zlib-base64",
+      "frame" : 10,
+      "layer" : 0
+    },
+    {
+      "data" : "3dI7EoAgEARRqgX5eP\/7OgUa7kJElb60kwkmhM\/LppEx5cVeO6ef8vYkcMi+PtlnWe5FoAlEgUv29dk+tyfTcxD\/P\/92Aw==",
+      "encoding" : "zlib-base64",
+      "frame" : 11,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "feature-palettes",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#4a4a51",
+    "#a3a3ab",
+    "#ff4a1c",
+    "#73737b",
+    "#2c2c31",
+    "#141416",
+    "#8f2508",
+    "#d9d9df",
+    "#d6390c",
+    "#ff9a78"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

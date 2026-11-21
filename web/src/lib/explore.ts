@@ -8,7 +8,7 @@ export type ExploreItem = {
   title: string;
   /** Words describing the piece, for the semantic search. */
   keywords: string;
-  collection: "characters" | "scenes" | "assets";
+  collection: "characters" | "scenes" | "assets" | "site";
   /** sprite: a still 2D picture; animation: an animated GIF; voxel: an isometric render of a 3D model. */
   kind: ExploreKind;
   /** The picture shown on the page, and its size in picture pixels. */
@@ -800,6 +800,450 @@ export const collections: ExploreCollection[] = [
           "gif": "/explore/scene-cottage.gif",
           "html": "/explore/scene-cottage.html",
           "vox": "/explore/scene-cottage.vox"
+        }
+      }
+    ]
+  },
+  {
+    "id": "site",
+    "title": "OpenPixel Assets",
+    "items": [
+      {
+        "slug": "site-chest",
+        "title": "Treasure Chest",
+        "keywords": "treasure box with an orange lock, loot, gray and orange, openpixel style",
+        "collection": "site",
+        "kind": "sprite",
+        "src": "/explore/site-chest.png",
+        "w": 32,
+        "h": 32,
+        "scale": 1,
+        "downloads": {
+          "png": "/explore/site-chest.png",
+          "html": "/explore/site-chest.html"
+        }
+      },
+      {
+        "slug": "site-person",
+        "title": "Waving Person",
+        "keywords": "character waving hello, greeting, person in an orange shirt",
+        "collection": "site",
+        "kind": "sprite",
+        "src": "/explore/site-person.png",
+        "w": 32,
+        "h": 32,
+        "scale": 1,
+        "downloads": {
+          "png": "/explore/site-person.png",
+          "html": "/explore/site-person.html"
+        }
+      },
+      {
+        "slug": "site-appletree",
+        "title": "Apple Tree",
+        "keywords": "round tree with orange apples, fruit, nature",
+        "collection": "site",
+        "kind": "sprite",
+        "src": "/explore/site-appletree.png",
+        "w": 32,
+        "h": 32,
+        "scale": 1,
+        "downloads": {
+          "png": "/explore/site-appletree.png",
+          "html": "/explore/site-appletree.html"
+        }
+      },
+      {
+        "slug": "site-voxtree",
+        "title": "Voxel Tree",
+        "keywords": "isometric tree on a grass block, cubes, 3d",
+        "collection": "site",
+        "kind": "sprite",
+        "src": "/explore/site-voxtree.png",
+        "w": 32,
+        "h": 32,
+        "scale": 1,
+        "downloads": {
+          "png": "/explore/site-voxtree.png",
+          "html": "/explore/site-voxtree.html"
+        }
+      },
+      {
+        "slug": "site-mushroom",
+        "title": "Mushroom House",
+        "keywords": "isometric toadstool house with an orange cap, door and window, cottage",
+        "collection": "site",
+        "kind": "sprite",
+        "src": "/explore/site-mushroom.png",
+        "w": 32,
+        "h": 32,
+        "scale": 1,
+        "downloads": {
+          "png": "/explore/site-mushroom.png",
+          "html": "/explore/site-mushroom.html"
+        }
+      },
+      {
+        "slug": "site-chest3d",
+        "title": "Voxel Chest",
+        "keywords": "isometric treasure box, cubes, loot, 3d",
+        "collection": "site",
+        "kind": "sprite",
+        "src": "/explore/site-chest3d.png",
+        "w": 32,
+        "h": 32,
+        "scale": 1,
+        "downloads": {
+          "png": "/explore/site-chest3d.png",
+          "html": "/explore/site-chest3d.html"
+        }
+      },
+      {
+        "slug": "site-slime",
+        "title": "Bouncing Slime",
+        "keywords": "orange jelly blob bouncing, squash and stretch, cute monster",
+        "collection": "site",
+        "kind": "animation",
+        "src": "/explore/site-slime.gif",
+        "w": 384,
+        "h": 384,
+        "scale": 12,
+        "downloads": {
+          "png": "/explore/site-slime.png",
+          "gif": "/explore/site-slime.gif",
+          "html": "/explore/site-slime.html"
+        }
+      },
+      {
+        "slug": "site-coin",
+        "title": "Spinning Coin",
+        "keywords": "orange coin spinning, money, gold, collectible",
+        "collection": "site",
+        "kind": "animation",
+        "src": "/explore/site-coin.gif",
+        "w": 384,
+        "h": 384,
+        "scale": 12,
+        "downloads": {
+          "png": "/explore/site-coin.png",
+          "gif": "/explore/site-coin.gif",
+          "html": "/explore/site-coin.html"
+        }
+      },
+      {
+        "slug": "site-campfire",
+        "title": "Campfire",
+        "keywords": "fire burning on crossed logs, flames, camping, embers",
+        "collection": "site",
+        "kind": "animation",
+        "src": "/explore/site-campfire.gif",
+        "w": 384,
+        "h": 384,
+        "scale": 12,
+        "downloads": {
+          "png": "/explore/site-campfire.png",
+          "gif": "/explore/site-campfire.gif",
+          "html": "/explore/site-campfire.html"
+        }
+      },
+      {
+        "slug": "site-sword",
+        "title": "Sword",
+        "keywords": "blade with an orange guard and pommel, weapon, steel",
+        "collection": "site",
+        "kind": "sprite",
+        "src": "/explore/site-sword.png",
+        "w": 32,
+        "h": 32,
+        "scale": 1,
+        "downloads": {
+          "png": "/explore/site-sword.png",
+          "html": "/explore/site-sword.html"
+        }
+      },
+      {
+        "slug": "site-potion",
+        "title": "Potion",
+        "keywords": "round glass flask of orange liquid with a cork, elixir, magic drink",
+        "collection": "site",
+        "kind": "sprite",
+        "src": "/explore/site-potion.png",
+        "w": 32,
+        "h": 32,
+        "scale": 1,
+        "downloads": {
+          "png": "/explore/site-potion.png",
+          "html": "/explore/site-potion.html"
+        }
+      },
+      {
+        "slug": "site-house",
+        "title": "Voxel House",
+        "keywords": "isometric cottage with a stepped orange roof, chimney, lit window, home",
+        "collection": "site",
+        "kind": "sprite",
+        "src": "/explore/site-house.png",
+        "w": 32,
+        "h": 32,
+        "scale": 1,
+        "downloads": {
+          "png": "/explore/site-house.png",
+          "html": "/explore/site-house.html"
+        }
+      },
+      {
+        "slug": "site-crystal",
+        "title": "Crystals",
+        "keywords": "orange gem shards growing from a gray rock, isometric, mineral, treasure",
+        "collection": "site",
+        "kind": "sprite",
+        "src": "/explore/site-crystal.png",
+        "w": 32,
+        "h": 32,
+        "scale": 1,
+        "downloads": {
+          "png": "/explore/site-crystal.png",
+          "html": "/explore/site-crystal.html"
+        }
+      },
+      {
+        "slug": "site-heart",
+        "title": "Beating Heart",
+        "keywords": "orange heart beating, pulse, health, love, life",
+        "collection": "site",
+        "kind": "animation",
+        "src": "/explore/site-heart.gif",
+        "w": 384,
+        "h": 384,
+        "scale": 12,
+        "downloads": {
+          "png": "/explore/site-heart.png",
+          "gif": "/explore/site-heart.gif",
+          "html": "/explore/site-heart.html"
+        }
+      },
+      {
+        "slug": "site-ghost",
+        "title": "Floating Ghost",
+        "keywords": "white spooky spirit floating up and down, halloween, cute phantom",
+        "collection": "site",
+        "kind": "animation",
+        "src": "/explore/site-ghost.gif",
+        "w": 384,
+        "h": 384,
+        "scale": 12,
+        "downloads": {
+          "png": "/explore/site-ghost.png",
+          "gif": "/explore/site-ghost.gif",
+          "html": "/explore/site-ghost.html"
+        }
+      },
+      {
+        "slug": "site-native",
+        "title": "Lightning Window",
+        "keywords": "app window with a lightning bolt, fast, speed, power",
+        "collection": "site",
+        "kind": "animation",
+        "src": "/explore/site-native.gif",
+        "w": 384,
+        "h": 384,
+        "scale": 12,
+        "downloads": {
+          "png": "/explore/site-native.png",
+          "gif": "/explore/site-native.gif",
+          "html": "/explore/site-native.html"
+        }
+      },
+      {
+        "slug": "site-layers",
+        "title": "Layers",
+        "keywords": "three stacked sheets, the top one lifting, stack, levels",
+        "collection": "site",
+        "kind": "animation",
+        "src": "/explore/site-layers.gif",
+        "w": 384,
+        "h": 384,
+        "scale": 12,
+        "downloads": {
+          "png": "/explore/site-layers.png",
+          "gif": "/explore/site-layers.gif",
+          "html": "/explore/site-layers.html"
+        }
+      },
+      {
+        "slug": "site-onion",
+        "title": "Onion Skin",
+        "keywords": "bouncing ball with faint earlier frames, motion trail, animation",
+        "collection": "site",
+        "kind": "animation",
+        "src": "/explore/site-onion.gif",
+        "w": 384,
+        "h": 384,
+        "scale": 12,
+        "downloads": {
+          "png": "/explore/site-onion.png",
+          "gif": "/explore/site-onion.gif",
+          "html": "/explore/site-onion.html"
+        }
+      },
+      {
+        "slug": "site-mirror",
+        "title": "Mirror Heart",
+        "keywords": "heart drawn on both sides of a mirror line, symmetry, love",
+        "collection": "site",
+        "kind": "animation",
+        "src": "/explore/site-mirror.gif",
+        "w": 384,
+        "h": 384,
+        "scale": 12,
+        "downloads": {
+          "png": "/explore/site-mirror.png",
+          "gif": "/explore/site-mirror.gif",
+          "html": "/explore/site-mirror.html"
+        }
+      },
+      {
+        "slug": "site-palettes",
+        "title": "Palette",
+        "keywords": "colour swatches with a moving selection, paint, colors",
+        "collection": "site",
+        "kind": "animation",
+        "src": "/explore/site-palettes.gif",
+        "w": 384,
+        "h": 384,
+        "scale": 12,
+        "downloads": {
+          "png": "/explore/site-palettes.png",
+          "gif": "/explore/site-palettes.gif",
+          "html": "/explore/site-palettes.html"
+        }
+      },
+      {
+        "slug": "site-iso",
+        "title": "Floating Cube",
+        "keywords": "isometric cube floating over its shadow, box, 3d",
+        "collection": "site",
+        "kind": "animation",
+        "src": "/explore/site-iso.gif",
+        "w": 384,
+        "h": 384,
+        "scale": 12,
+        "downloads": {
+          "png": "/explore/site-iso.png",
+          "gif": "/explore/site-iso.gif",
+          "html": "/explore/site-iso.html"
+        }
+      },
+      {
+        "slug": "site-sheets",
+        "title": "Sprite Sheet",
+        "keywords": "grid of frames lighting up in turn, tiles, animation strip",
+        "collection": "site",
+        "kind": "animation",
+        "src": "/explore/site-sheets.gif",
+        "w": 384,
+        "h": 384,
+        "scale": 12,
+        "downloads": {
+          "png": "/explore/site-sheets.png",
+          "gif": "/explore/site-sheets.gif",
+          "html": "/explore/site-sheets.html"
+        }
+      },
+      {
+        "slug": "site-gif",
+        "title": "Loop",
+        "keywords": "play button inside a looping arrow, repeat, video",
+        "collection": "site",
+        "kind": "animation",
+        "src": "/explore/site-gif.gif",
+        "w": 384,
+        "h": 384,
+        "scale": 12,
+        "downloads": {
+          "png": "/explore/site-gif.png",
+          "gif": "/explore/site-gif.gif",
+          "html": "/explore/site-gif.html"
+        }
+      },
+      {
+        "slug": "site-vox",
+        "title": "Voxel Stack",
+        "keywords": "cube dropping onto a stack of cubes, blocks, building",
+        "collection": "site",
+        "kind": "animation",
+        "src": "/explore/site-vox.gif",
+        "w": 384,
+        "h": 384,
+        "scale": 12,
+        "downloads": {
+          "png": "/explore/site-vox.png",
+          "gif": "/explore/site-vox.gif",
+          "html": "/explore/site-vox.html"
+        }
+      },
+      {
+        "slug": "site-import",
+        "title": "Picture Drop",
+        "keywords": "picture dropping into a frame, photo, image, upload",
+        "collection": "site",
+        "kind": "animation",
+        "src": "/explore/site-import.gif",
+        "w": 384,
+        "h": 384,
+        "scale": 12,
+        "downloads": {
+          "png": "/explore/site-import.png",
+          "gif": "/explore/site-import.gif",
+          "html": "/explore/site-import.html"
+        }
+      },
+      {
+        "slug": "site-make3d",
+        "title": "Rising Cube",
+        "keywords": "flat tile rising into a cube, extrude, 3d",
+        "collection": "site",
+        "kind": "animation",
+        "src": "/explore/site-make3d.gif",
+        "w": 384,
+        "h": 384,
+        "scale": 12,
+        "downloads": {
+          "png": "/explore/site-make3d.png",
+          "gif": "/explore/site-make3d.gif",
+          "html": "/explore/site-make3d.html"
+        }
+      },
+      {
+        "slug": "site-agent",
+        "title": "Agent Sparkle",
+        "keywords": "sparkle drawing a heart on a canvas, ai, magic, star",
+        "collection": "site",
+        "kind": "animation",
+        "src": "/explore/site-agent.gif",
+        "w": 384,
+        "h": 384,
+        "scale": 12,
+        "downloads": {
+          "png": "/explore/site-agent.png",
+          "gif": "/explore/site-agent.gif",
+          "html": "/explore/site-agent.html"
+        }
+      },
+      {
+        "slug": "site-voxagent",
+        "title": "Voxel Builder",
+        "keywords": "sparkle building a stack of cubes, ai, magic, blocks",
+        "collection": "site",
+        "kind": "animation",
+        "src": "/explore/site-voxagent.gif",
+        "w": 384,
+        "h": 384,
+        "scale": 12,
+        "downloads": {
+          "png": "/explore/site-voxagent.png",
+          "gif": "/explore/site-voxagent.gif",
+          "html": "/explore/site-voxagent.html"
         }
       }
     ]

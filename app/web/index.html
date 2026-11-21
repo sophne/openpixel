@@ -61,6 +61,7 @@
     </div>
     <hr class="rail-sep" aria-hidden="true">
     <button type="button" class="rail-btn" data-pane="layers" aria-controls="left" aria-label="Layers" data-tip="Layers"><span class="ri"><i data-icon="layers"></i></span></button>
+    <button type="button" class="rail-btn" data-pane="chat" aria-controls="left" aria-label="Agent Chat" data-tip="Agent Chat"><span class="ri"><i data-icon="sparkle"></i><span class="rail-dot" id="chat-dot" hidden></span></span></button>
     <button type="button" class="rail-btn" data-pane="activity" aria-controls="left" aria-label="Activity" data-tip="Activity"><span class="ri"><i data-icon="history"></i><span class="rail-dot" id="activity-dot" hidden></span></span></button>
   </nav>
 
@@ -81,6 +82,36 @@
         <button class="btn small icon" id="layer-del" title="Delete layer (⌘⌫)"><i data-icon="trash"></i></button>
       </div>
       <div id="layers"></div>
+    </section>
+    <!-- Chat with the person's own agents (Claude Code, Codex, Cursor, Gemini CLI) on their subscriptions: the agent
+         works on this file through OpenPixel's tools. The message box grows with its text, then scrolls; send sits
+         inside it, and the agent + model and effort menus sit under it. -->
+    <section class="sec grow pane" id="chat-sec" data-pane="chat" hidden>
+      <div class="sec-head chat-head">
+        <button type="button" class="chat-title" id="chat-history" aria-haspopup="menu" title="Agent chats on this file"><span class="ct-name" id="chat-title">Agent Chat</span><i data-icon="chevron-down"></i></button>
+        <span class="spacer"></span>
+        <button type="button" class="btn small icon" id="chat-new" title="New chat"><i data-icon="square-pen"></i></button>
+      </div>
+      <div class="chat-body">
+        <div class="chat-scroll" id="chat-scroll">
+          <div id="chat-log" role="log" aria-live="polite" aria-label="Conversation"></div>
+        </div>
+        <button type="button" class="chat-jump" id="chat-jump" aria-label="Scroll to the latest message" tabindex="-1"><i data-icon="arrow-down"></i></button>
+      </div>
+      <form class="composer" id="chat-form" autocomplete="off">
+        <div class="composer-box">
+          <textarea id="chat-input" rows="1" spellcheck="true" aria-label="Message"></textarea>
+          <button type="submit" class="chat-send" id="chat-send" aria-label="Send" disabled>
+            <span class="cs-ic go"><i data-icon="arrow-up"></i></span><span class="cs-ic stop out"><svg class="i" viewBox="0 0 24 24" width="16" height="16"><rect x="6.5" y="6.5" width="11" height="11" rx="2.5" fill="currentColor"/></svg></span>
+          </button>
+        </div>
+        <div class="skill-menu" id="chat-skills" role="listbox" aria-label="Skills" hidden></div>
+        <div class="composer-bar">
+          <button type="button" class="chat-slash" id="chat-slash" title="Skills (/)" aria-label="Skills" aria-haspopup="listbox"><span aria-hidden="true">/</span></button>
+          <div id="chat-model" class="chat-model"></div>
+          <div id="chat-effort" class="chat-effort"></div>
+        </div>
+      </form>
     </section>
     <section class="sec grow pane" id="activity-sec" data-pane="activity" hidden>
       <div class="sec-head" id="activity-head">Activity<span class="spacer"></span><span class="muted" id="activity-count"></span></div>
@@ -201,7 +232,7 @@
     <button type="button" class="home-nav on" data-home="recents" aria-current="page"><i data-icon="clock"></i>Recents</button>
     <button type="button" class="home-nav" data-home="folders" data-drop=""><i data-icon="folders"></i>All folders</button>
     <button type="button" class="home-nav" data-home="archive" data-drop-archive><i data-icon="archive"></i>Archive</button>
-    <button type="button" class="home-nav" data-home="agents"><i data-icon="sparkle"></i>Agents</button>
+    <button type="button" class="home-nav" data-home="agents"><i data-icon="plug"></i>Agents</button>
     <span class="spacer"></span>
     <div class="side-links">
       <button type="button" class="side-link app-link" data-link="website" title="openpixel.dev" aria-label="OpenPixel website, openpixel.dev"><i data-icon="file-2d"></i></button>
@@ -276,6 +307,9 @@
   <div data-card="deleteFolder" class="danger"><i data-icon="trash-2"></i>Delete folder</div>
 </div>
 <div class="menu-list card-menu move-menu" id="move-menu"></div>
+<!-- Chat: the chats kept for the open file, and the agent + model picker (both open from the Chat panel). -->
+<div class="menu-list dd-list card-menu chat-history-menu" id="chat-history-menu" role="menu"></div>
+<div class="menu-list dd-list card-menu chat-models" id="chat-model-menu" role="menu"></div>
 
 <!-- New 2D / 3D file: name, size and palette (2D File and 3D File on the New file page). -->
 <div class="modal-bg" id="newfile-dialog">
@@ -377,5 +411,6 @@
 <script src="agent-logos.js"></script>
 <script src="app.js"></script>
 <script src="uitest.js"></script>
+<script src="demo.js"></script>
 </body>
 </html>

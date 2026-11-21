@@ -1,0 +1,143 @@
+{
+  "cels" : [
+    {
+      "data" : "zZPBDoQgDEQNBSfB\/\/\/f3WKFaWFJ9uacjO9lMib1OP4KsKfn+dOAUs3SMJjSbQSlU81cggHJcDiFsIASaTOooCwMN+Axuui\/ADCqmTkGJMPhEsICpL+udRhUIGJUY9zvF2ksZzPifqOa9uj3D0iGwzmEBVyRNoMKroXh90djviAypvtyxuaCv8b2D1gWvzof",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    },
+    {
+      "data" : "zZPBDoQgDEQNBSfB\/\/\/f3WKFaWFJ9uacjO9lMib1OP4KsKfn+dOAUs3SMJjSbQSlU81cggHJcDiFsIASaTOooCwMN+Axuui\/ADCqmTkGJMPhEsICpL+udRhUIGJUY9zvF2ksZzPifqOa9uj3D0iGwzmEBVyRNoMKroXh90djviAypvtyxuaCv8b2D1gWvzof",
+      "encoding" : "zlib-base64",
+      "frame" : 1,
+      "layer" : 0
+    },
+    {
+      "data" : "zZPBDoQgDEQNBSfB\/\/\/f3WKFaWFJ9uacjO9lMib1OP4KsKfn+dOAUs3SMJjSbQSlU81cggHJcDiFsIASaTOooCwMN+Axuui\/ADCqmTkGJMPhEsICpL+udRhUIGJUY9zvF2ksZzPifqOa9uj3D0iGwzmEBVyRNoMKroXh90djviAypvtyxuaCv8b2D1gWvzof",
+      "encoding" : "zlib-base64",
+      "frame" : 2,
+      "layer" : 0
+    },
+    {
+      "data" : "xZNBDsMgDAQjAlmJ\/P+\/qQ2BtU2ReuoccpmRhQU5jp8A9va6vhYQKyyLLlNqhUuGFeIQTEmF0cnBAYq3WtCAsijMAd5ihHYDoFshekxJhdHFwQFOb7WgAedb1Dq8Pb8WVWk23IC6nOW7uJ9uhdoS1lNSYXR2cIDbWy1owL0o7H6+iBtQEfYzxeaFf4rtH7Ic\/Fce",
+      "encoding" : "zlib-base64",
+      "frame" : 3,
+      "layer" : 0
+    },
+    {
+      "data" : "tZNLDoAgDEQNgk3w\/vfVFoTpRxIXzsIF7zFxFmzbpxCt6XG8GsSUExodptQMowzK8SU0IRgKJxMUqFgqBhSUwFA\/4Ay\/QI6bFuzrlOPv04RgKFxMUKDdUjGgYH+MWgfX+8SokkbdAmE58zfY1ymnNgXxhGAonE1QoNNSMaDgDAy9zxp+ARhunzIWL+A2li8oLP41Fw==",
+      "encoding" : "zlib-base64",
+      "frame" : 4,
+      "layer" : 0
+    },
+    {
+      "data" : "pZPLDsMgEAMjArFE\/v9\/m11o8T6KVNWHHDITCyviOH4KsKfX9dWAUElqTFjKMJzyoZJYggXJMLi4sIDmqRpU0BLDHCAYcYG+Hlqyb1JJ\/B4LkmFwc2EBp6dqUMGZGHbfNHp\/07DgMbpGYPjFgLJa5Znsn1TSh8J4QTIMri4s4PZUDSq4E8Pu90ZcQEayn4zNDXmM7Q1Li\/\/KCw==",
+      "encoding" : "zlib-base64",
+      "frame" : 5,
+      "layer" : 0
+    },
+    {
+      "data" : "pZPLDsMgEAMjArFE\/v9\/m11o8T6KVNWHHDITCyviOH4KsKfX9dWAUElqTFjKMJzyoZJYggXJMLi4sIDmqRpU0BLDHCAYcYG+Hlqyb1JJ\/B4LkmFwc2EBp6dqUMGZGHbfNHp\/07DgMbpGYPjFgLJa5Znsn1TSh8J4QTIMri4s4PZUDSq4E8Pu90ZcQEayn4zNDXmM7Q1Li\/\/KCw==",
+      "encoding" : "zlib-base64",
+      "frame" : 6,
+      "layer" : 0
+    },
+    {
+      "data" : "pZPLDsMgEAMjArFE\/v9\/m11o8T6KVNWHHDITCyviOH4KsKfX9dWAUElqTFjKMJzyoZJYggXJMLi4sIDmqRpU0BLDHCAYcYG+Hlqyb1JJ\/B4LkmFwc2EBp6dqUMGZGHbfNHp\/07DgMbpGYPjFgLJa5Znsn1TSh8J4QTIMri4s4PZUDSq4E8Pu90ZcQEayn4zNDXmM7Q1Li\/\/KCw==",
+      "encoding" : "zlib-base64",
+      "frame" : 7,
+      "layer" : 0
+    },
+    {
+      "data" : "tZNLDoAgDEQNgk3w\/vfVFoTpRxIXzsIF7zFxFmzbpxCt6XG8GsSUExodptQMowzK8SU0IRgKJxMUqFgqBhSUwFA\/4Ay\/QI6bFuzrlOPv04RgKFxMUKDdUjGgYH+MWgfX+8SokkbdAmE58zfY1ymnNgXxhGAonE1QoNNSMaDgDAy9zxp+ARhunzIWL+A2li8oLP41Fw==",
+      "encoding" : "zlib-base64",
+      "frame" : 8,
+      "layer" : 0
+    },
+    {
+      "data" : "xZNBDsMgDAQjAlmJ\/P+\/qQ2BtU2ReuoccpmRhQU5jp8A9va6vhYQKyyLLlNqhUuGFeIQTEmF0cnBAYq3WtCAsijMAd5ihHYDoFshekxJhdHFwQFOb7WgAedb1Dq8Pb8WVWk23IC6nOW7uJ9uhdoS1lNSYXR2cIDbWy1owL0o7H6+iBtQEfYzxeaFf4rtH7Ic\/Fce",
+      "encoding" : "zlib-base64",
+      "frame" : 9,
+      "layer" : 0
+    },
+    {
+      "data" : "zZPBDoQgDEQNBSfB\/\/\/f3WKFaWFJ9uacjO9lMib1OP4KsKfn+dOAUs3SMJjSbQSlU81cggHJcDiFsIASaTOooCwMN+Axuui\/ADCqmTkGJMPhEsICpL+udRhUIGJUY9zvF2ksZzPifqOa9uj3D0iGwzmEBVyRNoMKroXh90djviAypvtyxuaCv8b2D1gWvzof",
+      "encoding" : "zlib-base64",
+      "frame" : 10,
+      "layer" : 0
+    },
+    {
+      "data" : "zZPBDoQgDEQNBSfB\/\/\/f3WKFaWFJ9uacjO9lMib1OP4KsKfn+dOAUs3SMJjSbQSlU81cggHJcDiFsIASaTOooCwMN+Axuui\/ADCqmTkGJMPhEsICpL+udRhUIGJUY9zvF2ksZzPifqOa9uj3D0iGwzmEBVyRNoMKroXh90djviAypvtyxuaCv8b2D1gWvzof",
+      "encoding" : "zlib-base64",
+      "frame" : 11,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "feature-layers",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#4a4a51",
+    "#a3a3ab",
+    "#ff4a1c",
+    "#73737b",
+    "#2c2c31",
+    "#141416",
+    "#8f2508",
+    "#d9d9df",
+    "#d6390c",
+    "#ff9a78"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

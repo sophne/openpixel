@@ -8,3 +8,5 @@
 *sparkle*private*
 *.key
 .claude/
+
+__pycache__/

@@ -963,6 +963,23 @@
         }
         const rail = $('#rail').getBoundingClientRect(), left = $('#left').getBoundingClientRect(), tabs = $('#tabbar').getBoundingClientRect();
         assert(Math.abs(left.left - rail.right - 4) < 1 && Math.abs(left.top - tabs.bottom) < 2, 'the panel sits 4px from the floating rail, from the top of the editor');
+        // Chat comes right after Layers. UI tests never look for the person's agents, so it explains how to get one;
+        // the message box grows with its text and then scrolls, and send stays off without an agent.
+        const railPanes = $$('#rail [data-pane]').map((b) => b.dataset.pane);
+        assert(railPanes.indexOf('chat') === railPanes.indexOf('layers') + 1, `Chat should follow Layers in the rail (${railPanes.join(', ')})`);
+        $('#rail [data-pane="chat"]').click();
+        await until(() => shown($('#chat-sec')) && $('#chat-log .chat-empty .ce-title'), 'the chat panel');
+        assert(!shown($('#left [data-pane="layers"]')) && /No agent/.test($('#chat-log').textContent), 'Chat should replace Layers and say there is no agent yet');
+        const ta = $('#chat-input'), oneLine = ta.offsetHeight;
+        ta.value = 'one\ntwo\nthree'; ta.dispatchEvent(new Event('input'));
+        assert(ta.offsetHeight > oneLine + 20, `the message box should grow (${oneLine} → ${ta.offsetHeight})`);
+        ta.value = Array(60).fill('line').join('\n'); ta.dispatchEvent(new Event('input'));
+        assert(getComputedStyle(ta).overflowY === 'auto' && ta.offsetHeight < $('#chat-sec').clientHeight * 0.5, 'a long message should scroll inside the box');
+        assert($('#chat-send').disabled && $('.composer-box #chat-send') && $('.composer-bar #chat-model'), 'send sits in the box, the agent menu under it, and send is off without an agent');
+        ta.value = ''; ta.dispatchEvent(new Event('input'));
+        assert($('#chat-sec').getBoundingClientRect().bottom <= left.bottom + 1 && $('#chat-sec').scrollWidth <= $('#chat-sec').clientWidth, 'the chat fits the panel');
+        await sleep(320); // the empty state's entrance settles first
+        await snap('09a-chat-empty');
         // Activity fills the whole panel.
         $('#rail [data-pane="activity"]').click(); await sleep(60);
         const act = $('#activity-sec').getBoundingClientRect(), head = $('#left .doc-head').getBoundingClientRect();

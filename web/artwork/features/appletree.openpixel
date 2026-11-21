@@ -1,0 +1,44 @@
+{
+  "cels" : [
+    {
+      "data" : "1ZNLDoQwDENR0lIB978vSR0g6YcFms14gaU+0zYWLMuPVIJ6vAYNAiLKRCsN30dG+YT9N0dpxrsGpRkVnmYuYetEafdeHM8iykdSU\/fccJQLFI\/T\/gQiB6lHWCDyhzRcxh7J378uMHN1HOTmk36AEcCUTYPAtoPffMhbLAHmbbs49VwDbxiBF3zXQLOv\/\/rFJvSbTg==",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 280
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "feature-appletree",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#4a4a51",
+    "#a3a3ab",
+    "#ff4a1c",
+    "#73737b",
+    "#2c2c31",
+    "#141416",
+    "#8f2508",
+    "#d9d9df",
+    "#d6390c",
+    "#ff9a78"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

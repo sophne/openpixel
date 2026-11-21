@@ -1,0 +1,930 @@
+[
+  {
+    "slug": "site-chest",
+    "title": "Treasure Chest",
+    "collection": "site",
+    "kind": "sprite",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 1,
+    "issues": [],
+    "display": "/explore/site-chest.png",
+    "downloads": {
+      "png": "/explore/site-chest.png",
+      "html": "/explore/site-chest.html"
+    },
+    "display_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "slug": "site-person",
+    "title": "Waving Person",
+    "collection": "site",
+    "kind": "sprite",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 1,
+    "issues": [
+      "4 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/site-person.png",
+    "downloads": {
+      "png": "/explore/site-person.png",
+      "html": "/explore/site-person.html"
+    },
+    "display_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "slug": "site-appletree",
+    "title": "Apple Tree",
+    "collection": "site",
+    "kind": "sprite",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 1,
+    "issues": [
+      "8 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/site-appletree.png",
+    "downloads": {
+      "png": "/explore/site-appletree.png",
+      "html": "/explore/site-appletree.html"
+    },
+    "display_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "slug": "site-voxtree",
+    "title": "Voxel Tree",
+    "collection": "site",
+    "kind": "sprite",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 1,
+    "issues": [
+      "The sprite touches the canvas edge; leave a 1-pixel margin for outlines.",
+      "4 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/site-voxtree.png",
+    "downloads": {
+      "png": "/explore/site-voxtree.png",
+      "html": "/explore/site-voxtree.html"
+    },
+    "display_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "slug": "site-mushroom",
+    "title": "Mushroom House",
+    "collection": "site",
+    "kind": "sprite",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 1,
+    "issues": [
+      "The sprite touches the canvas edge; leave a 1-pixel margin for outlines.",
+      "2 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/site-mushroom.png",
+    "downloads": {
+      "png": "/explore/site-mushroom.png",
+      "html": "/explore/site-mushroom.html"
+    },
+    "display_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "slug": "site-chest3d",
+    "title": "Voxel Chest",
+    "collection": "site",
+    "kind": "sprite",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 1,
+    "issues": [
+      "7 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/site-chest3d.png",
+    "downloads": {
+      "png": "/explore/site-chest3d.png",
+      "html": "/explore/site-chest3d.html"
+    },
+    "display_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "slug": "site-slime",
+    "title": "Bouncing Slime",
+    "collection": "site",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 12,
+    "issues": [],
+    "display": "/explore/site-slime.gif",
+    "downloads": {
+      "png": "/explore/site-slime.png",
+      "gif": "/explore/site-slime.gif",
+      "html": "/explore/site-slime.html"
+    },
+    "frame_durations_ms": [
+      110,
+      110,
+      110,
+      110,
+      110,
+      110,
+      110,
+      110,
+      110,
+      110,
+      110,
+      110
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  },
+  {
+    "slug": "site-coin",
+    "title": "Spinning Coin",
+    "collection": "site",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 8,
+    "issues": [
+      "2 separate shapes; small ones may be stray pixels (see find_voxels).",
+      "13 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/site-coin.gif",
+    "downloads": {
+      "png": "/explore/site-coin.png",
+      "gif": "/explore/site-coin.gif",
+      "html": "/explore/site-coin.html"
+    },
+    "frame_durations_ms": [
+      120,
+      120,
+      120,
+      120,
+      120,
+      120,
+      120,
+      120
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  },
+  {
+    "slug": "site-campfire",
+    "title": "Campfire",
+    "collection": "site",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 12,
+    "issues": [
+      "5 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/site-campfire.gif",
+    "downloads": {
+      "png": "/explore/site-campfire.png",
+      "gif": "/explore/site-campfire.gif",
+      "html": "/explore/site-campfire.html"
+    },
+    "frame_durations_ms": [
+      150,
+      150,
+      150,
+      150,
+      150,
+      150,
+      150,
+      150,
+      150,
+      150,
+      150,
+      150
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  },
+  {
+    "slug": "site-sword",
+    "title": "Sword",
+    "collection": "site",
+    "kind": "sprite",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 1,
+    "issues": [
+      "3 separate shapes; small ones may be stray pixels (see find_voxels).",
+      "1 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/site-sword.png",
+    "downloads": {
+      "png": "/explore/site-sword.png",
+      "html": "/explore/site-sword.html"
+    },
+    "display_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "slug": "site-potion",
+    "title": "Potion",
+    "collection": "site",
+    "kind": "sprite",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 1,
+    "issues": [
+      "17 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/site-potion.png",
+    "downloads": {
+      "png": "/explore/site-potion.png",
+      "html": "/explore/site-potion.html"
+    },
+    "display_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "slug": "site-house",
+    "title": "Voxel House",
+    "collection": "site",
+    "kind": "sprite",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 1,
+    "issues": [
+      "The sprite touches the canvas edge; leave a 1-pixel margin for outlines.",
+      "5 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/site-house.png",
+    "downloads": {
+      "png": "/explore/site-house.png",
+      "html": "/explore/site-house.html"
+    },
+    "display_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "slug": "site-crystal",
+    "title": "Crystals",
+    "collection": "site",
+    "kind": "sprite",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 1,
+    "issues": [
+      "2 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/site-crystal.png",
+    "downloads": {
+      "png": "/explore/site-crystal.png",
+      "html": "/explore/site-crystal.html"
+    },
+    "display_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "slug": "site-heart",
+    "title": "Beating Heart",
+    "collection": "site",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 12,
+    "issues": [
+      "2 separate shapes; small ones may be stray pixels (see find_voxels)."
+    ],
+    "display": "/explore/site-heart.gif",
+    "downloads": {
+      "png": "/explore/site-heart.png",
+      "gif": "/explore/site-heart.gif",
+      "html": "/explore/site-heart.html"
+    },
+    "frame_durations_ms": [
+      110,
+      110,
+      110,
+      110,
+      110,
+      110,
+      110,
+      110,
+      110,
+      110,
+      110,
+      110
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  },
+  {
+    "slug": "site-ghost",
+    "title": "Floating Ghost",
+    "collection": "site",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 12,
+    "issues": [
+      "2 separate shapes; small ones may be stray pixels (see find_voxels)."
+    ],
+    "display": "/explore/site-ghost.gif",
+    "downloads": {
+      "png": "/explore/site-ghost.png",
+      "gif": "/explore/site-ghost.gif",
+      "html": "/explore/site-ghost.html"
+    },
+    "frame_durations_ms": [
+      150,
+      150,
+      150,
+      150,
+      150,
+      150,
+      150,
+      150,
+      150,
+      150,
+      150,
+      150
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  },
+  {
+    "slug": "site-native",
+    "title": "Lightning Window",
+    "collection": "site",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 12,
+    "issues": [],
+    "display": "/explore/site-native.gif",
+    "downloads": {
+      "png": "/explore/site-native.png",
+      "gif": "/explore/site-native.gif",
+      "html": "/explore/site-native.html"
+    },
+    "frame_durations_ms": [
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  },
+  {
+    "slug": "site-layers",
+    "title": "Layers",
+    "collection": "site",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 12,
+    "issues": [],
+    "display": "/explore/site-layers.gif",
+    "downloads": {
+      "png": "/explore/site-layers.png",
+      "gif": "/explore/site-layers.gif",
+      "html": "/explore/site-layers.html"
+    },
+    "frame_durations_ms": [
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  },
+  {
+    "slug": "site-onion",
+    "title": "Onion Skin",
+    "collection": "site",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 12,
+    "issues": [
+      "3 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/site-onion.gif",
+    "downloads": {
+      "png": "/explore/site-onion.png",
+      "gif": "/explore/site-onion.gif",
+      "html": "/explore/site-onion.html"
+    },
+    "frame_durations_ms": [
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  },
+  {
+    "slug": "site-mirror",
+    "title": "Mirror Heart",
+    "collection": "site",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 12,
+    "issues": [],
+    "display": "/explore/site-mirror.gif",
+    "downloads": {
+      "png": "/explore/site-mirror.png",
+      "gif": "/explore/site-mirror.gif",
+      "html": "/explore/site-mirror.html"
+    },
+    "frame_durations_ms": [
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  },
+  {
+    "slug": "site-palettes",
+    "title": "Palette",
+    "collection": "site",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 12,
+    "issues": [],
+    "display": "/explore/site-palettes.gif",
+    "downloads": {
+      "png": "/explore/site-palettes.png",
+      "gif": "/explore/site-palettes.gif",
+      "html": "/explore/site-palettes.html"
+    },
+    "frame_durations_ms": [
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  },
+  {
+    "slug": "site-iso",
+    "title": "Floating Cube",
+    "collection": "site",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 12,
+    "issues": [
+      "2 separate shapes; small ones may be stray pixels (see find_voxels)."
+    ],
+    "display": "/explore/site-iso.gif",
+    "downloads": {
+      "png": "/explore/site-iso.png",
+      "gif": "/explore/site-iso.gif",
+      "html": "/explore/site-iso.html"
+    },
+    "frame_durations_ms": [
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  },
+  {
+    "slug": "site-sheets",
+    "title": "Sprite Sheet",
+    "collection": "site",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 12,
+    "issues": [],
+    "display": "/explore/site-sheets.gif",
+    "downloads": {
+      "png": "/explore/site-sheets.png",
+      "gif": "/explore/site-sheets.gif",
+      "html": "/explore/site-sheets.html"
+    },
+    "frame_durations_ms": [
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  },
+  {
+    "slug": "site-gif",
+    "title": "Loop",
+    "collection": "site",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 12,
+    "issues": [
+      "2 separate shapes; small ones may be stray pixels (see find_voxels).",
+      "4 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/site-gif.gif",
+    "downloads": {
+      "png": "/explore/site-gif.png",
+      "gif": "/explore/site-gif.gif",
+      "html": "/explore/site-gif.html"
+    },
+    "frame_durations_ms": [
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  },
+  {
+    "slug": "site-vox",
+    "title": "Voxel Stack",
+    "collection": "site",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 12,
+    "issues": [],
+    "display": "/explore/site-vox.gif",
+    "downloads": {
+      "png": "/explore/site-vox.png",
+      "gif": "/explore/site-vox.gif",
+      "html": "/explore/site-vox.html"
+    },
+    "frame_durations_ms": [
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  },
+  {
+    "slug": "site-import",
+    "title": "Picture Drop",
+    "collection": "site",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 12,
+    "issues": [
+      "3 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/site-import.gif",
+    "downloads": {
+      "png": "/explore/site-import.png",
+      "gif": "/explore/site-import.gif",
+      "html": "/explore/site-import.html"
+    },
+    "frame_durations_ms": [
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  },
+  {
+    "slug": "site-make3d",
+    "title": "Rising Cube",
+    "collection": "site",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 12,
+    "issues": [],
+    "display": "/explore/site-make3d.gif",
+    "downloads": {
+      "png": "/explore/site-make3d.png",
+      "gif": "/explore/site-make3d.gif",
+      "html": "/explore/site-make3d.html"
+    },
+    "frame_durations_ms": [
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  },
+  {
+    "slug": "site-agent",
+    "title": "Agent Sparkle",
+    "collection": "site",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 12,
+    "issues": [
+      "2 separate shapes; small ones may be stray pixels (see find_voxels).",
+      "4 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/site-agent.gif",
+    "downloads": {
+      "png": "/explore/site-agent.png",
+      "gif": "/explore/site-agent.gif",
+      "html": "/explore/site-agent.html"
+    },
+    "frame_durations_ms": [
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  },
+  {
+    "slug": "site-voxagent",
+    "title": "Voxel Builder",
+    "collection": "site",
+    "kind": "animation",
+    "size": [
+      32,
+      32,
+      1
+    ],
+    "frames": 12,
+    "issues": [
+      "2 separate shapes; small ones may be stray pixels (see find_voxels).",
+      "4 doubled corner pixel(s) in 1-pixel lines (L-shaped steps make lines look thick). pixel_perfect removes them; check the result."
+    ],
+    "display": "/explore/site-voxagent.gif",
+    "downloads": {
+      "png": "/explore/site-voxagent.png",
+      "gif": "/explore/site-voxagent.gif",
+      "html": "/explore/site-voxagent.html"
+    },
+    "frame_durations_ms": [
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280,
+      280
+    ],
+    "display_size": [
+      384,
+      384
+    ]
+  }
+]

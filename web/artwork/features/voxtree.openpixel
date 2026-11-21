@@ -1,0 +1,44 @@
+{
+  "cels" : [
+    {
+      "data" : "hZPREoUgCESbhWSa\/v9\/L6BmJnj3sXMmYbPjmCJybCKCkhtKcZ4lMSq1RMagoTHRZky4PQZK6cYkEFWsvAmfA9wYPJqQqPN8Q+NpQ8bVyCvWPYBNv3UFCQ9w6hzMqyBPQ8DNyyGKmTu3fATl9x8+3r\/h3mHKyZNxIubHWLg91xGBaiwLXle\/AmYEBY3+EBf84gFuI0bDdU4tySe2ET3p\/XFj94tKfDc2+QE=",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 280
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "feature-voxtree",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#4a4a51",
+    "#a3a3ab",
+    "#ff4a1c",
+    "#73737b",
+    "#2c2c31",
+    "#141416",
+    "#8f2508",
+    "#d9d9df",
+    "#d6390c",
+    "#ff9a78"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

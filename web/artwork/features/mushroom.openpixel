@@ -1,0 +1,44 @@
+{
+  "cels" : [
+    {
+      "data" : "ndNLDsUgCEDRplpB3P9+H0rEHzJ4TJr03Fg16fMsA\/A4A\/Cme8H6fl+6FKJ1rKJrsIuuQbwVCzdNSZ2LJWAIq28f4GJ2Y4ezGyesC8j+YvS9OJ6zt37OhK0wnZUIsRaWA5E4onX\/RMP3QpVixLNgLUW0TmN+wGAaqgX2ABbNWYvJ4zGzn9oK3UAp7YUsrTMdoBezbjcwirqMdYOjuP0BUnh\/UHFUCk\/\/mB8=",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 280
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "feature-mushroom",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#4a4a51",
+    "#a3a3ab",
+    "#ff4a1c",
+    "#73737b",
+    "#2c2c31",
+    "#141416",
+    "#8f2508",
+    "#d9d9df",
+    "#d6390c",
+    "#ff9a78"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

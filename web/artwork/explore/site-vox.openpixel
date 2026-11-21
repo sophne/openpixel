@@ -1,0 +1,143 @@
+{
+  "cels" : [
+    {
+      "data" : "7dFLCsAgDARQiYzB+1+4ifHT1M+qm0JnFXwjoobwZlhyUoBo11BVXzeYCc0pPRuidPfkG1xWnUtj4Vmy91yzdnQHZi+Hw1TjPaJlTO4CtaH7bZpfIPbz46TWaL7\/gZNa46R\/vpcL",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    },
+    {
+      "data" : "7dFLCsAgDARQiYzB+1+4ifHT1M+qm0JnFXwjoobwZlhyUoBo11BVXzeYCc0pPRuidPfkG1xWnUtj4Vmy91yzdnQHZi+Hw1TjPaJlTO4CtaH7bZpfIPbz46TWaL7\/gZNa46R\/vpcL",
+      "encoding" : "zlib-base64",
+      "frame" : 1,
+      "layer" : 0
+    },
+    {
+      "data" : "xdLRDoAgCAVQh5Fa\/\/+\/gahFir24dZ9c5zYjdW5lAmWmiABWg5V93AgBsDrs7wYpPH3XjZCfKqfGwBPF9lQydmyO2HveHEU52j3W3Cs1QGnw+7Lq\/4Bv+\/tOpVHdPoGZSmOm\/+fr\/h1HjGaDlJ0aNmcfF1b4RrF9K7E+8DzFzQFzQ89\/AQ==",
+      "encoding" : "zlib-base64",
+      "frame" : 2,
+      "layer" : 0
+    },
+    {
+      "data" : "rdFLDoAgDARQUixFvf99bSmgCMWFzIrwhvBzbmWIM1NEAKshKj5uEAEWh\/BusMLTQ9ugNNs4Nwa+c2zfc8aO1RF7T5ujqqR1jyX3qLlAbsh6HfUv4Ov+vlNtFLd\/YKbamOmXEx1HjGaDVZwbNicfF1b4xrF9y7EOeJ7q5gVT48\/7rs8F",
+      "encoding" : "zlib-base64",
+      "frame" : 3,
+      "layer" : 0
+    },
+    {
+      "data" : "3dJBEoAgCAXQBiPE7n\/fQNQyxVWr\/orp\/UYtt+3LkGSliABeQ1V93iACrA7HuyEKTz\/6BuWnnUtj4izxnUvmjs0RR8+Lo6mm94A199QdoDT0fZvGLxDa+mFQazCnFCOz8wcoJfUYF5x9XvjCd4nve4m3wfM0964g5cb6hq70j7kA",
+      "encoding" : "zlib-base64",
+      "frame" : 4,
+      "layer" : 0
+    },
+    {
+      "data" : "7dLLEsAQDAVQEyIe\/\/+\/TTzaqrCy7F0Z584YwZiTIc5OEQFWDVFxvUEE2B38t8EKb\/djg8ru4NxQPHLWHlt0x9sRZy+HY1XJ6BZ7ntVwgdZIKYS6midgWcWloU4wdQ\/qC5xwx1m7a9HdUM7VV1+ISmP\/w3b6Z84F",
+      "encoding" : "zlib-base64",
+      "frame" : 5,
+      "layer" : 0
+    },
+    {
+      "data" : "7dLLDoUgDARQUh2L9f\/\/11LwgRRyb+LSWRHOJARoCG+GNSMFiHqNpMn9BjPhcFqeDVW6+1I32HYr14bjq6bva4nvOB1o3Q5H1pTap7wJkRjLEtUFrCGSPDfaF5jk8NioNS53f+AXnzV9n0t8D7xt2XsjwtYYT9BIv\/yfHQ==",
+      "encoding" : "zlib-base64",
+      "frame" : 6,
+      "layer" : 0
+    },
+    {
+      "data" : "7dLLEsAQDAVQEyIe\/\/+\/TTzaqrCy7F0Z584YwZiTIc5OEQFWDVFxvUEE2B38t8EKb\/djg8ru4NxQPHLWHlt0x9sRZy+HY1XJ6BZ7ntVwgdZIKYS6midgWcWloU4wdQ\/qC5xwx1m7a9HdUM7VV1+ISmP\/w3b6Z84F",
+      "encoding" : "zlib-base64",
+      "frame" : 7,
+      "layer" : 0
+    },
+    {
+      "data" : "7dLLEsAQDAVQEyIe\/\/+\/TTzaqrCy7F0Z584YwZiTIc5OEQFWDVFxvUEE2B38t8EKb\/djg8ru4NxQPHLWHlt0x9sRZy+HY1XJ6BZ7ntVwgdZIKYS6midgWcWloU4wdQ\/qC5xwx1m7a9HdUM7VV1+ISmP\/w3b6Z84F",
+      "encoding" : "zlib-base64",
+      "frame" : 8,
+      "layer" : 0
+    },
+    {
+      "data" : "7dLLEsAQDAVQEyIe\/\/+\/TTzaqrCy7F0Z584YwZiTIc5OEQFWDVFxvUEE2B38t8EKb\/djg8ru4NxQPHLWHlt0x9sRZy+HY1XJ6BZ7ntVwgdZIKYS6midgWcWloU4wdQ\/qC5xwx1m7a9HdUM7VV1+ISmP\/w3b6Z84F",
+      "encoding" : "zlib-base64",
+      "frame" : 9,
+      "layer" : 0
+    },
+    {
+      "data" : "7dLLEsAQDAVQEyIe\/\/+\/TTzaqrCy7F0Z584YwZiTIc5OEQFWDVFxvUEE2B38t8EKb\/djg8ru4NxQPHLWHlt0x9sRZy+HY1XJ6BZ7ntVwgdZIKYS6midgWcWloU4wdQ\/qC5xwx1m7a9HdUM7VV1+ISmP\/w3b6Z84F",
+      "encoding" : "zlib-base64",
+      "frame" : 10,
+      "layer" : 0
+    },
+    {
+      "data" : "7dLLEsAQDAVQEyIe\/\/+\/TTzaqrCy7F0Z584YwZiTIc5OEQFWDVFxvUEE2B38t8EKb\/djg8ru4NxQPHLWHlt0x9sRZy+HY1XJ6BZ7ntVwgdZIKYS6midgWcWloU4wdQ\/qC5xwx1m7a9HdUM7VV1+ISmP\/w3b6Z84F",
+      "encoding" : "zlib-base64",
+      "frame" : 11,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "feature-vox",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#4a4a51",
+    "#a3a3ab",
+    "#ff4a1c",
+    "#73737b",
+    "#2c2c31",
+    "#141416",
+    "#8f2508",
+    "#d9d9df",
+    "#d6390c",
+    "#ff9a78"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

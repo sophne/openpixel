@@ -183,6 +183,11 @@ Object.assign(window.LUCIDE = window.LUCIDE || {}, {
     ['path', { d: 'M4 4l11.733 16h4.267l-11.733-16z' }],
     ['path', { d: 'M4 20l6.768-6.768m2.46-2.46L20 4' }],
   ],
+  // Agent Chat (Lucide's square-pen).
+  'square-pen': [
+    ['path', { d: 'M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7' }],
+    ['path', { d: 'M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z' }],
+  ],
   'file-2d': [
     ['rect', { x: '3', y: '3', width: '18', height: '18', rx: '4' }],
     ['path', { d: 'M7.5 3v18M12 3v18M16.5 3v18M3 7.5h18M3 12h18M3 16.5h18', 'stroke-width': '1', opacity: '.5' }],
@@ -289,6 +294,7 @@ function applyState(st) {
   meshDirty = true; sliceDirty = true; render3dDirty = true;
   updatePanels();
   schedulePreview();
+  if (chatState.opened) syncChatFile();
 }
 
 /* ---------------------------------------------------------------- panels */
@@ -637,7 +643,7 @@ async function refreshActivity() {
   if (last && last.source === 'agent' && last.time > leftSide.seen && S.lastActivity && !showing) $('#activity-dot').hidden = false;
   if (showing && last) leftSide.seen = last.time;
   if (last && last.time > S.lastActivity) {
-    if (last.source === 'agent' && S.lastActivity) toast(`Agent: ${last.tool}`, true);
+    if (last.source === 'agent' && S.lastActivity && !chatState.busy) toast(`Agent: ${last.tool}`, true);
     S.lastActivity = last.time;
   }
 }
@@ -647,7 +653,7 @@ async function refreshActivity() {
    hides the panel, and any rail button brings it back. Both choices are remembered. */
 const leftSide = { pane: 'layers', open: true, seen: 0 };
 try { Object.assign(leftSide, JSON.parse(localStorage.getItem('openpixel.leftSide') || '{}')); } catch (e) { /* defaults */ }
-if (!['layers', 'activity'].includes(leftSide.pane)) leftSide.pane = 'layers';
+if (!['layers', 'chat', 'activity'].includes(leftSide.pane)) leftSide.pane = 'layers';
 function saveLeftSide() {
   try { localStorage.setItem('openpixel.leftSide', JSON.stringify({ pane: leftSide.pane, open: leftSide.open })); } catch (e) { /* not saved */ }
 }
@@ -662,6 +668,7 @@ function applyLeftSide() {
   $$('#left .pane').forEach((s) => { s.hidden = s.dataset.pane !== leftSide.pane; });
   $('#left-collapse').setAttribute('aria-expanded', String(leftSide.open));
   if (leftSide.open && leftSide.pane === 'activity') { leftSide.seen = S.lastActivity || 0; $('#activity-dot').hidden = true; }
+  if (leftSide.open && leftSide.pane === 'chat') { $('#chat-dot').hidden = true; openChat(); }
   render3dDirty = true; sliceDirty = true;
 }
 function setLeftOpen(open) { leftSide.open = open; applyLeftSide(); saveLeftSide(); }
@@ -2257,6 +2264,7 @@ async function deleteForever(files) {
   for (const f of files) {
     const r = await nativeAction('deleteItem', { id: f.id });
     if (r !== true) failed = String(r || `Could not delete “${f.name}”`);
+    else if (!f.sample) chatForget(f.id);
   }
   toast(failed || (one ? `“${one.name}” deleted permanently` : 'Archive emptied'));
   await loadHome();
@@ -2624,7 +2632,7 @@ const AGENTS = [
 const agentsState = { data: null, timer: null };
 
 function agentLogo(a, big = false) {
-  const svg = (window.AGENT_LOGOS || {})[a.logo.replace(/\.svg$/, '')] || icon('sparkle', 18);
+  const svg = (window.AGENT_LOGOS || {})[a.logo.replace(/\.svg$/, '')] || icon('plug', 18);
   return `<div class="alogo${big ? ' big' : ''}${a.mono ? ' mono' : ''}" title="${escapeHtml(a.name)}">${svg}</div>`;
 }
 function exeCommand() { return (agentsState.data && agentsState.data.command) || '/Applications/OpenPixel.app/Contents/MacOS/OpenPixel'; }
@@ -2806,7 +2814,7 @@ function agentRow(a) {
   const row = document.createElement('div');
   row.className = 'fl-row agent-row'; row.setAttribute('role', 'row');
   row.dataset.agent = a.id;
-  row.innerHTML = `<span class="c-name" role="cell">${a.logo ? agentLogo(a) : `<div class="alogo">${icon(a.generic ? 'plug' : 'sparkle', 16)}</div>`}<span class="aname"></span></span>` +
+  row.innerHTML = `<span class="c-name" role="cell">${a.logo ? agentLogo(a) : `<div class="alogo">${icon('plug', 16)}</div>`}<span class="aname"></span></span>` +
     `<span class="c-status" role="cell"><span class="pill"></span></span>` +
     `<span class="c-info" role="cell">${a.id === 'other' ? '' : `<button type="button" class="btn small outline info-btn" title="How to connect ${escapeHtml(a.name)}">${icon('info', 14)}<span class="lbl">How to connect</span></button>`}</span>`;
   row.querySelector('.aname').textContent = a.name;
@@ -2841,7 +2849,7 @@ function showAgentInfo(a) {
     // Laid out like a step: the spark sits where the numbers do, so its text and code line up with the steps below.
     const box = document.createElement('section');
     box.className = 'setup-prompt';
-    box.innerHTML = `<span class="sp-mark">${icon('sparkle', 14)}</span><div><div class="sp-head"></div><div class="sp-text"></div><div class="codebox"><pre class="code"></pre><button class="btn small copy"></button></div></div>`;
+    box.innerHTML = `<span class="sp-mark">${icon('plug', 14)}</span><div><div class="sp-head"></div><div class="sp-text"></div><div class="codebox"><pre class="code"></pre><button class="btn small copy"></button></div></div>`;
     box.querySelector('.sp-head').textContent = a.generic ? 'Let the app set it up' : `Let ${a.name} set it up`;
     box.querySelector('.sp-text').textContent = `Paste this into a chat with ${a.generic ? 'the app' : a.name}. It adds OpenPixel to its own settings.` +
       (AGENT_PROMPT_CAVEAT[a.id] ? ` ${AGENT_PROMPT_CAVEAT[a.id]}` : '');
@@ -3077,7 +3085,7 @@ function closeMenus() { $$('.menu, .card-menu').forEach((m) => m.classList.remov
 
 
 /* Panels resize by dragging their edges; sizes are remembered. */
-const SIZES = { left: [180, 440, 240], right: [230, 460, 264], bottom: [72, 260, 104] };
+const SIZES = { left: [180, 440, 264], right: [230, 460, 264], bottom: [72, 260, 104] };
 function setSize(which, px) {
   const [min, max] = SIZES[which];
   const v = Math.round(Math.max(min, Math.min(max, px)));
@@ -3088,7 +3096,8 @@ function setSize(which, px) {
 function initResizers() {
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem('openpixel.panels') || '{}'); } catch (e) { saved = {}; }
-  for (const k of Object.keys(SIZES)) setSize(k, saved[k] || SIZES[k][2]);
+  // The left panel opens as wide as the right one (until it is resized itself).
+  for (const k of Object.keys(SIZES)) setSize(k, saved[k] || (k === 'left' && saved.right) || SIZES[k][2]);
   $$('.resizer').forEach((r) => {
     r.addEventListener('mousedown', (e) => {
       e.preventDefault(); e.stopPropagation();
@@ -3213,10 +3222,11 @@ function wire() {
   wirePicker();
   wireSteppers();
   wireHome();
+  wireChat();
   new ResizeObserver(sizeThumbs).observe($('#strip'));
 
   window.addEventListener('keydown', (e) => {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
     if (e.metaKey) return; // menu shortcuts are handled by the Mac menu bar
     if (e.key === 'Enter' && e.target.tagName === 'BUTTON') return; // the focused button handles Return itself
     if (e.key === ' ') { spaceDown = true; e.preventDefault(); return; }
@@ -3289,6 +3299,967 @@ function showUpdate(version) {
 $('#tab-update').onclick = () => nativeAction('checkUpdates');
 nativeAction('version').then((v) => { if (v && v.available) showUpdate(v.available); }).catch(() => {});
 
+/* ---------------------------------------------------------------- Agent Chat
+   Talks to the agents the person already has (Claude Code, Codex, Cursor, Gemini CLI), on their own subscriptions.
+   For each message the app runs the agent's command-line tool with OpenPixel's tools attached and streams back its
+   events (see Chat.swift): text and thinking deltas, tool calls and their results.
+   Every file keeps its own chats (saved by the app, so they survive restarts): the title above the conversation lists
+   them, and the pen starts another one on the same file. A chat continues the agent's own session while you stay
+   with that agent; switching agents mid-chat hands the new one a short transcript instead.
+   Motion: the reply is revealed at a steady pace (agents send text in bursts) and each newly shown run of words fades
+   in; tool calls are rows whose pixel spinner settles into a check or a cross; thinking streams into a muted window
+   that folds away into "Thought for 4s" when it ends. Typing, sending and switching chats never animate the panel. */
+const EFFORT_LABELS = { minimal: 'Minimal', low: 'Low', medium: 'Medium', high: 'High', xhigh: 'Extra high', max: 'Max', ultra: 'Ultra' };
+const CHAT_TOOLS_SHOWN = 4; // tool rows shown per run of calls; earlier ones fold into "N earlier steps"
+const FADE_MS = 320;
+const chatState = {
+  providers: null, providersLoading: null, opened: false,
+  skills: new Map(), // provider -> { list, at } for the "/" menu
+  skillMenu: { open: false, items: [], index: 0 },
+  pick: (() => { try { return JSON.parse(localStorage.getItem('openpixel.chatPick') || '{}'); } catch (e) { return {}; } })(),
+  key: null, files: new Map(), thread: null, gone: new Set(), // gone: files deleted for good (their chats too)
+  live: new Map(),          // thread id -> { thread, msg, key, timer }
+  views: new WeakMap(),     // message or part -> its DOM while shown
+  stick: true, effortMenu: null, saveTimers: new Map(),
+  get busy() { return this.live.size > 0; },
+};
+chatState.pick.effort = chatState.pick.effort || {};
+
+const chatId = () => `c${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+function chatNative(action, extra = {}) {
+  if (bridge) return bridge.postMessage({ kind: 'chat', action, ...extra });
+  return Promise.resolve(chatMock(action, extra)); // the page opened in a browser, without the app: a scripted agent
+}
+
+/* --- markdown (a safe subset: paragraphs, headings, lists, code, bold, italics, links shown as text) */
+function mdInline(raw) {
+  const codes = [];
+  let s = escapeHtml(raw).replace(/`([^`\n]+)`/g, (m, c) => { codes.push(c); return `\u0000${codes.length - 1}\u0000`; });
+  s = s.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>').replace(/__([^_\n]+)__/g, '<strong>$1</strong>')
+    .replace(/(^|[^*\w])\*([^*\s][^*\n]*)\*(?!\w)/g, '$1<em>$2</em>').replace(/(^|[^_\w])_([^_\s][^_\n]*)_(?!\w)/g, '$1<em>$2</em>')
+    .replace(/\[([^\]\n]+)\]\(([^)\s]+)\)/g, '<span class="md-link" title="$2">$1</span>');
+  return s.replace(/\u0000(\d+)\u0000/g, (m, i) => `<code>${codes[+i]}</code>`);
+}
+function md(src) {
+  const lines = src.replace(/\r/g, '').split('\n');
+  let html = '', para = [], list = null;
+  const flushPara = () => { if (para.length) { html += `<p>${para.map(mdInline).join('<br>')}</p>`; para = []; } };
+  const flushList = () => { if (list) { html += `<${list.type}>${list.items.map((i) => `<li>${mdInline(i)}</li>`).join('')}</${list.type}>`; list = null; } };
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (/^\s*```/.test(line)) {
+      flushPara(); flushList();
+      const body = [];
+      for (i++; i < lines.length && !/^\s*```/.test(lines[i]); i++) body.push(lines[i]);
+      html += `<pre><code>${escapeHtml(body.join('\n'))}</code></pre>`;
+      continue;
+    }
+    const h = line.match(/^(#{1,6})\s+(.*)$/);
+    if (h) { flushPara(); flushList(); html += `<p class="md-h">${mdInline(h[2])}</p>`; continue; }
+    if (/^\s*([-*_])\s*\1\s*\1[\s\1]*$/.test(line)) { flushPara(); flushList(); html += '<hr>'; continue; }
+    const li = line.match(/^\s*(?:([-*+])|(\d+)[.)])\s+(.*)$/);
+    if (li) {
+      flushPara();
+      const type = li[1] ? 'ul' : 'ol';
+      if (!list || list.type !== type) { flushList(); list = { type, items: [] }; }
+      list.items.push(li[3]);
+      continue;
+    }
+    if (!line.trim()) { flushPara(); flushList(); continue; }
+    if (list && /^\s{2,}\S/.test(line)) { list.items[list.items.length - 1] += ' ' + line.trim(); continue; }
+    flushList();
+    para.push(line.replace(/^\s*>\s?/, ''));
+  }
+  flushPara(); flushList();
+  return html;
+}
+
+/* --- streamed text: shown at a steady pace, each newly shown run fading in. The text is re-rendered as Markdown on
+   every step; the runs shown in the last moment are wrapped in spans whose fade starts in the past (a negative delay),
+   so a re-render never restarts a fade that is under way. */
+class Reveal {
+  constructor(el, onGrow) { Object.assign(this, { el, onGrow, src: '', shown: 0, len: 0, marks: [], raf: 0, fast: false, timer: 0 }); }
+  push(d, fast) { this.src += d; if (fast) this.fast = true; if (!this.raf) this.raf = requestAnimationFrame(() => this.tick()); }
+  tick() {
+    this.raf = 0;
+    const left = this.src.length - this.shown;
+    if (left <= 0) return;
+    let end = reducedMotion.matches ? this.src.length : Math.min(this.src.length, this.shown + Math.max(2, Math.ceil(left / (this.fast ? 6 : 12))));
+    const ws = this.src.slice(end).search(/\s/); // finish the word
+    if (ws > 0 && ws < 14) end += ws;
+    this.shown = end;
+    this.render();
+    if (this.shown < this.src.length) this.raf = requestAnimationFrame(() => this.tick());
+  }
+  /** Everything at once (a chat being shown again, or the end of the reply). */
+  finish() {
+    cancelAnimationFrame(this.raf); this.raf = 0;
+    if (this.shown < this.src.length) { this.shown = this.src.length; this.render(); }
+  }
+  render() {
+    const now = performance.now();
+    const t = document.createElement('template');
+    t.innerHTML = md(this.src.slice(0, this.shown));
+    const total = t.content.textContent.length;
+    if (total > this.len && this.len + total > 0 && this.marks !== null) this.marks.push({ from: this.len, to: total, t: now });
+    this.len = total;
+    this.marks = (this.marks || []).filter((m) => now - m.t < FADE_MS);
+    if (this.marks.length && !reducedMotion.matches) wrapFresh(t.content, this.marks, now);
+    this.el.replaceChildren(t.content);
+    clearTimeout(this.timer);
+    if (this.marks.length) this.timer = setTimeout(() => { if (!this.raf) this.render(); }, FADE_MS); // drop the spans when the fades end
+    if (this.onGrow) this.onGrow();
+  }
+}
+function wrapFresh(root, marks, now) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) nodes.push(n);
+  let pos = 0;
+  const first = marks[0].from;
+  for (const node of nodes) {
+    const s = pos, e = pos + node.data.length, text = node.data;
+    pos = e;
+    if (e <= first) continue;
+    const frag = document.createDocumentFragment();
+    let cur = s;
+    if (cur < first) { frag.append(text.slice(0, first - s)); cur = first; }
+    for (const m of marks) {
+      const a = Math.max(cur, m.from), b = Math.min(e, m.to);
+      if (b <= a) continue;
+      if (a > cur) frag.append(text.slice(cur - s, a - s));
+      const span = document.createElement('span');
+      span.className = 'fresh';
+      span.style.animationDelay = `${Math.round(m.t - now)}ms`;
+      span.textContent = text.slice(a - s, b - s);
+      frag.append(span);
+      cur = b;
+    }
+    if (cur < e) frag.append(text.slice(cur - s));
+    node.replaceWith(frag);
+  }
+}
+
+/* --- agents and models */
+async function loadChatProviders(force) {
+  if (chatState.providers && !force) return chatState.providers;
+  if (!chatState.providersLoading || force) {
+    chatState.providersLoading = chatNative('providers').then((list) => {
+      chatState.providers = Array.isArray(list) ? list : [];
+      return chatState.providers;
+    }).catch(() => { chatState.providers = []; return []; });
+  }
+  return chatState.providersLoading;
+}
+const readyProviders = () => (chatState.providers || []).filter((p) => p.ready);
+/** Agents connected to OpenPixel, including one whose own sign-in has lapsed (it offers to sign in). */
+const connectedProviders = () => (chatState.providers || []).filter((p) => p.ready || p.needs_login);
+/** Looks for agents again (one connected or signed in since) and redraws what depends on them. */
+async function refreshChatProviders() {
+  const before = JSON.stringify(chatState.providers);
+  await loadChatProviders(true);
+  if (JSON.stringify(chatState.providers) === before) return;
+  chatState.skills.clear();
+  renderChatPickers();
+  if (chatState.thread && !chatState.thread.messages.length) renderChatThread();
+  if ($('#chat-model-menu').classList.contains('open')) { closeMenus(); openModelMenu(); }
+}
+function chatProvider() {
+  const ready = readyProviders();
+  return ready.find((p) => p.id === chatState.pick.provider) || ready[0] || null;
+}
+function chatModel(p = chatProvider()) {
+  if (!p) return null;
+  return p.models.find((m) => m.id === chatState.pick.model && chatState.pick.provider === p.id)
+    || p.models.find((m) => p.default_model && m.id === p.default_model) || p.models[0]; // the agent's own default (Codex's config)
+}
+/** Effort levels: the model's own when it has them (Codex lists them per model), else the agent's. */
+const chatEfforts = (p, m = chatModel(p)) => (m && m.efforts) || (p && p.efforts) || [];
+function chatEffort(p = chatProvider()) {
+  const m = chatModel(p), levels = chatEfforts(p, m);
+  if (!levels.length) return '';
+  const e = chatState.pick.effort[p.id];
+  const d = (m && m.default_effort) || p.default_effort;
+  return levels.includes(e) ? e : levels.includes(d) ? d : levels[0];
+}
+function saveChatPick() { try { localStorage.setItem('openpixel.chatPick', JSON.stringify(chatState.pick)); } catch (e) { /* not saved */ } }
+function agentFor(id) { return AGENTS.find((a) => a.id === id) || { id, name: id, logo: null }; }
+function miniLogo(id) {
+  const a = agentFor(id === 'claude-code' ? 'claude' : id); // the chat's "Claude" runs Claude Code: shown with Claude's mark
+  const svg = a.logo ? (window.AGENT_LOGOS || {})[a.logo.replace(/\.svg$/, '')] : null;
+  return `<span class="alogo mini${a.mono ? ' mono' : ''}" aria-hidden="true">${svg || icon('plug', 12)}</span>`;
+}
+
+function renderChatPickers() {
+  const p = chatProvider(), m = chatModel(p);
+  const btn = $('#chat-model .dd-btn');
+  btn.disabled = !p;
+  btn.querySelector('.cm-logo').innerHTML = p ? miniLogo(p.id) : '';
+  btn.querySelector('.v').textContent = p ? m.label : 'No agent';
+  btn.dataset.tip = p ? `${p.name} · ${m.label} (${p.plan})` : 'No agent found';
+  btn.setAttribute('aria-label', p ? `Agent and model: ${p.name}, ${m.label}` : 'Agent and model');
+  const eff = $('#chat-effort'), levels = chatEfforts(p, m);
+  eff.hidden = !levels.length;
+  if (levels.length) {
+    chatState.effortMenu = dropdown(eff, levels.map((e) => ({ value: e, label: EFFORT_LABELS[e] || e })), {
+      value: chatEffort(p),
+      onChange: (v) => { chatState.pick.effort[p.id] = v; saveChatPick(); renderChatPickers(); },
+    });
+    const b = eff.querySelector('.dd-btn');
+    b.dataset.tip = 'Effort'; b.setAttribute('aria-label', `Effort: ${EFFORT_LABELS[chatEffort(p)]}`);
+    // Three bars fill as the effort rises through the model's own levels; the top levels light up in orange.
+    const i = levels.indexOf(chatEffort(p)), level = levels.length < 2 ? 2 : Math.round((i / (levels.length - 1)) * 4);
+    b.insertAdjacentHTML('afterbegin', `<span class="eff-bars" data-level="${level}" aria-hidden="true"><i></i><i></i><i></i></span>`);
+  }
+  const input = $('#chat-input');
+  input.setAttribute('aria-label', p ? `Message ${p.name}` : 'Message'); // no placeholder: the box stays clean
+  updateChatSend();
+}
+function openModelMenu() {
+  const m = $('#chat-model-menu'), btn = $('#chat-model .dd-btn');
+  if (m.classList.contains('open')) { closeMenus(); return; }
+  closeMenus();
+  const cur = chatProvider(), curModel = chatModel(cur);
+  m.innerHTML = '';
+  for (const p of connectedProviders()) { // only agents that can reach OpenPixel; the rest are on the Agents page
+    const h = document.createElement('header');
+    h.innerHTML = `${miniLogo(p.id)}<b></b><span class="plan"></span>`;
+    h.querySelector('b').textContent = p.name;
+    h.querySelector('.plan').textContent = p.plan;
+    m.appendChild(h);
+    if (!p.ready) {
+      // Connected, but the agent's own sign-in has lapsed (Cursor's command-line agent signs in apart from the editor).
+      const d = document.createElement('div');
+      d.className = 'opt more';
+      d.innerHTML = `<span class="ck">${icon('external-link', 14)}</span><span class="ol">Sign in to ${escapeHtml(p.name)}…</span>`;
+      d.onclick = async (e) => {
+        e.stopPropagation(); closeMenus();
+        const r = await chatNative('login', { provider: p.id });
+        toast(r === true ? `Finish signing in to ${p.name} in your browser` : String(r || `Couldn't start ${p.name}'s sign-in`));
+      };
+      m.appendChild(d);
+      continue;
+    }
+    for (const model of p.models) {
+      const d = document.createElement('div');
+      d.className = 'opt' + (cur && cur.id === p.id && curModel.id === model.id ? ' sel' : '');
+      d.setAttribute('role', 'menuitemradio');
+      d.innerHTML = `<span class="ck">${icon('check', 14)}</span><span class="ol"></span>`;
+      d.querySelector('.ol').textContent = model.label;
+      d.onclick = (e) => {
+        e.stopPropagation(); closeMenus();
+        chatState.pick.provider = p.id; chatState.pick.model = model.id; saveChatPick();
+        renderChatPickers();
+        if (chatState.thread && !chatState.thread.messages.length) renderChatThread();
+      };
+      m.appendChild(d);
+    }
+  }
+  m.insertAdjacentHTML('beforeend', `<hr><div class="opt more"><span class="ck">${icon('plug', 14)}</span><span class="ol">Connect another agent…</span></div>`);
+  m.lastElementChild.onclick = (e) => { e.stopPropagation(); closeMenus(); showHome('agents'); };
+  m.style.minWidth = Math.max(230, btn.getBoundingClientRect().width) + 'px';
+  placeMenu(m, btn);
+  if (!openModelMenu.refreshing) { openModelMenu.refreshing = true; refreshChatProviders().finally(() => { openModelMenu.refreshing = false; }); }
+}
+
+/* --- chats per file */
+function chatKey() {
+  if (ui.active == null) return null;
+  return S.file || `untitled:${activeTabName()}`;
+}
+function newThread() { return { id: chatId(), title: 'New chat', provider: null, session: null, created: Date.now(), updated: Date.now(), messages: [] }; }
+async function chatFile(key) {
+  if (!chatState.files.has(key)) {
+    chatState.gone.delete(key); // a new file where a deleted one was starts with no chats
+    const entry = { threads: [], current: null };
+    chatState.files.set(key, entry);
+    let data = null;
+    try { data = await chatNative('history', { key }); } catch (e) { data = null; }
+    if (data && Array.isArray(data.threads)) {
+      // Replies that were still streaming when the app quit end where they stopped.
+      for (const t of data.threads) for (const m of t.messages || []) if (m.role === 'assistant' && !m.done) { m.done = true; m.stopped = true; }
+      // Codex replies saved before format 2 marked every tool call failed (Codex's "error": null was read as an
+      // error). Back then a real failure only ever stored Codex's error object ({"message": …}), so any other
+      // result is a call that worked.
+      for (const t of data.threads) for (const m of t.messages || []) {
+        if (m.role !== 'assistant' || m.provider !== 'codex' || m.v >= 2) continue;
+        for (const p of m.parts || []) if (p.kind === 'tools') for (const c of p.calls || []) {
+          if (c.done && !c.ok && c.out && !/^\s*\{\s*"message"\s*:/.test(c.out)) c.ok = true;
+        }
+        m.v = 2;
+      }
+      // Earlier chats come back in the chat menu only: opening a file always starts on a clean chat.
+      entry.threads = data.threads.filter((t) => t && t.id && Array.isArray(t.messages)).concat(entry.threads);
+    }
+  }
+  return chatState.files.get(key);
+}
+function saveChatFile(key) {
+  if (!key || chatState.gone.has(key)) return;
+  clearTimeout(chatState.saveTimers.get(key));
+  chatState.saveTimers.set(key, setTimeout(() => {
+    const f = chatState.files.get(key);
+    if (!f) return;
+    const threads = f.threads.filter((t) => t.messages.length).sort((a, b) => b.updated - a.updated).slice(0, 50).map((t) => ({
+      ...t,
+      messages: t.messages.map((m) => (m.role !== 'assistant' ? m : { ...m, parts: m.parts.map((p) => (p.kind !== 'tools' ? p
+        : { ...p, calls: p.calls.map((c) => ({ ...c, out: c.out && c.out.length > 1500 ? c.out.slice(0, 1500) + '…' : c.out })) })) })),
+    }));
+    chatNative('saveHistory', { key, data: { v: 1, current: f.current, threads } }).catch(() => {});
+  }, 400));
+}
+/** A file deleted for good: its chats are gone from disk (the app removed them), so drop them here too and stop any
+    reply still running on them, so nothing writes them back. */
+function chatForget(key) {
+  chatState.gone.add(key);
+  clearTimeout(chatState.saveTimers.get(key));
+  for (const [id, live] of chatState.live) if (live.key === key) chatNative('stop', { chat: id });
+  chatState.files.delete(key);
+  if (chatState.key === key) { chatState.key = null; if (chatState.opened) showChatThread(newThread()); }
+}
+/** A renamed file: the app moved its chats on disk; the page follows (open chats, a running reply, pending saves). */
+function chatMoved(from, to) {
+  const f = chatState.files.get(from);
+  clearTimeout(chatState.saveTimers.get(from));
+  chatState.files.delete(from);
+  if (f) chatState.files.set(to, f);
+  for (const live of chatState.live.values()) if (live.key === from) live.key = to;
+  if (chatState.key === from) chatState.key = to;
+  if (f) saveChatFile(to);
+}
+/** Shows the chat for the file that is open now, when the file changed: the one you were on if you were already
+    chatting about it since it opened, else a clean new chat (the file's earlier chats wait in the chat menu). */
+async function syncChatFile() {
+  const key = chatKey();
+  if (key === chatState.key) return;
+  chatState.key = key;
+  // Files no longer open in a tab start clean the next time they are opened.
+  const open = new Set((ui.tabs || []).map((t) => t.path).filter(Boolean));
+  for (const [k, entry] of chatState.files) if (k !== key && !open.has(k)) { entry.current = null; entry.draft = null; }
+  if (!key) return;
+  const f = await chatFile(key);
+  if (chatState.key !== key) return;
+  if (!f.draft) f.draft = newThread();
+  showChatThread(f.threads.find((x) => x.id === f.current) || f.draft);
+}
+function showChatThread(t) {
+  chatState.thread = t;
+  const f = chatState.files.get(chatState.key);
+  if (f) { f.current = t.messages.length ? t.id : null; if (!t.messages.length) f.draft = t; }
+  renderChatThread();
+}
+function startNewChat() {
+  closeMenus();
+  if (chatState.thread && !chatState.thread.messages.length) { $('#chat-input').focus(); return; }
+  showChatThread(newThread());
+  $('#chat-input').focus();
+}
+function openHistoryMenu() {
+  const m = $('#chat-history-menu'), btn = $('#chat-history');
+  if (m.classList.contains('open')) { closeMenus(); return; }
+  closeMenus();
+  const f = chatState.files.get(chatState.key) || { threads: [] };
+  const list = f.threads.filter((t) => t.messages.length).sort((a, b) => b.updated - a.updated);
+  m.innerHTML = `<div class="opt new"><span class="ck">${icon('square-pen', 14)}</span><span class="ol">New chat</span></div><hr>`;
+  m.firstElementChild.onclick = (e) => { e.stopPropagation(); startNewChat(); };
+  if (!list.length) m.insertAdjacentHTML('beforeend', '<p class="ch-empty">No earlier chats on this file</p>');
+  for (const t of list) {
+    const d = document.createElement('div');
+    d.className = 'opt' + (chatState.thread && t.id === chatState.thread.id ? ' sel' : '');
+    d.innerHTML = `<span class="ck">${chatState.live.has(t.id) ? '<span class="px-load sm"><i></i><i></i><i></i><i></i></span>' : icon('check', 14)}</span>` +
+      `<span class="ol"></span><span class="k">${escapeHtml(timeAgo(t.updated / 1000))}</span>` +
+      `<button type="button" class="ch-del" aria-label="Delete chat" title="Delete chat">${icon('trash-2', 13)}</button>`;
+    if (chatState.live.has(t.id)) d.classList.add('running');
+    d.querySelector('.ol').textContent = t.title;
+    d.onclick = (e) => { e.stopPropagation(); closeMenus(); showChatThread(t); };
+    d.querySelector('.ch-del').onclick = async (e) => {
+      e.stopPropagation(); closeMenus();
+      if (!(await askConfirm('Delete this chat?', `“${t.title}” and its messages will be removed from this file's chats. The changes it made to the file stay.`, 'Delete chat'))) return;
+      if (chatState.live.has(t.id)) chatNative('stop', { chat: t.id });
+      f.threads = f.threads.filter((x) => x !== t);
+      if (chatState.thread === t) showChatThread(f.threads.slice().sort((a, b) => b.updated - a.updated)[0] || newThread());
+      saveChatFile(chatState.key);
+    };
+    m.appendChild(d);
+  }
+  m.style.minWidth = '240px';
+  placeMenu(m, btn);
+}
+
+/* --- drawing the conversation */
+const prettyTool = (n) => { const s = String(n || 'tool').replace(/[_-]+/g, ' ').trim(); return s.charAt(0).toUpperCase() + s.slice(1); };
+function toolSummary(input) {
+  if (input == null) return '';
+  if (typeof input === 'string') return input.slice(0, 80);
+  if (Array.isArray(input)) return `${input.length} items`;
+  const out = [];
+  for (const [k, v] of Object.entries(input)) {
+    if (out.length >= 3) break;
+    if (v == null || typeof v === 'object' && !Array.isArray(v)) continue;
+    out.push(Array.isArray(v) ? `${k} [${v.length}]` : `${k} ${String(v).slice(0, 24)}`);
+  }
+  return out.join(' · ');
+}
+function chatScrollGrow() { if (chatState.stick) { const sc = $('#chat-scroll'); sc.scrollTop = sc.scrollHeight; } }
+
+function renderChatThread() {
+  const log = $('#chat-log'), t = chatState.thread;
+  $('#chat-title').textContent = t && t.messages.length ? t.title : 'Agent Chat';
+  log.replaceChildren();
+  chatState.stick = true;
+  if (!t || !t.messages.length) log.appendChild(chatEmpty());
+  else for (const m of t.messages) appendChatMessage(m, false);
+  const sc = $('#chat-scroll'); sc.scrollTop = sc.scrollHeight;
+  updateChatJump();
+  updateChatSend();
+}
+function chatEmpty() {
+  const el = document.createElement('div');
+  el.className = 'chat-empty';
+  if (chatState.providers === null) {
+    el.innerHTML = `<span class="px-load lg"><i></i><i></i><i></i><i></i></span><p class="ce-sub">Looking for your agents…</p>`;
+    return el;
+  }
+  const p = chatProvider();
+  if (!p) {
+    const waiting = (chatState.providers || []).filter((x) => x.installed);
+    el.innerHTML = '<span class="pxa pxa-agents" aria-hidden="true"></span><p class="ce-title">No agent to chat with yet</p>' +
+      `<p class="ce-sub">${waiting.length ? `Add OpenPixel to ${escapeHtml(waiting.map((x) => x.name).join(' or '))}, or install` : 'Install'} Claude Code, Codex, Cursor or Gemini CLI and sign in. Chat runs them on your own subscription.</p>` +
+      `<div class="ce-actions"><button type="button" class="btn small outline" data-ce="agents">${icon('plug', 14)}<span class="lbl">Agents</span></button>` +
+      `<button type="button" class="btn small" data-ce="retry">${icon('history', 14)}<span class="lbl">Look again</span></button></div>`;
+    el.querySelector('[data-ce="agents"]').onclick = () => showHome('agents');
+    el.querySelector('[data-ce="retry"]').onclick = async () => { chatState.providers = null; renderChatThread(); await loadChatProviders(true); renderChatPickers(); renderChatThread(); };
+    return el;
+  }
+  el.innerHTML = `${miniLogo(p.id).replace('alogo mini', 'alogo big')}<p class="ce-title">Chat with ${escapeHtml(p.name)}</p>` +
+    `<p class="ce-sub">Uses your ${escapeHtml(p.plan)}. It works on this file with OpenPixel's tools, and you can undo every change. Type / for its skills.</p>`;
+  return el;
+}
+function appendChatMessage(msg, animate) {
+  const log = $('#chat-log');
+  const empty = log.querySelector('.chat-empty');
+  if (empty) empty.remove();
+  const el = document.createElement('div');
+  el.className = `cm ${msg.role}` + (animate ? ' enter' : '');
+  if (msg.role === 'user') {
+    if (msg.skill) {
+      const chip = document.createElement('span');
+      chip.className = 'cm-skill';
+      chip.textContent = `/${msg.skill}`;
+      el.append(chip, msg.args ? ` ${msg.args}` : '');
+    } else el.textContent = msg.text;
+    log.appendChild(el);
+    return el;
+  }
+  el.innerHTML = '<div class="cm-parts"></div><div class="cm-status" hidden><span class="px-load"><i></i><i></i><i></i><i></i></span><span class="shimmer"></span><span class="cm-sec"></span></div><div class="cm-foot"></div>';
+  const view = { el, parts: el.firstChild, status: el.children[1], foot: el.children[2] };
+  chatState.views.set(msg, view);
+  log.appendChild(el);
+  const live = !msg.done;
+  msg.parts.forEach((p, i) => appendChatPart(msg, p, live && i === msg.parts.length - 1));
+  updateChatStatus(msg);
+  if (msg.done) renderChatFoot(msg);
+  return el;
+}
+function chatView(msg) {
+  const v = chatState.views.get(msg);
+  return v && v.el.isConnected ? v : null;
+}
+function appendChatPart(msg, part, live) {
+  const mv = chatView(msg);
+  if (!mv) return;
+  const el = document.createElement('div');
+  mv.parts.appendChild(el);
+  if (part.kind === 'text') {
+    el.className = 'cm-text md';
+    const reveal = new Reveal(el, chatScrollGrow);
+    chatState.views.set(part, { el, reveal });
+    // What was already said shows at once; only what streams in from here fades in.
+    reveal.marks = null; reveal.push(part.text); reveal.finish(); reveal.marks = [];
+  } else if (part.kind === 'think') {
+    el.className = 'cm-think' + (live ? ' live open' : '');
+    el.innerHTML = `<button type="button" class="ct-head" aria-expanded="${live}"><span class="ct-label"></span>${icon('chevron-down', 12).replace('class="i"', 'class="i chev"')}</button>` +
+      '<div class="ct-body"><div class="ct-inner"><div class="ct-text"><span></span></div></div></div>';
+    const v = { el, label: el.querySelector('.ct-label'), text: el.querySelector('.ct-text span'), box: el.querySelector('.ct-text') };
+    chatState.views.set(part, v);
+    v.text.textContent = part.text;
+    setThinkLabel(part, v);
+    el.querySelector('.ct-head').onclick = () => {
+      const open = !el.classList.contains('open');
+      el.classList.toggle('open', open);
+      el.querySelector('.ct-head').setAttribute('aria-expanded', String(open));
+    };
+  } else {
+    el.className = 'cm-tools';
+    el.innerHTML = `<button type="button" class="ctl-more" hidden>${icon('chevron-right', 12)}<span></span></button>`;
+    const v = { el, rows: new Map(), more: el.firstChild, expanded: false };
+    chatState.views.set(part, v);
+    v.more.onclick = () => { v.expanded = !v.expanded; foldTools(part, v); };
+    for (const c of part.calls) addToolRow(part, c, false);
+  }
+  if (live && part.kind === 'think') el.querySelector('.ct-text').scrollTop = 1e9;
+}
+function setThinkLabel(part, v) {
+  const live = part.ms == null;
+  v.label.className = 'ct-label' + (live ? ' shimmer' : '');
+  v.label.textContent = live ? 'Thinking' : `Thought for ${Math.max(1, Math.round(part.ms / 1000))}s`;
+}
+function addToolRow(part, call, animate) {
+  const v = chatState.views.get(part);
+  if (!v || !v.el.isConnected) return;
+  const row = document.createElement('div');
+  row.className = 'ctl-row ' + (call.done ? (call.ok ? 'ok' : 'bad') : 'running') + (animate ? ' enter' : '');
+  row.innerHTML = '<button type="button" class="ctl-head" aria-expanded="false">' +
+    `<span class="ctl-ic" aria-hidden="true"><span class="s-run px-load sm"><i></i><i></i><i></i><i></i></span><span class="s-ok">${icon('check', 13)}</span><span class="s-bad">${icon('x', 13)}</span></span>` +
+    `<span class="ctl-name"></span><span class="ctl-arg mono"></span>${icon('chevron-down', 12).replace('class="i"', 'class="i chev"')}</button>` +
+    '<div class="ctl-detail"><div class="ctl-inner"><pre class="ctl-in"></pre><pre class="ctl-out"></pre></div></div>';
+  row.querySelector('.ctl-name').textContent = prettyTool(call.name);
+  row.querySelector('.ctl-head').onclick = () => {
+    const open = !row.classList.contains('open');
+    row.classList.toggle('open', open);
+    row.querySelector('.ctl-head').setAttribute('aria-expanded', String(open));
+  };
+  v.rows.set(call.id, row);
+  v.el.appendChild(row);
+  updateToolRow(part, call);
+  foldTools(part, v);
+}
+function updateToolRow(part, call) {
+  const v = chatState.views.get(part);
+  const row = v && v.rows.get(call.id);
+  if (!row) return;
+  row.classList.toggle('running', !call.done);
+  row.classList.toggle('ok', !!call.done && call.ok);
+  row.classList.toggle('bad', !!call.done && !call.ok);
+  row.querySelector('.ctl-arg').textContent = toolSummary(call.input);
+  row.querySelector('.ctl-in').textContent = call.input == null ? '' : typeof call.input === 'string' ? call.input : JSON.stringify(call.input, null, 2);
+  row.querySelector('.ctl-out').textContent = call.out || (call.done ? '' : 'Running…');
+  row.querySelector('.ctl-head').setAttribute('aria-label', `${prettyTool(call.name)}: ${call.done ? (call.ok ? 'done' : 'failed') : 'running'}`);
+}
+function foldTools(part, v) {
+  const rows = [...v.rows.values()];
+  const hidden = v.expanded ? 0 : Math.max(0, rows.length - CHAT_TOOLS_SHOWN);
+  rows.forEach((r, i) => { r.hidden = i < hidden; });
+  v.more.hidden = rows.length <= CHAT_TOOLS_SHOWN;
+  v.more.classList.toggle('open', v.expanded);
+  v.more.querySelector('span').textContent = v.expanded ? 'Show fewer steps' : `${hidden} earlier step${hidden === 1 ? '' : 's'}`;
+}
+function updateChatStatus(msg) {
+  const v = chatView(msg);
+  if (!v) return;
+  const last = msg.parts[msg.parts.length - 1];
+  const waiting = !msg.done && (!last || (last.kind === 'tools' && last.calls.every((c) => c.done)));
+  v.status.hidden = !waiting;
+  v.status.querySelector('.shimmer').textContent = !last ? 'Thinking' : 'Working';
+}
+function renderChatFoot(msg) {
+  const v = chatView(msg);
+  if (!v) return;
+  v.foot.replaceChildren();
+  if (msg.error) {
+    const e = document.createElement('div');
+    e.className = 'cm-error';
+    e.innerHTML = `${icon('info', 14)}<span></span>`;
+    e.querySelector('span').textContent = msg.error;
+    v.foot.appendChild(e);
+  }
+  if (msg.stopped) v.foot.insertAdjacentHTML('beforeend', '<div class="cm-note">Stopped</div>');
+  const text = msg.parts.filter((p) => p.kind === 'text').map((p) => p.text.trim()).join('\n\n');
+  if (text && msg.done) {
+    const bar = document.createElement('div');
+    bar.className = 'cm-actions';
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn small';
+    bar.appendChild(b);
+    copyButton(b, text);
+    if (msg.model) bar.insertAdjacentHTML('beforeend', `<span class="cm-model">${miniLogo(msg.provider)}<span></span></span>`);
+    if (msg.model) bar.querySelector('.cm-model span:last-child').textContent = msg.model;
+    v.foot.appendChild(bar);
+  }
+}
+
+/* --- sending and the event stream */
+function chatSystemPrompt() {
+  const kind = S.isSprite ? `${S.sx}×${S.sy} 2D sprite` : `${S.sx}×${S.sy}×${S.sz} 3D voxel model`;
+  return [
+    "You are the assistant in the Chat panel of OpenPixel, a pixel-art and voxel editor on the person's Mac.",
+    `The file open in the editor is "${activeTabName()}", a ${kind} with ${S.layers.length} layer${S.layers.length === 1 ? '' : 's'} and ${S.frames.length} frame${S.frames.length === 1 ? '' : 's'}.`,
+    'Work on it with the openpixel tools: your edits appear in the editor as you make them, and the person can undo each one.',
+    "Use the person's skills when one fits (you may read a skill's own files); don't run shell commands or change any other files.",
+    'Look before you change things (get_model_info, view_as_text, review_model), stay in this file unless asked for a new one, and review your work before you finish.',
+    'Reply briefly in plain language; use short Markdown lists when they help.',
+  ].join(' ');
+}
+function chatTranscript(messages) {
+  const turns = messages.slice(-8).map((m) => {
+    const text = m.role === 'user' ? m.text : m.parts.filter((p) => p.kind === 'text').map((p) => p.text).join('\n');
+    const clipped = text.length > 700 ? text.slice(0, 700) + '…' : text;
+    return clipped.trim() ? `${m.role === 'user' ? 'Person' : 'Agent'}: ${clipped.trim()}` : '';
+  }).filter(Boolean);
+  return turns.length ? `Earlier in this chat (with another agent):\n${turns.join('\n\n')}\n\nNow:\n` : '';
+}
+async function sendChat(raw) {
+  const text = String(raw || '').trim();
+  const t = chatState.thread, key = chatState.key;
+  if (!text || !t || chatState.live.has(t.id)) return;
+  const p = chatProvider();
+  if (!p) { toast('No agent to send to: connect one on the Agents page'); return; }
+  const model = chatModel(p), effort = chatEffort(p);
+  const resume = t.session && t.provider === p.id ? t.session : null;
+  // "/name rest": one of this agent's skills, then what to do with it.
+  const sm = text.match(/^\/(\S+)(?:\s+([\s\S]*))?$/);
+  const skills = sm ? await loadChatSkills(p) : [];
+  const skill = sm && skills.some((k) => k.name === sm[1]) ? sm[1] : null;
+  const args = skill ? (sm[2] || '').trim() : '';
+  const transcript = resume ? '' : chatTranscript(t.messages);
+  const prompt = transcript + (skill ? args : text);
+  const f = await chatFile(key);
+  if (!f.threads.includes(t)) f.threads.push(t);
+  f.current = t.id;
+  if (!t.messages.length) t.title = text.replace(/\s+/g, ' ').slice(0, 60);
+  if (!resume) t.session = null;
+  t.provider = p.id;
+  t.updated = Date.now();
+  const user = skill ? { role: 'user', text, skill, args } : { role: 'user', text };
+  const msg = { role: 'assistant', v: 2, parts: [], provider: p.id, model: `${model.label}${effort ? ` · ${EFFORT_LABELS[effort] || effort}` : ''}`, done: false, started: Date.now() };
+  t.messages.push(user, msg);
+  const live = { thread: t, msg, key, timer: 0 };
+  chatState.live.set(t.id, live);
+  if (chatState.thread === t) {
+    $('#chat-title').textContent = t.title;
+    chatState.stick = true;
+    appendChatMessage(user, true);
+    appendChatMessage(msg, true);
+    chatScrollGrow();
+    const input = $('#chat-input');
+    if (input.value.trim() === text) { input.value = ''; sizeChatInput(); }
+  }
+  live.timer = setInterval(() => tickChatStatus(live), 1000);
+  updateChatSend();
+  saveChatFile(key);
+  let r;
+  try {
+    r = await chatNative('send', { chat: t.id, provider: p.id, model: model.id, effort, prompt, resume, system: chatSystemPrompt(),
+      skill: skill || undefined, transcript: !!transcript });
+  } catch (e) { r = errorText(e); }
+  if (r !== true && chatState.live.get(t.id) === live) {
+    chatEvent({ chat: t.id, t: 'error', message: typeof r === 'string' ? r : `Couldn't start ${p.name}.` });
+    chatEvent({ chat: t.id, t: 'done', ok: false });
+  }
+}
+function tickChatStatus(live) {
+  const v = chatView(live.msg);
+  if (!v) return;
+  const s = Math.round((Date.now() - live.msg.started) / 1000);
+  v.status.querySelector('.cm-sec').textContent = s >= 3 ? `${s}s` : '';
+}
+function stopChat() {
+  const t = chatState.thread;
+  if (t && chatState.live.has(t.id)) chatNative('stop', { chat: t.id });
+}
+function chatPart(live, kind) {
+  const msg = live.msg;
+  const last = msg.parts[msg.parts.length - 1];
+  if (last && last.kind === kind) return last;
+  if (last) closeChatPart(last);
+  const part = kind === 'tools' ? { kind, calls: [] } : { kind, text: '' };
+  if (kind === 'think') part.start = Date.now();
+  msg.parts.push(part);
+  appendChatPart(msg, part, true);
+  return part;
+}
+function closeChatPart(part) {
+  const v = chatState.views.get(part);
+  if (part.kind === 'think' && part.ms == null) {
+    part.ms = Date.now() - part.start;
+    if (v && v.el.isConnected) { setThinkLabel(part, v); v.el.classList.remove('live', 'open'); v.el.querySelector('.ct-head').setAttribute('aria-expanded', 'false'); }
+  }
+  if (part.kind === 'text' && v) v.reveal.finish();
+}
+function chatEvent(e) {
+  if (e && e.t === 'providers') { refreshChatProviders(); return; } // an agent's sign-in finished
+  const live = e && chatState.live.get(e.chat);
+  if (!live) return;
+  const { thread, msg } = live;
+  switch (e.t) {
+    case 'session': thread.session = e.session; break;
+    case 'text': {
+      if (!e.d) break;
+      const part = chatPart(live, 'text');
+      part.text += e.d;
+      const v = chatState.views.get(part);
+      if (v && v.el.isConnected) v.reveal.push(e.d, e.whole);
+      break;
+    }
+    case 'think': {
+      if (!e.d) break;
+      const part = chatPart(live, 'think');
+      part.text += e.d;
+      const v = chatState.views.get(part);
+      if (v && v.el.isConnected) { v.text.textContent = part.text; v.box.scrollTop = v.box.scrollHeight; chatScrollGrow(); }
+      break;
+    }
+    case 'tool': {
+      const part = chatPart(live, 'tools');
+      if (part.calls.some((c) => c.id === e.id)) break;
+      const call = { id: e.id, name: e.name, input: null, done: false, ok: true, out: '' };
+      part.calls.push(call);
+      addToolRow(part, call, true);
+      break;
+    }
+    case 'tool_input': case 'tool_done': {
+      for (const part of msg.parts) {
+        const call = part.kind === 'tools' && part.calls.find((c) => c.id === e.id);
+        if (!call) continue;
+        if (e.t === 'tool_input') call.input = e.input;
+        else { call.done = true; call.ok = e.ok !== false; call.out = e.out || ''; }
+        updateToolRow(part, call);
+        break;
+      }
+      break;
+    }
+    case 'error': msg.error = msg.error ? `${msg.error}\n${e.message}` : e.message; break;
+    case 'done': {
+      const last = msg.parts[msg.parts.length - 1];
+      if (last) closeChatPart(last);
+      for (const part of msg.parts) if (part.kind === 'tools') for (const c of part.calls) if (!c.done) { c.done = true; c.ok = !e.stopped; updateToolRow(part, c); }
+      msg.done = true;
+      if (e.stopped) msg.stopped = true;
+      if (e.session) thread.session = e.session;
+      delete msg.started;
+      thread.updated = Date.now();
+      clearInterval(live.timer);
+      chatState.live.delete(thread.id);
+      renderChatFoot(msg);
+      updateChatSend();
+      saveChatFile(live.key);
+      const showing = leftSide.open && leftSide.pane === 'chat' && chatState.thread === thread && ui.view === 'editor';
+      if (!showing) $('#chat-dot').hidden = false;
+      break;
+    }
+    default: break;
+  }
+  updateChatStatus(msg);
+  chatScrollGrow();
+}
+
+/* --- the message box */
+function sizeChatInput() {
+  const ta = $('#chat-input');
+  ta.style.height = 'auto';
+  const sec = $('#chat-sec');
+  const max = Math.max(54, Math.min(240, Math.round(sec.clientHeight * 0.42)));
+  const h = Math.min(ta.scrollHeight, max);
+  ta.style.height = h + 'px';
+  ta.style.overflowY = ta.scrollHeight > max ? 'auto' : 'hidden';
+}
+function updateChatSend() {
+  const b = $('#chat-send'), t = chatState.thread;
+  const busy = !!(t && chatState.live.has(t.id));
+  const has = !!$('#chat-input').value.trim();
+  b.classList.toggle('busy', busy);
+  b.disabled = !busy && (!has || !chatProvider());
+  b.querySelector('.go').classList.toggle('out', busy);
+  b.querySelector('.stop').classList.toggle('out', !busy);
+  b.setAttribute('aria-label', busy ? 'Stop' : 'Send');
+  b.dataset.tip = busy ? 'Stop (Esc)' : 'Send (↩)';
+}
+function updateChatJump() {
+  const sc = $('#chat-scroll');
+  chatState.stick = sc.scrollHeight - sc.scrollTop - sc.clientHeight < 32;
+  $('#chat-jump').classList.toggle('on', !chatState.stick);
+}
+async function openChat() {
+  if (!chatState.opened) {
+    chatState.opened = true;
+    renderChatThread();
+    await loadChatProviders();
+    renderChatPickers();
+  } else refreshChatProviders(); // an agent connected (or signed in) since: it shows up without a restart
+  await syncChatFile();
+  if (!chatState.thread) showChatThread(newThread());
+  else if (!chatState.thread.messages.length) renderChatThread();
+  sizeChatInput();
+  if (lastInput === 'pointer' && !$('#chat-input').disabled) $('#chat-input').focus({ preventScroll: true });
+}
+/* --- skills: "/" in the message box lists the chosen agent's own skills (from its folders on this Mac). Picking one
+   writes "/name " at the start; sending "/name what to do" runs it (Claude Code natively, the others with the skill's
+   instructions in front). Typing filters the list; ↑↓ move, Return or Tab picks, Escape closes. */
+async function loadChatSkills(p = chatProvider()) {
+  if (!p) return [];
+  const c = chatState.skills.get(p.id);
+  if (c && c.list && Date.now() - c.at < 30000) return c.list;
+  if (c && c.loading) return c.loading;
+  const entry = { list: c && c.list, at: 0 };
+  entry.loading = chatNative('skills', { provider: p.id }).then((list) => {
+    entry.list = Array.isArray(list) ? list : []; entry.at = Date.now(); entry.loading = null; return entry.list;
+  }).catch(() => { entry.loading = null; return entry.list || []; });
+  chatState.skills.set(p.id, entry);
+  return entry.loading;
+}
+function skillQuery() {
+  const ta = $('#chat-input');
+  const m = ta.value.match(/^\/(\S*)$/);
+  return m && ta.selectionStart <= ta.value.length ? m[1] : null; // only while the first word is being typed
+}
+function rankSkills(list, q) {
+  q = q.toLowerCase();
+  if (!q) return list.slice(0, 80);
+  const scored = [];
+  for (const k of list) {
+    const n = k.name.toLowerCase(), short = n.split(':').pop();
+    const s = short.startsWith(q) ? 0 : n.startsWith(q) ? 1 : n.includes(q) ? 2 : (k.description || '').toLowerCase().includes(q) ? 3 : -1;
+    if (s >= 0) scored.push([s, k]);
+  }
+  return scored.sort((a, b) => a[0] - b[0] || a[1].name.localeCompare(b[1].name)).map((x) => x[1]).slice(0, 80);
+}
+async function updateSkillMenu() {
+  const q = skillQuery(), box = $('#chat-skills'), sm = chatState.skillMenu, p = chatProvider();
+  if (q == null || !p) { closeSkillMenu(); return; }
+  const wasOpen = sm.open;
+  sm.open = true;
+  box.hidden = false;
+  const cached = chatState.skills.get(p.id);
+  if (!cached || !cached.list) box.innerHTML = '<p class="sk-note">Loading skills…</p>';
+  const list = await loadChatSkills(p);
+  if (skillQuery() == null) return;
+  sm.items = rankSkills(list, skillQuery());
+  sm.index = Math.min(sm.index, Math.max(0, sm.items.length - 1));
+  box.innerHTML = '';
+  if (!sm.items.length) {
+    box.innerHTML = `<p class="sk-note">${list.length ? 'No skill matches' : `${escapeHtml(p.name)} has no skills on this Mac`}</p>`;
+  }
+  sm.items.forEach((k, i) => {
+    const d = document.createElement('div');
+    d.className = 'sk-item' + (i === sm.index ? ' kb' : '');
+    d.setAttribute('role', 'option');
+    d.setAttribute('aria-selected', String(i === sm.index));
+    d.innerHTML = '<span class="sk-name"><b>/</b><span></span></span><span class="sk-src"></span><span class="sk-desc"></span>';
+    d.querySelector('.sk-name span').textContent = k.name.split(':').pop(); // the plugin shows on the right
+    d.title = `/${k.name}`;
+    d.querySelector('.sk-src').textContent = k.source === 'Personal' ? (k.command ? 'Command' : '') : k.source;
+    d.querySelector('.sk-desc').textContent = k.description || '';
+    d.onmousedown = (e) => { e.preventDefault(); pickSkill(k); };
+    d.onmousemove = () => { if (sm.index !== i) { sm.index = i; markSkill(); } };
+    box.appendChild(d);
+  });
+  if (!wasOpen) popIn(box, '50% 100%', { duration: 150, scale: 0.98 });
+  markSkill();
+}
+function markSkill() {
+  const sm = chatState.skillMenu;
+  $$('#chat-skills .sk-item').forEach((d, i) => { d.classList.toggle('kb', i === sm.index); d.setAttribute('aria-selected', String(i === sm.index)); });
+  const cur = $$('#chat-skills .sk-item')[sm.index];
+  if (cur) cur.scrollIntoView({ block: 'nearest' });
+}
+function closeSkillMenu() {
+  chatState.skillMenu.open = false;
+  chatState.skillMenu.index = 0;
+  $('#chat-skills').hidden = true;
+}
+function pickSkill(k) {
+  const ta = $('#chat-input');
+  ta.value = `/${k.name} `;
+  ta.focus();
+  ta.setSelectionRange(ta.value.length, ta.value.length);
+  closeSkillMenu();
+  sizeChatInput(); updateChatSend();
+}
+function wireChat() {
+  $('#chat-slash').onclick = () => {
+    const ta = $('#chat-input');
+    if (chatState.skillMenu.open) { closeSkillMenu(); ta.focus(); return; }
+    if (!ta.value.startsWith('/')) ta.value = '/' + ta.value.replace(/^\s+/, '');
+    if (/\s/.test(ta.value)) ta.value = '/'; // a typed message gives way to picking a skill
+    ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+    sizeChatInput(); updateChatSend(); updateSkillMenu();
+  };
+  $('#chat-input').addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== $('#chat-input')) closeSkillMenu(); }, 120));
+  const el = $('#chat-model');
+  el.classList.add('dropdown');
+  el.innerHTML = `<button type="button" class="dd-btn" aria-haspopup="menu" disabled><span class="cm-logo"></span><span class="v">Agent</span>${icon('chevron-down', 14)}</button>`;
+  el.querySelector('.dd-btn').onclick = (e) => { e.stopPropagation(); openModelMenu(); };
+  $('#chat-history').onclick = (e) => { e.stopPropagation(); openHistoryMenu(); };
+  $('#chat-new').onclick = startNewChat;
+  const input = $('#chat-input');
+  input.addEventListener('input', () => { sizeChatInput(); updateChatSend(); updateSkillMenu(); });
+  input.addEventListener('keydown', (e) => {
+    e.stopPropagation(); // typing never reaches the editor's shortcuts
+    const sm = chatState.skillMenu;
+    if (sm.open && !e.isComposing) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (sm.items.length) { sm.index = (sm.index + (e.key === 'ArrowDown' ? 1 : -1) + sm.items.length) % sm.items.length; markSkill(); }
+        return;
+      }
+      if ((e.key === 'Enter' && !e.shiftKey) || e.key === 'Tab') {
+        if (sm.items[sm.index]) { e.preventDefault(); pickSkill(sm.items[sm.index]); return; }
+      }
+      if (e.key === 'Escape') { e.preventDefault(); closeSkillMenu(); return; }
+    }
+    if (e.key === 'Enter' && !e.shiftKey && !e.altKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); if (!$('#chat-send').classList.contains('busy')) sendChat(input.value); }
+    else if (e.key === 'Escape') { e.preventDefault(); if ($('#chat-send').classList.contains('busy')) stopChat(); else input.blur(); }
+  });
+  $('#chat-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if ($('#chat-send').classList.contains('busy')) stopChat(); else sendChat(input.value);
+  });
+  $('.composer-box').addEventListener('mousedown', (e) => { if (e.target === e.currentTarget) { e.preventDefault(); input.focus(); } });
+  const sc = $('#chat-scroll');
+  sc.addEventListener('scroll', updateChatJump, { passive: true });
+  new ResizeObserver(() => { chatScrollGrow(); updateChatJump(); }).observe($('#chat-log'));
+  new ResizeObserver(() => { if (leftSide.pane === 'chat') sizeChatInput(); }).observe($('#chat-sec'));
+  $('#chat-jump').onclick = () => {
+    chatState.stick = true;
+    sc.scrollTo({ top: sc.scrollHeight, behavior: reducedMotion.matches ? 'auto' : 'smooth' });
+  };
+}
+
+/* --- the page opened in a browser without the app (design previews): a scripted agent, never used inside OpenPixel */
+const chatMockState = { store: {}, timers: new Map() };
+function chatMock(action, x) {
+  if (action === 'providers') {
+    const efforts = ['low', 'medium', 'high', 'xhigh', 'max'];
+    return [
+      { id: 'claude-code', name: 'Claude', plan: 'Claude subscription', installed: true, ready: true, efforts, default_effort: 'medium',
+        models: [{ id: 'opus', label: 'Opus 5.5' }, { id: 'sonnet', label: 'Sonnet 5.5' }, { id: 'fable', label: 'Fable 5.2' }, { id: 'haiku', label: 'Haiku 5.5' }] },
+      { id: 'codex', name: 'Codex', plan: 'ChatGPT subscription', installed: true, ready: true, efforts: ['low', 'medium', 'high'], default_effort: 'medium',
+        default_model: 'gpt-5.6-sol', models: [{ id: 'gpt-6.2-sol', label: 'GPT-6.2-Sol', efforts: ['low', 'medium', 'high', 'xhigh', 'max', 'ultra'], default_effort: 'low' },
+          { id: 'gpt-5.6-sol', label: 'GPT-5.6-Sol', efforts: ['low', 'medium', 'high', 'xhigh', 'max', 'ultra'], default_effort: 'low' },
+          { id: 'gpt-5.6-luna', label: 'GPT-5.6-Luna', efforts: ['low', 'medium', 'high', 'xhigh', 'max'], default_effort: 'medium' }] },
+      { id: 'cursor', name: 'Cursor', plan: 'Cursor plan', installed: true, ready: false, needs_setup: true, efforts: [], models: [{ id: '', label: 'Auto' }] },
+    ];
+  }
+  if (action === 'history') return chatMockState.store[x.key] || null;
+  if (action === 'skills') return [
+    { name: 'emil-design-eng', description: "Emil Kowalski's design-engineering philosophy for UI polish and animation.", source: 'Personal', command: false },
+    { name: 'frontend-design:frontend-design', description: 'Distinctive, intentional visual design for new UI.', source: 'frontend-design', command: false },
+    { name: 'anthropic-skills:pdf', description: 'Read, create and edit PDF files.', source: 'anthropic-skills', command: false },
+    { name: 'code-review:code-review', description: 'Code review a pull request', source: 'code-review', command: true },
+  ];
+  if (action === 'login') return true;
+  if (action === 'saveHistory') { chatMockState.store[x.key] = JSON.parse(JSON.stringify(x.data)); return true; }
+  if (action === 'stop') { const s = chatMockState.timers.get(x.chat); if (s) s.stop(); return true; }
+  if (action !== 'send') return null;
+  const ev = [];
+  let at = 300;
+  const push = (ms, e) => { at += ms; ev.push([at, e]); };
+  push(0, { t: 'session', session: 'mock-session' });
+  for (const w of 'The person wants changes to the sprite. I should look at the file first, then block in the shape and review.'.split(' ')) push(45, { t: 'think', d: w + ' ' });
+  push(200, { t: 'tool', id: 't1', name: 'get_model_info' }); push(60, { t: 'tool_input', id: 't1', input: {} });
+  push(500, { t: 'tool_done', id: 't1', ok: true, out: '{ "size": [32, 32, 1], "layers": 1 }' });
+  push(150, { t: 'tool', id: 't2', name: 'paint_slice' }); push(60, { t: 'tool_input', id: 't2', input: { axis: 'z', index: 0, rows: new Array(20).fill('') } });
+  push(900, { t: 'tool_done', id: 't2', ok: true, out: 'Painted 212 cells.' });
+  push(150, { t: 'tool', id: 't3', name: 'review_model' }); push(60, { t: 'tool_input', id: 't3', input: { views: ['front'] } });
+  push(700, { t: 'tool_done', id: 't3', ok: true, out: 'Score 92. No open issues.' });
+  const reply = 'Done — I drew it on the **Layer 1** of this sprite:\n\n- A dark outline and three-tone wood ramp\n- A gold lock plate with a `#fbf236` highlight\n- Light from the top left, no pillow shading\n\nThe review scored it 92 with no open issues. Want an opening animation next?';
+  for (let i = 0; i < reply.length;) { const n = 3 + Math.floor(Math.random() * 9); push(30 + Math.random() * 40, { t: 'text', d: reply.slice(i, i + n) }); i += n; }
+  push(100, { t: 'done', ok: true, session: 'mock-session' });
+  const ids = ev.map(([ms, e]) => setTimeout(() => chatEvent({ chat: x.chat, ...e }), ms));
+  chatMockState.timers.set(x.chat, { stop() { ids.forEach(clearTimeout); chatEvent({ chat: x.chat, t: 'done', ok: false, stopped: true }); } });
+  return true;
+}
+
 window.PC = {
   updateAvailable: (version) => showUpdate(version),
   refresh: (toolName) => {
@@ -3312,6 +4283,8 @@ window.PC = {
     return ui.view === 'home';
   },
   showAgentHelp,
+  chatEvent: (e) => chatEvent(e),
+  chatMoved: (from, to) => chatMoved(from, to),
   command(cmd) {
     if (cmd === 'shortcuts') { showShortcuts(); return; }
     if (S.home) return; // editor commands do nothing over the home screen

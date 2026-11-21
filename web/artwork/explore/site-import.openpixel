@@ -1,0 +1,143 @@
+{
+  "cels" : [
+    {
+      "data" : "7ZHbCoAgDEBltvbQ\/\/9vOq3dNARfO0KEZycJU9qHJuvROFnih70MxCP1tgxa\/fcySAHTEwZI94SnA8n22eH76D\/7cD50AdCeyL\/w9Ihtv4j6AtWj7XkAXlTPn+CwPo4C+6RoHpb8tdd3nM8Be+ej+13iBg==",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    },
+    {
+      "data" : "7ZHbCoAgDEBltvbQ\/\/9vOq3dNARfO0KEZycJU9qHJuvROFnih70MxCP1tgxa\/fcySAHTEwZI94SnA8n22eH76D\/7cD50AdCeyL\/w9Ihtv4j6AtWj7XkAXlTPn+CwPo4C+6RoHpb8tdd3nM8Be+ej+13iBg==",
+      "encoding" : "zlib-base64",
+      "frame" : 1,
+      "layer" : 0
+    },
+    {
+      "data" : "3ZFLDoAgDAVJ8dmF97+vUD6FFtyYuHBIiGEYSCSE9\/BmNI3NUL\/sdYO\/clzWjbP+U8+OqWc4eOwZpwE899Fge+8fe3c\/VUFUZtuX9STyB2VvetlAHcgvaD0gYZ6OhHjYvtB97+UI9Vf1YWDVb3zF+OiY33z1vp9wAw==",
+      "encoding" : "zlib-base64",
+      "frame" : 2,
+      "layer" : 0
+    },
+    {
+      "data" : "3ZFBDoAgDARJsfbg\/\/8rFYTSLV5MPDgkhHR30gMpvUcW5455cUYe+qOAK+14FOf4S1+AyRcGxPrCu0Nn1s8O72P+6MN+agFRvb1f5yXQB2nu\/KtAHfRLQa+tEPuVnqNf8+POjc+Bz7HfML42MjB\/evC\/\/+AE",
+      "encoding" : "zlib-base64",
+      "frame" : 3,
+      "layer" : 0
+    },
+    {
+      "data" : "5ZJLDsAgCAUNlrLo\/e9bFT\/I025cdkiM4TFhoSGcI5tqMW9q5Et\/DOBK2x6Dc2x9ASZfGBDrC98OltmPDu9j\/unDfqoBkZ7e134K8oVy7vwyQB3000A+rsTaV3qOvubPmV9xfgTKEzZ\/WdZf1eZb\/YsX",
+      "encoding" : "zlib-base64",
+      "frame" : 4,
+      "layer" : 0
+    },
+    {
+      "data" : "5ZFBDsAgCAQJajn0\/\/8tFqsI2DTx2FljjMvEgwD70CJPnRcZfeiPAV4OAO0XB2mfymEoNPvJYH3fv\/rufWwFouzWl3su6gFrb\/x7ADve54G6ZSb2hd57X\/pzz28YPzkmP\/rfyY+i\/DBf\/V9zAQ==",
+      "encoding" : "zlib-base64",
+      "frame" : 5,
+      "layer" : 0
+    },
+    {
+      "data" : "5ZFLCsAgDAVD1Lro\/e9b01jNz1Jw2Xkg4suQhQD71EWeOi8y+wAQA1CLYy4gvxyGUrWfDNb3\/avv9mMvEPm0Pr+3gi5IvfHvARx4vw3QkRuxz4ze+9yfe37H+MmhfAj+V\/oQoPZHEX6Yr\/6vuQA=",
+      "encoding" : "zlib-base64",
+      "frame" : 6,
+      "layer" : 0
+    },
+    {
+      "data" : "5ZFBDsAgCAQJajn0\/\/8tFqsI2DTx2FljjMvEgwD70CJPnRcZfeiPAV4OAO0XB2mfymEoNPvJYH3fv\/rufWwFouzWl3su6gFrb\/x7ADve54G6ZSb2hd57X\/pzz28YPzkmP\/rfyY+i\/DBf\/V9zAQ==",
+      "encoding" : "zlib-base64",
+      "frame" : 7,
+      "layer" : 0
+    },
+    {
+      "data" : "5ZFBDsAgCAQJajn0\/\/8tFqsI2DTx2FljjMvEgwD70CJPnRcZfeiPAV4OAO0XB2mfymEoNPvJYH3fv\/rufWwFouzWl3su6gFrb\/x7ADve54G6ZSb2hd57X\/pzz28YPzkmP\/rfyY+i\/DBf\/V9zAQ==",
+      "encoding" : "zlib-base64",
+      "frame" : 8,
+      "layer" : 0
+    },
+    {
+      "data" : "5ZFBDsAgCAQJajn0\/\/8tFqsI2DTx2FljjMvEgwD70CJPnRcZfeiPAV4OAO0XB2mfymEoNPvJYH3fv\/rufWwFouzWl3su6gFrb\/x7ADve54G6ZSb2hd57X\/pzz28YPzkmP\/rfyY+i\/DBf\/V9zAQ==",
+      "encoding" : "zlib-base64",
+      "frame" : 9,
+      "layer" : 0
+    },
+    {
+      "data" : "5ZFLDsAgCAUJlrLw\/vctFusHsGnisvOMMT4mLgTYhxd5alqk96HfB2Q5AEafHDz6TKeBePaTwfq+f\/Xd+1gLRN2tr\/dSlAOW3vj3ADa8LwNlO4TYV1rvfe3znl8xfnJMfvS\/kx9l8MN89X\/NBQ==",
+      "encoding" : "zlib-base64",
+      "frame" : 10,
+      "layer" : 0
+    },
+    {
+      "data" : "5ZFLDsAgCAUJlrLw\/vctFusHsGnisvOMMT4mLgTYhxd5alqk96HfB2Q5AEafHDz6TKeBePaTwfq+f\/Xd+1gLRN2tr\/dSlAOW3vj3ADa8LwNlO4TYV1rvfe3znl8xfnJMfvS\/kx9l8MN89X\/NBQ==",
+      "encoding" : "zlib-base64",
+      "frame" : 11,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    },
+    {
+      "duration" : 280
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "feature-import",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#4a4a51",
+    "#a3a3ab",
+    "#ff4a1c",
+    "#73737b",
+    "#2c2c31",
+    "#141416",
+    "#8f2508",
+    "#d9d9df",
+    "#d6390c",
+    "#ff9a78"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

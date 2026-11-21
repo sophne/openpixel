@@ -1,0 +1,107 @@
+{
+  "cels" : [
+    {
+      "data" : "zZJLDoAwCAVZEFG4\/319aUjrB6gLE53tDE1DIHoPcTK9OGlQzz+gnhZRkP9PnTiA5kYcdB0HBx0G7ldNPQ\/PN49xA91fg797BCcf7Wf4eH8bPCfPIzAEuW6BFXp6H9P7otl9fsEO",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    },
+    {
+      "data" : "3ZJLCoAwDAWzECPN\/e\/ra\/sQofm4EARnOxNa2oi8h5JI7yQM8vkH5NOqDcT3a8QPut5AFOjUPfD8pYNAhz7mEavnOP0awJvZfz2Cm3ffD0HyviNIdPm\/1X6U+yXVfn7BCQ==",
+      "encoding" : "zlib-base64",
+      "frame" : 1,
+      "layer" : 0
+    },
+    {
+      "data" : "3ZIxDgAgCAMdiCTl\/\/8Voyutg3Gw6x0hSlu7F9+pcN8pBT5\/EjHsABMSMyGxGRE8cQrl87B4JWhuxhY4Iv7mCPF\/lM8F7D7yvqofsl+yn+8zAA==",
+      "encoding" : "zlib-base64",
+      "frame" : 2,
+      "layer" : 0
+    },
+    {
+      "data" : "Y2CgHmCHAlzSbFCAUwF+\/dQABAxn52bBq2BUflQenzyh9DX4AAA=",
+      "encoding" : "zlib-base64",
+      "frame" : 3,
+      "layer" : 0
+    },
+    {
+      "data" : "3ZIxDgAgCAMdiCTl\/\/8Voyutg3Gw6x0hSlu7F9+pcN8pBT5\/EjHsABMSMyGxGRE8cQrl87B4JWhuxhY4Iv7mCPF\/lM8F7D7yvqofsl+yn+8zAA==",
+      "encoding" : "zlib-base64",
+      "frame" : 4,
+      "layer" : 0
+    },
+    {
+      "data" : "3ZJLCoAwDAWzECPN\/e\/ra\/sQofm4EARnOxNa2oi8h5JI7yQM8vkH5NOqDcT3a8QPut5AFOjUPfD8pYNAhz7mEavnOP0awJvZfz2Cm3ffD0HyviNIdPm\/1X6U+yXVfn7BCQ==",
+      "encoding" : "zlib-base64",
+      "frame" : 5,
+      "layer" : 0
+    },
+    {
+      "data" : "zZJBDoAwCAQ5EDH4\/\/+KStqqC3gw0bnO0DQEovcQJ9KTEwb5\/APyaRE14v+pgwPTvIODpnEwaBi4nzX03D3fvI0vRvPX4O\/egpNH++ke72\/zHDzvQayPINHlfZT3RdV9fsEK",
+      "encoding" : "zlib-base64",
+      "frame" : 6,
+      "layer" : 0
+    },
+    {
+      "data" : "zZJBDoAwCAQ5EDH4\/\/+KStqqC3gw0bnO0DQEovcQJ9KTEwb5\/APyaRE14v+pgwPTvIODpnEwaBi4nzX03D3fvI0vRvPX4O\/egpNH++ke72\/zHDzvQayPINHlfZT3RdV9fsEK",
+      "encoding" : "zlib-base64",
+      "frame" : 7,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 120
+    },
+    {
+      "duration" : 120
+    },
+    {
+      "duration" : 120
+    },
+    {
+      "duration" : 120
+    },
+    {
+      "duration" : 120
+    },
+    {
+      "duration" : 120
+    },
+    {
+      "duration" : 120
+    },
+    {
+      "duration" : 120
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "feature-coin",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#4a4a51",
+    "#a3a3ab",
+    "#ff4a1c",
+    "#73737b",
+    "#2c2c31",
+    "#141416",
+    "#8f2508",
+    "#d9d9df",
+    "#d6390c",
+    "#ff9a78"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

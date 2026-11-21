@@ -1,0 +1,44 @@
+{
+  "cels" : [
+    {
+      "data" : "1dJLDoAgDEVRg4WGdv\/7tdQiCkXjwIFMTDx38Pwsy6uDeK8hzQvREFKaFKrqXmFqPhRVQ4ypFg5HPWOAJz2KzuU20Lm4eFEAakG8DlhXqG6X7gFQmJnEitPwBnZXU+9YneBTz+YsOx3nMs\/c+cJ4OM5+ADT3VItnz\/fO7vYWsL+9BZPt\/z0b",
+      "encoding" : "zlib-base64",
+      "frame" : 0,
+      "layer" : 0
+    }
+  ],
+  "format" : "openpixel",
+  "frames" : [
+    {
+      "duration" : 280
+    }
+  ],
+  "layers" : [
+    {
+      "locked" : false,
+      "name" : "Layer 1",
+      "visible" : true
+    }
+  ],
+  "name" : "feature-crystal",
+  "palette" : [
+    "transparent",
+    "#000000",
+    "#4a4a51",
+    "#a3a3ab",
+    "#ff4a1c",
+    "#73737b",
+    "#2c2c31",
+    "#141416",
+    "#8f2508",
+    "#d9d9df",
+    "#d6390c",
+    "#ff9a78"
+  ],
+  "size" : [
+    32,
+    32,
+    1
+  ],
+  "version" : 1
+}

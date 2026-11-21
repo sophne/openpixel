@@ -4,13 +4,14 @@
     python3 app/tools/make-empty-states.py            # uses app/OpenPixel.app (the newest local build)
     OPENPIXEL=/path/to/OpenPixel python3 app/tools/make-empty-states.py
 
-Four 32×32 animated sprites, each written as a 1× sprite sheet (frames side by side) to app/web/empty/<name>.png and
+Five 32×32 animated sprites, each written as a 1× sprite sheet (frames side by side) to app/web/empty/<name>.png and
 as its .openpixel source to app/assets/empty/<name>.openpixel:
 
   search   nothing found: the website's search buddy (a slime sweeping a magnifying glass), in grays and orange
   archive  empty archive: the box's lid lifts, an orange spark drifts up out of the empty box
   folder   empty folder: the front opens and an orange speck floats out of the empty folder
   files    no files yet: a blank canvas where an orange pixel cursor draws a tiny heart, then starts over
+  agents   no agent connected: an orange plug on its cable slides into a socket, sparks, and the socket light glows
 
 Every frame lasts the same time (the page animates the sheet in equal steps); slow parts repeat frames.
 """
@@ -271,7 +272,49 @@ def files():
     return frames
 
 
-ART = {"search": search, "archive": archive, "folder": folder, "files": files}
+# ---------------------------------------------------------------- agents: a plug slides into its socket, the light comes on
+def agents_frame(bx, lit, spark):
+    g = blank()
+    # the cable, coming in from the left edge (from off the picture) to the plug
+    for x in range(0, bx):
+        g[16][x] = "3"
+        g[17][x] = "2"
+    # the plug (the agent) in orange: body, a lit top, a dark grip line, two metal prongs
+    rect(g, bx, 12, bx + 6, 21, "c")
+    rect(g, bx, 12, bx + 6, 12, "d")
+    rect(g, bx, 13, bx, 21, "d")
+    rect(g, bx + 6, 13, bx + 6, 21, "b")
+    rect(g, bx, 21, bx + 6, 21, "a")
+    rect(g, bx + 2, 15, bx + 2, 18, "b")
+    rect(g, bx + 4, 15, bx + 4, 18, "b")
+    for py in (14, 19):
+        rect(g, bx + 7, py, bx + 9, py, "5")
+    # the socket (OpenPixel), drawn over the prongs once they are in
+    rect(g, 19, 9, 27, 24, "3")
+    rect(g, 19, 9, 27, 9, "4")
+    rect(g, 19, 10, 19, 24, "4")
+    rect(g, 27, 10, 27, 24, "2")
+    rect(g, 19, 24, 27, 24, "2")
+    for py in (14, 19):
+        g[py][20] = g[py][21] = "1"
+    # its light: dark until the plug is in, then orange with a soft glow
+    g[11][24] = g[11][25] = "c" if lit else "1"
+    if lit:
+        g[10][24] = g[10][25] = "d"
+    if spark:
+        for x, y, ch in ((18, 11, "d"), (17, 10, "c"), (18, 22, "d"), (17, 23, "c"), (16, 16, "d")):
+            if g[y][x] == ".":
+                g[y][x] = ch
+    return rows(outline(g))
+
+
+def agents():
+    # far away, slides in, sparks on contact, glows, then eases back out
+    path = [(3, 0, 0), (3, 0, 0), (5, 0, 0), (8, 0, 0), (10, 0, 0), (12, 0, 1), (12, 1, 0), (12, 1, 0), (12, 1, 0), (12, 1, 0), (9, 0, 0), (5, 0, 0)]
+    return [agents_frame(bx, lit, spark) for bx, lit, spark in path]
+
+
+ART = {"search": search, "archive": archive, "folder": folder, "files": files, "agents": agents}
 
 
 def main():

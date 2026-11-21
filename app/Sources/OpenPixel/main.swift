@@ -48,10 +48,14 @@ if arguments.contains("--selftest") {
 }
 
 let app = NSApplication.shared
-let flagValues = Set([argValue("--screenshot"), argValue("--ui-test")].compactMap { $0 })
+let flagValues = Set([argValue("--screenshot"), argValue("--ui-test"), argValue("--record"), argValue("--demo")].compactMap { $0 })
 let delegate = AppDelegate(screenshotPath: argValue("--screenshot"),
                            openPath: arguments.dropFirst().first { !$0.hasPrefix("-") && !flagValues.contains($0) },
                            uiTestFolder: argValue("--ui-test"))
+// Demo recordings for the website (not in --help): --record <folder> saves the window's frames there while
+// --demo <config.json> drives the page (web/demo.js).
+delegate.recordFolder = argValue("--record")
+delegate.demoConfig = argValue("--demo").flatMap { try? String(contentsOfFile: $0, encoding: .utf8) }
 app.delegate = delegate
 app.setActivationPolicy(.regular)
 if argValue("--screenshot") != nil { FileHandle.standardError.write("[screenshot] starting\n".data(using: .utf8)!) }
