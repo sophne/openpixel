@@ -75,7 +75,10 @@ function mcp(command, list, env) {
 /** The one line an MCP server may write for one request: the answer to `initialize`, from this version. */
 function assertInitialized(r, what) {
   const lines = r.stdout.split('\n').filter((l) => l !== '');
-  assert.equal(lines.length, 1, `${what}: exactly one line on standard output, got ${lines.length}:\n${r.stdout.slice(0, 600)}\nstderr: ${r.stderr.slice(-600)}`);
+  // Each line on its own and quoted (a stray \r or a blank shows), long ones cut in the middle: the answer to
+  // `initialize` alone is longer than any fixed slice, so an extra line after it would not show otherwise.
+  const shown = lines.map((l, i) => `  line ${i + 1} (${l.length} characters): ${JSON.stringify(l.length > 240 ? `${l.slice(0, 160)} … ${l.slice(-60)}` : l)}`);
+  assert.equal(lines.length, 1, `${what}: exactly one line on standard output, got ${lines.length}:\n${shown.join('\n')}\nstderr: ${r.stderr.slice(-600)}`);
   const answer = JSON.parse(lines[0]);
   assert.equal(answer.id, 1);
   assert.equal(answer.result?.serverInfo?.name, 'openpixel', lines[0].slice(0, 300));
