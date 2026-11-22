@@ -378,7 +378,8 @@ pub mod image_files {
     }
 
     fn read_png(data: &[u8]) -> Option<Picture> {
-        let mut decoder = png::Decoder::new(data);
+        // png 0.18 reads from a seekable reader, not from a plain slice.
+        let mut decoder = png::Decoder::new(std::io::Cursor::new(data));
         decoder.set_transformations(png::Transformations::EXPAND | png::Transformations::STRIP_16);
         let mut reader = decoder.read_info().ok()?;
         let (w, h) = (reader.info().width as i64, reader.info().height as i64);
@@ -387,7 +388,8 @@ pub mod image_files {
             return None;
         }
         let mut pic = Picture::clear(w, h).ok()?;
-        let mut buf = vec![0u8; reader.output_buffer_size()];
+        // None when the size would not fit in memory's address range: not a picture this can read.
+        let mut buf = vec![0u8; reader.output_buffer_size()?];
         let info = reader.next_frame(&mut buf).ok()?;
         let buf = &buf[..info.buffer_size()];
         let n = pic.width * pic.height;
