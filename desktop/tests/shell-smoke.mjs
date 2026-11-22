@@ -71,7 +71,7 @@ console.log('\nold page (app/web), pretending to be a Mac');
     assert.equal(await page.evaluate(() => document.querySelector('#stars-count').textContent), '1.2K');
     assert.ok((await app.evaluate(({ app }) => app.getPath('userData'))).includes('openpixel-test-profile-'), 'the test runs on its own profile');
     const p = await post({ kind: 'fake', do: 'platform' });
-    assert.deepEqual(p.ui, ['alert', 'askToSave', 'copyText', 'openExternal', 'openPanel', 'page', 'reveal', 'savePanel', 'screenshot', 'setTitle', 'showUpdateDialog']);
+    assert.deepEqual(p.ui, ['alert', 'askToSave', 'copyText', 'openExternal', 'openPanel', 'page', 'reveal', 'savePanel', 'screenshot', 'setTitle', 'showUpdateDialog', 'trash']);
     assert.ok(Math.abs(p.now - Date.now() / 1000) < 5, 'now() is seconds since 1970');
   });
   await check('a failed tool rejects with a plain Error carrying the host\'s text', async () => {

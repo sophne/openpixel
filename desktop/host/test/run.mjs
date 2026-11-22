@@ -23,7 +23,7 @@ function find(dir, out = []) {
 
 if (!flags.includes('--no-typecheck')) {
   const tsc = path.join(desktop, 'node_modules', 'typescript', 'bin', 'tsc');
-  for (const project of ['host/tsconfig.json', 'host/node/tsconfig.json']) {
+  for (const project of ['host/tsconfig.json', 'host/node/tsconfig.json', 'host/node/chat/tsconfig.json']) {
     const r = spawnSync(process.execPath, [tsc, '--noEmit', '-p', project], { cwd: desktop, stdio: 'inherit' });
     if (r.status !== 0) process.exit(r.status ?? 1);
   }

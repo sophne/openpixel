@@ -55,5 +55,5 @@ export async function createAppHost(o: AppHostOptions): Promise<Host> {
   // The engine's bytes sit next to this bundle (scripts/build-electron.mjs puts them there). Node gets them
   // handed over; the address a browser would fetch them from is never used.
   seam.core.initSync({ module: readFileSync(path.join(__dirname, 'core.wasm')) });
-  return seam.createHost({ ...options, core: seam.core });
+  return seam.createHost({ ...options, core: seam.core, chat: seam.createChatRunner });
 }

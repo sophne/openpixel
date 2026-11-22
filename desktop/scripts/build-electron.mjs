@@ -17,6 +17,7 @@ export function hostPieces() {
   const pieces = {
     host: path.join(desktop, 'host', 'index.ts'),
     node: path.join(desktop, 'host', 'node', 'platform-node.ts'),
+    chat: path.join(desktop, 'host', 'node', 'chat', 'index.ts'),
     // wasm-bindgen names its files after the crate; whatever the name, there is one glue script and one .wasm.
     glue: path.join(pkg, files.find((f) => f.endsWith('.js') && !f.endsWith('_bg.js')) ?? 'the .js from `npm run build:core`'),
     wasm: path.join(pkg, files.find((f) => f.endsWith('.wasm')) ?? 'the .wasm from `npm run build:core`'),
@@ -43,7 +44,7 @@ const seam = {
         loader: 'ts',
         resolveDir: desktop,
         watchFiles: [p.wasm],
-        contents: `export { createHost } from ${from(p.host)};\nexport { nodePlatform } from ${from(p.node)};\n`
+        contents: `export { createHost } from ${from(p.host)};\nexport { nodePlatform } from ${from(p.node)};\nexport { createChatRunner } from ${from(p.chat)};\n`
           + `import * as core from ${from(p.glue)};\nexport { core };\nexport const missing = undefined;\n`,
       };
     });

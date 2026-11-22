@@ -15,5 +15,7 @@
     "erasableSyntaxOnly": true,
     "types": ["node"]
   },
-  "include": ["**/*.ts", "../test/**/*.ts"]
+  "include": ["**/*.ts", "../test/**/*.ts"],
+  // Agent Chat has its own project (host/node/chat/tsconfig.json): its files import each other with .ts endings.
+  "exclude": ["chat/**"]
 }

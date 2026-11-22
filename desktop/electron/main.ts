@@ -213,6 +213,7 @@ function createWindow(): void {
   // A new document has none of the CSS added to the last one; the tab bar moves the window from the start.
   wc.on('did-start-navigation', (details) => { if (details.isMainFrame && !details.isSameDocument) titlebarCSS = undefined; });
   wc.on('dom-ready', () => setTitlebar(true));
+  wc.on('did-finish-load', () => { if (args.uitest && !args.legacy) runUITestInPage(wc); });
   wc.on('render-process-gone', (_e, details) => {
     console.error(`OpenPixel: the page stopped (${details.reason})`);
     if (args.uitest) finishUITest({ error: `the page stopped (${details.reason})` });
@@ -227,6 +228,23 @@ function createWindow(): void {
 
   trace(`loading ${devURL ?? pageFile}`);
   if (devURL) wc.loadURL(devURL); else wc.loadFile(pageFile);
+}
+
+/* The old page loads its own UI test (app/web/uitest.js, a classic script that reaches for app.js's globals). The
+   React page runs that same file unchanged: the page publishes those names on window.__OP (src/testing/compat.ts)
+   and the script runs with them in scope. The page's content policy forbids it compiling text itself, so the shell
+   hands the script over. Development and tests only: it needs the repository's app/web folder. */
+async function runUITestInPage(wc: Electron.WebContents): Promise<void> {
+  const file = path.join(desktopFolder, '..', 'app', 'web', 'uitest.js');
+  try {
+    const text = readFileSync(file, 'utf8');
+    // The page's modules have run once it has published its names and the host's calls can reach it.
+    for (let i = 0; i < 200 && !(await wc.executeJavaScript('!!(window.__OP && window.PC)')); i++) await new Promise((r) => setTimeout(r, 50));
+    await wc.executeJavaScript(`with (window.__OP) {\n${text}\n}\n;undefined`);
+    trace('UI test started in the page');
+  } catch (e) {
+    finishUITest({ error: `the UI test could not be started: ${(e as Error).message}` });
+  }
 }
 
 /* The tab bar is the window's title bar: its empty parts move the window. The Mac app looked at every click
@@ -383,6 +401,12 @@ const ui: PlatformUI = {
     if (headless || !file || !existsSync(file)) return false;
     shell.showItemInFolder(file);
     return true;
+  },
+  // "Delete permanently" in the library: the file goes to the system's Trash, as in the Mac app. Checks delete it
+  // outright, so they leave nothing behind in the person's Trash.
+  async trash(file) {
+    if (headless) rmSync(file, { force: true, recursive: true });
+    else await shell.trashItem(file);
   },
   screenshot: () => capture(),
   setTitle(title, file, edited) {
