@@ -23,6 +23,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { appEnv, desktop, needDisplay, until } from './lib.mjs';
 
+/** Text for use inside a regular expression, every character that means something there taken literally. */
+const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 if (process.platform !== 'linux') { console.log('The update check against a local feed runs on Linux (AppImage) only.'); process.exit(0); }
 needDisplay();
 
@@ -125,7 +128,7 @@ console.log(`OpenPixel ${version} (AppImage) against a local feed offering ${NEW
     await check('at launch the app reads the feed by itself and the Update button appears', async () => {
       await run.page.waitForSelector('#tab-update', { state: 'visible', timeout: 30_000 });
       const says = await run.page.locator('#tab-update').evaluate((b) => b.getAttribute('title') || b.getAttribute('aria-label') || b.textContent);
-      assert.match(says ?? '', new RegExp(`Update to OpenPixel ${NEWER.replace(/\./g, '\\.')}`));
+      assert.match(says ?? '', new RegExp(`Update to OpenPixel ${escapeRegExp(NEWER)}`));
       const asked = feed.requests.filter((r) => r.path === '/latest-linux.yml');
       assert.equal(asked.length, 1, 'one request for the feed');
       assert.equal(asked[0].agent, `OpenPixel/${version}`, 'it says which version asks');
@@ -138,7 +141,7 @@ console.log(`OpenPixel ${version} (AppImage) against a local feed offering ${NEW
       const first = await until(async () => (await run.dialogs())[0], 'the update dialog', 30_000);
       assert.equal(first.message, `OpenPixel ${NEWER} is available`);
       assert.deepEqual(first.buttons, ['Download Update', 'Later']);
-      assert.match(first.detail, new RegExp(`You have ${version.replace(/\./g, '\\.')}\\.[\\s\\S]*asks before it restarts[\\s\\S]*releases/tag/v${NEWER.replace(/\./g, '\\.')}`));
+      assert.match(first.detail, new RegExp(`You have ${escapeRegExp(version)}\\.[\\s\\S]*asks before it restarts[\\s\\S]*releases/tag/v${escapeRegExp(NEWER)}`));
       assert.equal(first.answered, 'Download Update');
     });
 

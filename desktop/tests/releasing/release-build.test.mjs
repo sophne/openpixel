@@ -183,7 +183,7 @@ test('the program packed for agents must be for that system and processor', (t) 
   assert.deepEqual(programKind(pe(0x8664)), { system: 'win32', arch: 'x64' });
   assert.deepEqual(programKind(pe(0xaa64)), { system: 'win32', arch: 'arm64' });
   assert.equal(programKind(file('text', Buffer.from('#!/bin/sh\necho hi\n'))), null);
-  assert.equal(programKind(file('tiny', Buffer.from('MZ')).replace(/$/, '')), null);
+  assert.equal(programKind(file('tiny', Buffer.from('MZ'))), null);
 
   assert.equal(wrongProgram(macho(0x0100000c), 'darwin', 'arm64'), undefined);
   // The mix-up a universal build invites: the same program staged for both halves.
