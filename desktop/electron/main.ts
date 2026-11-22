@@ -339,6 +339,11 @@ ipcMain.handle('openpixel:post', async (e, msg) => {
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
 /** The window's page as a PNG, as the person sees it. */
+async function quickCapture(): Promise<Buffer> {
+  if (!win || win.isDestroyed()) throw new Error('window closed');
+  return (await win.webContents.capturePage()).toPNG();
+}
+
 async function capture(): Promise<Buffer> {
   if (!win || win.isDestroyed()) throw new Error('window closed');
   const wc = win.webContents;
@@ -592,7 +597,9 @@ async function recordFrame(): Promise<void> {
   record.busy = true;
   const n = record.frames.length;
   record.frames.push({ n, ms: Date.now() - record.start });
-  try { await writeFile(path.join(args.record, `f${String(n).padStart(6, '0')}.png`), await capture()); }
+  // A recording takes many pictures a second: the compositor's last frame, which is quick. (capture() asks the page
+  // for a fresh one, which is right for single pictures but too slow to keep up with a frame rate.)
+  try { await writeFile(path.join(args.record, `f${String(n).padStart(6, '0')}.png`), await quickCapture()); }
   catch { /* the window is closing */ }
   record.busy = false;
 }
