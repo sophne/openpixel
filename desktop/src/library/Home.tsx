@@ -1,6 +1,6 @@
-/* The home screen, #home (index.html 229–272): Recents, All folders, Archive, Agents; what renderHome(),
-   renderTitle(), fileCard(), folderCard(), fileList() and wireItem() built and wireHome() attached (app.js 1933–2161,
-   2387–2454). The logic is in ./home. The Agents list (#home-agents-wrap) is <AgentsList/> from library/Agents. */
+/* The home screen, #home: Recents, All folders, Archive, Agents: the title, the file and folder cards, the list
+   layout and their handlers. The logic is in ./homePage. The Agents list (#home-agents-wrap) is <AgentsList/> from
+   library/Agents. */
 import { Fragment, memo, useLayoutEffect, useRef, type HTMLAttributes, type ReactElement, type ReactNode, type RefObject } from 'react';
 import { Dropdown, inlineRename, RenameText } from '../kit';
 import { $, useEvent } from '../lib/dom';

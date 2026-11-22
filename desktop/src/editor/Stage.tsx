@@ -1,4 +1,4 @@
-/* The canvas area (index.html 122–130; app.js 2919–2937 buildTools): the WebGL 3D view, the 2D slice canvas, the axes
+/* The canvas area: the WebGL 3D view, the 2D slice canvas, the axes
    gizmo, the two chips and the drawing toolbar. The canvases are drawn by gl.ts and slice.ts, which get them here. */
 import type { ReactElement } from 'react';
 import { pressableProps, Toast } from '../kit';

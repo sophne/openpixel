@@ -1,4 +1,4 @@
-//! Checks an agent (or person) can use to review a model before refining it (port of Analysis.swift).
+//! Checks an agent (or person) can use to review a model before refining it.
 use std::collections::BTreeSet;
 
 use serde_json::json;

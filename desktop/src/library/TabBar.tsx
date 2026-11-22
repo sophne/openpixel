@@ -1,4 +1,4 @@
-/* The tab bar, #tabbar (index.html 11–19; what renderTabs() built, app.js 1678–1747). The logic is in ./tabs. */
+/* The tab bar, #tabbar. The logic is in ./tabs. */
 import { useLayoutEffect, type DragEvent, type ReactElement } from 'react';
 import { actions } from '../app/actions';
 import { hideTip, inlineRename, RenameText } from '../kit';

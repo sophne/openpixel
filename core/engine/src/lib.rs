@@ -1,10 +1,15 @@
 //! OpenPixel's engine: the document, its undo history, every tool, rendering, file formats and reviews.
-//! A port of the Mac app's `app/Sources/OpenPixelCore` (see docs/desktop-architecture.md).
+//! See docs/desktop-architecture.md for where it sits in the app.
+//!
+//! It began as a port of OpenPixel's first engine, written in Swift for a Mac-only app ("the Swift app" in
+//! comments here; it is in the repository's history). Files that app saved and pictures it exported are still
+//! read and compared against (tests/golden.rs), so where a comment says something is done "as the Swift app
+//! did", that is a promise about bytes on disk or text agents read, not a habit.
 //!
 //! The engine never touches the operating system itself: files, the clock and the network go through
 //! [`HostIo`], so the same code runs natively and as WebAssembly.
-// The arithmetic is kept in the shape of the Swift source it was ported from, so the two can be read side
-// by side (and so NaN and negative values behave the same).
+// The arithmetic is kept in the shape of the Swift source it was ported from, so that NaN and negative values
+// behave as they did there (the golden files depend on it).
 #![allow(clippy::manual_clamp, clippy::manual_range_contains, clippy::manual_rem_euclid, clippy::manual_is_multiple_of, clippy::needless_range_loop)]
 
 use std::fmt;
@@ -35,7 +40,7 @@ pub use model::{Document, Frame, Grid, Layer, Rgba};
 pub type Json = serde_json::Value;
 pub type JsonMap = serde_json::Map<String, Json>;
 
-/// The app's version (app/VERSION, Cargo's workspace version).
+/// The app's version: Cargo's workspace version, which a release stamps from its tag.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// What a tool call returns: a JSON object, plus PNG pictures for review tools.
@@ -82,7 +87,7 @@ pub type ChangeFn = Box<dyn FnMut(&str) + Send>;
 #[cfg(target_arch = "wasm32")]
 pub type ChangeFn = Box<dyn FnMut(&str)>;
 
-/// A decimal for JSON, written the way the Mac app's JSON writer did: whole values without a fraction
+/// A decimal for JSON, written the way the Swift app's JSON writer did: whole values without a fraction
 /// ("45", not "45.0").
 pub fn num(v: f64) -> Json {
     if v.is_finite() && v.fract() == 0.0 && v.abs() < 9.0e15 {

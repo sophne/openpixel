@@ -1,12 +1,12 @@
-//! `openpixel --selftest`: the MCP program's built-in checks, without a window. Port of the MCP and HTTP-path
-//! parts of SelfTest.swift (the engine's own checks live with the engine).
+//! `openpixel --selftest`: the MCP program's built-in checks, without a window: the MCP protocol and the HTTP
+//! mode's path rules (the engine's own checks live with the engine).
 use crate::mcp::{self, McpServer};
 use crate::mcp_http;
 use openpixel_core::{tools, Engine, Json, JsonMap, PcError};
 use serde_json::json;
 use std::path::{Path, PathBuf};
 
-/// Collects results; each one is printed as it is made, like the Mac app's self-test.
+/// Collects results; each one is printed as it is made.
 pub struct Checks {
     pub failed: Vec<String>,
     pub count: usize,

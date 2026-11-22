@@ -1,5 +1,5 @@
-/* Empty states (app.js 1909–1921): a small animated pixel-art scene (drawn with OpenPixel by
-   app/tools/make-empty-states.py, in the accent orange and grays) over the message. The picture is decoration; the
+/* Empty states: a small animated pixel-art scene (drawn with OpenPixel by
+   desktop/tools/make-empty-states.py, in the accent orange and grays) over the message. The picture is decoration; the
    text says what is going on. */
 import type { ReactElement } from 'react';
 

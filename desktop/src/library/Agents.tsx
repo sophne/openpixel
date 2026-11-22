@@ -1,6 +1,5 @@
 /* The Agents page's list, #home-agents-wrap, and the two agent dialogs, #agent-dialog and #agent-info
-   (index.html 265–270, 368–389; what agentRow(), setAgentStatus() and showAgentInfo() built, app.js 2811–2899).
-   The logic is in ./agents. */
+   (a row per agent with its status, and one agent's set-up guide). The logic is in ./agentsPage. */
 import { Fragment, memo, useLayoutEffect, useRef, type ReactElement } from 'react';
 import { CopyButton, Modal } from '../kit';
 import { nativeAction } from '../lib/host';
@@ -10,7 +9,7 @@ import type { AgentInfo } from '../state/agents';
 import { AGENT_PROMPT_CAVEAT, agentInfo, agentRows, showAgentInfo, type AgentRowData, type AgentStatus } from './agentsPage';
 import { homeTop } from './homePage';
 
-// Logos: @lobehub/icons-static-svg (MIT), see app/web/agents/ATTRIBUTION.txt. Single-colour ones are drawn as masks.
+// Logos: @lobehub/icons-static-svg (MIT), see lib/AGENT-LOGOS-ATTRIBUTION.txt. Single-colour ones follow the text colour.
 function AgentLogo({ a, big = false, id }: { a: AgentInfo; big?: boolean; id?: string }): ReactElement {
   return <TrustedSvg as="div" className={`alogo${big ? ' big' : ''}${a.mono ? ' mono' : ''}`} title={a.name} id={id} html={agentLogoSvg(a.logo, icon('plug', 18))} />;
 }

@@ -1,6 +1,6 @@
 /* History: each file's chats, kept next to the app's other data (<data folder>/Chat/History).
    One JSON file per document, named after a hash of its path, so chats survive restarts and follow the file.
-   Ported from the history part of Chat.swift; the files are the ones the Mac app wrote. */
+   The files are the ones the Swift app wrote too, so chats from before are read back. */
 import { createHash } from 'node:crypto';
 import * as nodePath from 'node:path';
 import type { PlatformFS } from '../../platform';

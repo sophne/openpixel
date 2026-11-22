@@ -1,4 +1,4 @@
-/* What the library gives the other areas (app/actions.ts) and the old UI test (testing/compat.ts). Imported by the
+/* What the library gives the other areas (app/actions.ts) and the UI test (testing/compat.ts). Imported by the
    library's components, so the slots and names are filled before the first render. */
 import { registerActions } from '../app/actions';
 import { nativeAction } from '../lib/host';
@@ -11,7 +11,7 @@ import {
 import { closeNewPage, openNewFileDialog, openNewPage, renderNewRecents } from './newFile';
 import { applyTabs, closeTab, renderTabs, reportTitlebar, showStars, showUpdate, switchTab, titlebarSentNow } from './tabs';
 
-/** Once at startup: what wireHome() asked the app for, and line 3300 (is there an update?). */
+/** Once at startup: is there an update, and how many stars has the repository? */
 function initLibrary(): void {
   nativeAction('version').then((v) => { if (v && v.available) showUpdate(v.available); }).catch(() => {});
   nativeAction('githubStars').then(showStars).catch(() => {});
@@ -23,11 +23,11 @@ registerActions({
 });
 
 registerCompat({
-  // what app/web/uitest.js uses
+  // what tests/uitest.js uses
   homePrefs, setHomeLayout, setHomeSort, loadHome, loadAgents, closeNewPage, fileById, folderById, latestInFolder,
   get filterMenu() { return menus.filter; },
   get titlebarSent() { return titlebarSentNow(); },
-  // the rest of the old page's library functions, for the console and for scripts written like the UI test
+  // the rest of the library's functions, for the console and for scripts written like the UI test
   get sortMenu() { return menus.sort; },
   get dragging() { return draggingNow(); },
   agentsState, applyTabs, renderTabs, reportTitlebar, switchTab, closeTab, showHome, hideHome, renderHome, openFolder, openCardMenu, openMoveMenu,

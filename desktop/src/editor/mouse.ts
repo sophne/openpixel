@@ -1,4 +1,4 @@
-/* The pointer in both views: drawing, orbiting and panning, the wheel and the trackpad (app.js 1329–1573).
+/* The pointer in both views: drawing, orbiting and panning, the wheel and the trackpad.
    The listeners are the old ones, on the canvases and on window; initMouse() adds them once the canvases exist. */
 import { toast } from '../kit';
 import { S } from '../state/ui';

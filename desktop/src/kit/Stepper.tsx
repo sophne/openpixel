@@ -1,7 +1,7 @@
-/* Number steppers (app.js 1634–1652 and the names wire() gave − and +): a field between − and +. The buttons step
+/* Number steppers: a field between − and +. The buttons step
    by `stepSize` and clamp, ↑ and ↓ do the same from the field, Return leaves the field, and leaving it clamps what
    was typed.
-   Same markup as the old page:
+   The markup (style.css and the UI test know it):
      <div class="stepper" data-min data-max [data-step-size] [title]>
        <button type="button" data-step="-1" aria-label="Decrease">−</button><input …><button type="button" data-step="1" aria-label="Increase">+</button>
      </div>

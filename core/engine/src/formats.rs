@@ -1,4 +1,4 @@
-//! File formats (port of Formats.swift): the native .openpixel file, PNG and GIF pictures,
+//! File formats: the native .openpixel file, PNG and GIF pictures,
 //! MagicaVoxel .vox, Wavefront .obj, SVG and HTML.
 use std::collections::{BTreeMap, HashSet};
 use std::io::{Read, Write};
@@ -13,10 +13,10 @@ use crate::palettes;
 use crate::render::Picture;
 use crate::{Json, PcError};
 
-// MARK: - JSON as the Mac app wrote it
+// MARK: - JSON as the Swift app wrote it
 
 /// JSON text laid out like Foundation's JSONSerialization with `.prettyPrinted` and `.sortedKeys`:
-/// two-space indents, `"key" : value`, keys in order, "/" written as "\/". The Mac app wrote
+/// two-space indents, `"key" : value`, keys in order, "/" written as "\/". The Swift app wrote
 /// .openpixel and style files this way, so files stay the same text whichever app saves them.
 pub fn pretty_sorted_json(v: &Json) -> String {
     let mut out = String::new();
@@ -91,7 +91,7 @@ fn write_json_string(s: &str, out: &mut String) {
 ///  "cels":[{"layer":0,"frame":0,"encoding":"zlib-base64","data":".."}]}
 /// palette[0] is the empty slot. Cell order: x fastest, then z (back→front), then y (bottom→top).
 ///
-/// "zlib-base64" is what the Mac app called it; the bytes are a raw DEFLATE stream (no zlib header),
+/// "zlib-base64" is what the Swift app called it; the bytes are a raw DEFLATE stream (no zlib header),
 /// which is what Foundation's `.zlib` compression writes.
 pub mod native_file {
     use super::*;
@@ -149,7 +149,7 @@ pub mod native_file {
         Document::check_size(size[0], size[1], size[2])?;
         let name = o.get("name").and_then(Json::as_str).unwrap_or("Untitled");
         let mut doc = Document::new(name, size[0], size[1], size[2], None);
-        // A palette is only read when every entry is text (as the Mac app's cast required).
+        // A palette is only read when every entry is text (as the Swift app's cast required).
         if let Some(pal) = o.get("palette").and_then(Json::as_array) {
             if let Some(texts) = pal.iter().map(Json::as_str).collect::<Option<Vec<&str>>>() {
                 doc.palette = vec![Rgba::new(0, 0, 0, 0)];
@@ -224,7 +224,7 @@ pub mod image_files {
     /// The largest picture that is read (4096 × 4096 pixels).
     const MAX_DECODED_PIXELS: i64 = 1 << 24;
 
-    /// PNG bytes of a picture (empty if it can't be encoded, as in the Mac app).
+    /// PNG bytes of a picture (empty if it can't be encoded, as in the Swift app).
     pub fn png(p: &Picture) -> Vec<u8> {
         let mut out = Vec::new();
         let (Ok(w), Ok(h)) = (u32::try_from(p.width), u32::try_from(p.height)) else { return Vec::new() };
@@ -242,7 +242,7 @@ pub mod image_files {
 
     /// Animated GIF; delays in milliseconds. Transparent pixels stay transparent.
     ///
-    /// The colours are reduced the way the Mac app's GIF writer (ImageIO) did, so the pictures come out the
+    /// The colours are reduced the way the Swift app's GIF writer (ImageIO) did, so the pictures come out the
     /// same: colours whose red, green and blue share their top five bits become one colour, the average of the
     /// pixels that have them over all frames; the darkest group becomes pure black and the lightest pure white.
     /// Flat sprite colours pass through unchanged; the shades of a 3D render merge slightly.
@@ -344,7 +344,7 @@ pub mod image_files {
 
     /// Reads a PNG or GIF (its first frame) into RGBA pixels.
     ///
-    /// The Mac app read any picture macOS understands through CoreGraphics, which stored half-transparent
+    /// The Swift app read any picture macOS understands through CoreGraphics, which stored half-transparent
     /// pixels premultiplied; the same rounding is applied here so colours come out alike.
     pub fn read(io: &dyn HostIo, path: &str) -> Result<Picture, PcError> {
         let fail = || PcError::invalid(format!("could not read image {path}"));

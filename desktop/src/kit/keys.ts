@@ -1,4 +1,4 @@
-/* Escape, everywhere (the Escape branch of the page's key handler, app.js 3228–3236): it closes the open dialog,
+/* Escape, everywhere (the Escape branch of the page's key handler): it closes the open dialog,
    menu and colour picker; with none of them open it leaves the New file page or the home screen.
    The rest of that handler (tools, frames, zoom…) is the editor's, and starts after this branch. */
 import { actions } from '../app/actions';

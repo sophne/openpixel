@@ -1,6 +1,6 @@
-/* The editor's startup, key handling and frame loop (app.js 3124–3284 minus what became handlers in JSX and what the
-   kit took, and 4345–4356), and what the editor owes the other areas and the old test scripts: its `actions` slots and
-   its compat names (README.md). Editor.tsx imports this module, so both are registered before the page starts. */
+/* The editor's startup, key handling and frame loop, and what the editor owes the other areas and the test scripts:
+   its `actions` slots and its compat names (README.md). Editor.tsx imports this module, so both are registered before
+   the page starts. */
 import { actions, registerActions } from '../app/actions';
 import { $, $$ } from '../lib/dom';
 import { post, SCREENSHOT } from '../lib/host';
@@ -12,7 +12,7 @@ import { addColor, closePicker, editColor, openPicker, pk } from './colour';
 import { showReview, showShortcuts, stopPlay, togglePlay } from './controls';
 import { cam, chipsView, dirty, live, sliceSize, sv, target, tool, TOOL_LIST, ZOOMS } from './core';
 import { isRefreshing, refresh, setActive, setFg } from './engine';
-import { draw3d, gl, glCanvas, initGL, resetCamera, viewProj } from './gl';
+import { draw3d, gl, glCanvas, initGL, pick, resetCamera, viewProj } from './gl';
 import { buildTools, setAxis, setBrush, setFramesOpen, setMode, setPixelGrid, setTool, stepSlice } from './modes';
 import { initMouse } from './mouse';
 import { initResizers, setSize, SIZES } from './resizers';
@@ -82,13 +82,13 @@ function loop(): void {
   requestAnimationFrame(loop);
 }
 
-/** Once, after the first render: what app.js ran at the end of the file for the editor, in the old order. */
+/** Once, after the first render. The order matters: the canvases and tools first, then what reads them. */
 function initEditor(): void {
   initGL();
   initMouse();
   buildTools();
   initResizers();
-  // wire(): what was not a handler on an element
+  // what is not a handler on an element
   setPixelGrid(S.pixelGrid);
   chipsView.pscale = S.previewScale; changed(chipsView);
   applyLeftSide();
@@ -114,9 +114,10 @@ registerActions({
   renameFile, docMenuAction,
 });
 
-// The names app/web/uitest.js and demo.js use of the editor (testing/compat.ts lists them).
+// The names tests/uitest.js and tests/demo.js use of the editor (testing/compat.ts lists them).
 registerCompat({
-  ZOOMS, SIZES, sv, cam, pk, viewProj, resetCamera, setMode, setFg, setSize, setFramesOpen, setPixelGrid, setLeftOpen, applyLeftSide,
+  // `pick3d(x, y)`: what a click at that point of the 3D canvas lands on (gl.ts `pick`; the test has a `pick` of its own).
+  ZOOMS, SIZES, sv, cam, pk, viewProj, pick3d: pick, resetCamera, setMode, setFg, setSize, setFramesOpen, setPixelGrid, setLeftOpen, applyLeftSide,
   closePicker, refresh, fitSlice,
   // Not used by the two scripts, but part of the same surface (handy from the console, and for a script that grows):
   setTool, setAxis, setBrush, stepSlice, zoomStep, togglePlay, stopPlay, showReview, showShortcuts, openPicker, addColor, editColor,
@@ -134,6 +135,6 @@ registerCompat({
   get gl() { return gl; },
   get sliceCanvas() { return sliceCanvas; },
   get sctx() { return sctx; },
-  // Not in the old page: the slots between the areas, so a test can stand in for an area that is not there.
+  // The slots between the areas, so a test can stand in for an area that is not there.
   actions,
 });

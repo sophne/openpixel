@@ -148,7 +148,7 @@ test('Windows: an argument written for cmd.exe cannot break out of its quotes', 
   }
 });
 
-// MARK: - values, as the Swift read and wrote them
+// MARK: - values, as the Swift app read and wrote them
 
 test('values: casts, trimming, counting characters, and JSON as Foundation wrote it', () => {
   const o = JSON.parse('{"a":null,"b":"x","n":3,"f":1.5,"t":true,"one":1,"list":[{"k":1},"s"],"constructor":"mine"}') as Record<string, unknown>;

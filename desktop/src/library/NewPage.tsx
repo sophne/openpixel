@@ -1,6 +1,4 @@
-/* The New file page, #newpage, and the new-file dialog, #newfile-dialog (index.html 274–287, 314–337; what
-   renderNewRecents() built and wireNewPage() and wireNewFileDialog() attached, app.js 2497–2610). The logic is in
-   ./newpage. */
+/* The New file page, #newpage, and the new-file dialog, #newfile-dialog. The logic is in ./newFile. */
 import { memo, useRef, type ReactElement, type RefObject } from 'react';
 import { Dropdown, Modal, Stepper } from '../kit';
 import { $, useEvent } from '../lib/dom';

@@ -1,4 +1,4 @@
-/* Icons (app.js 175–218): Lucide's, plus OpenPixel's own for files, drawn on Lucide's 24-unit grid so they sit with
+/* Icons: Lucide's, plus OpenPixel's own for files, drawn on Lucide's 24-unit grid so they sit with
    the others. Everything here comes from tables bundled with the app; nothing from a file or an agent ends up in
    markup through these.
    file-2d: the app icon at icon size: a rounded square, a thin pixel grid and one filled pixel (the accent colour,

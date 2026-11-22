@@ -1,13 +1,20 @@
 # OpenPixel
 
-A native Mac editor for pixel art: flat 2D sprites and 3D voxel models that render to crisp sprites. It has a
-built-in [MCP](https://modelcontextprotocol.io) server, so AI agents can draw, review and refine art with you.
-Agent edits appear live in the open window and can be undone.
+An editor for pixel art, for macOS, Windows and Linux: flat 2D sprites and 3D voxel models that render to crisp
+sprites. It has a built-in [MCP](https://modelcontextprotocol.io) server, so AI agents can draw, review and refine
+art with you. Agent edits appear live in the open window and can be undone.
 
-**[Download for Mac](https://github.com/sophne/openpixel/releases/latest/download/OpenPixel.dmg)** — macOS 13 or later,
-Apple silicon and Intel. OpenPixel updates itself.
+| System | Download | Needs |
+|---|---|---|
+| macOS | **[OpenPixel.dmg](https://github.com/sophne/openpixel/releases/latest/download/OpenPixel.dmg)** | macOS 12 or later, Apple silicon or Intel |
+| Windows | **[OpenPixel-Setup.exe](https://github.com/sophne/openpixel/releases/latest/download/OpenPixel-Setup.exe)** | Windows 10 or later, 64-bit; installs for your user, no administrator rights |
+| Linux | **[OpenPixel.AppImage](https://github.com/sophne/openpixel/releases/latest/download/OpenPixel.AppImage)** or **[openpixel.deb](https://github.com/sophne/openpixel/releases/latest/download/openpixel.deb)** | 64-bit (x64) Linux with glibc |
+
+All of them are also on [openpixel.dev/downloads](https://openpixel.dev/downloads). OpenPixel tells you when a new
+version is out and installs it itself where the system lets it (Windows, the AppImage, and macOS once releases are
+signed with a Developer ID); otherwise its Update button takes you to the download page.
 Until releases are notarized by Apple, macOS asks you to confirm the first launch: open the app once, then
-**System Settings → Privacy & Security → Open Anyway**.
+**System Settings → Privacy & Security → Open Anyway**. Each release's notes say how it was signed.
 
 ![The OpenPixel editor](web/public/editor.png)
 
@@ -24,34 +31,37 @@ Until releases are notarized by Apple, macOS asks you to confirm the first launc
 
 ## Connect an agent
 
+Agents start the `openpixel` program that comes inside the app, with `--mcp`. The **Agents page in the app shows the
+exact command for your computer** and a guide for each agent; these are the usual places:
+
 ```sh
-claude mcp add --scope user openpixel -- /Applications/OpenPixel.app/Contents/MacOS/OpenPixel --mcp
+# macOS
+claude mcp add --scope user openpixel -- /Applications/OpenPixel.app/Contents/Resources/core/openpixel --mcp
+# Linux (AppImage and .deb: the app keeps a copy of the program here)
+claude mcp add --scope user openpixel -- ~/.local/share/OpenPixel/bin/openpixel --mcp
 ```
 
-Other agents use the same command (`OpenPixel --mcp`) in their MCP settings. `OpenPixel --mcp-http 8765` serves MCP
-over HTTP on this Mac only, for ChatGPT through a tunnel; agents connected that way can only open and save files in
-`~/Documents/OpenPixel`.
+```bat
+:: Windows
+claude mcp add --scope user openpixel -- "%LOCALAPPDATA%\Programs\OpenPixel\resources\core\openpixel.exe" --mcp
+```
+
+Other agents take the same command (`openpixel --mcp`) in their MCP settings. The command older set-ups use,
+`/Applications/OpenPixel.app/Contents/MacOS/OpenPixel --mcp`, keeps working. `openpixel --mcp-http 8765` serves MCP
+over HTTP on this computer only, for ChatGPT through a tunnel; agents connected that way can only open and save files
+in the `OpenPixel` folder of your Documents.
 
 ## Repository
 
 | Folder | What it is |
 |---|---|
-| [`app/`](app) | The Mac app: Swift package (`Sources/`), the editor UI it shows in a web view (`app/web/`), build and release scripts |
-| [`core/`](core) | The core in Rust: document model, undo, every tool, rendering voxels to sprites, file formats. Builds natively (the MCP program agents start) and to WebAssembly with wasm-bindgen (one package for the desktop app and, later, a browser) |
-| [`desktop/`](desktop) | The cross-platform app for macOS, Windows and Linux: Electron shell, the editor in React + Vite, the app's logic in TypeScript on top of the WebAssembly core. See [how it fits together](docs/desktop-architecture.md) |
+| [`core/`](core) | The core in Rust: document model, undo, every tool, rendering voxels to sprites, file formats, reviews. Builds natively (the `openpixel` program agents start) and to WebAssembly with wasm-bindgen (one package for the app and for a browser) |
+| [`desktop/`](desktop) | The app: Electron shell (`electron/`), the editor page in React + Vite (`src/`), the app's logic in TypeScript on top of the WebAssembly core (`host/`), its tests (`tests/`). See [how it fits together](docs/desktop-architecture.md) |
 | [`web/`](web) | The website (Next.js), deployed with Docker |
+| [`docs/`](docs) | How the app fits together, and records of past work |
 | [`.github/`](.github) | CI, CodeQL, release workflow, templates |
 
-Build the app (needs macOS 13+ and the Xcode command line tools):
-
-```sh
-cd app
-make            # OpenPixel.app
-make test       # engine, MCP and file-parsing checks
-make ui-test    # clicks through the editor and checks the layout
-```
-
-Build the cross-platform app (needs Node 22, Rust with the `wasm32-unknown-unknown` target, and
+Build and run the app (needs Node 22, Rust with the `wasm32-unknown-unknown` target, and
 `cargo install wasm-bindgen-cli --version 0.2.100`):
 
 ```sh
@@ -60,11 +70,14 @@ npm install
 npm run build:core && npm run build:mcp   # the core as WebAssembly, and the MCP program
 npm run dev                               # the app, rebuilding as you edit
 npm test                                  # the app logic's checks
-npm run test:ui                           # the Mac app's own UI test on the old page and the React page, with pictures compared
+npm run test:shell                        # the Electron shell: window, menus, messages
+npm run test:ui                           # the app clicks through itself: every tool, page and dialog, with pictures
+npm run pack                              # the app as a folder, unsigned (release/)
 ```
 
-`cd core && cargo test` checks the core: the engine's self-test, golden files against what the Mac app exported, and
-one session run natively and through WebAssembly with every answer compared.
+`cd core && cargo test` checks the core: the engine's self-test, golden files (every model in `web/artwork` exported
+and compared with the pictures in `web/public`), the MCP program, and one session run natively and through
+WebAssembly with every answer compared.
 
 Run the website: `cd web && npm install && npm run dev`.
 
@@ -75,10 +88,16 @@ in [SECURITY.md](SECURITY.md). How releases work: [RELEASING.md](RELEASING.md).
 
 ## Credits
 
-- Icons: [Lucide](https://lucide.dev) (ISC), `app/web/LUCIDE-LICENSE.txt`
-- Agent logos: [LobeHub icons](https://github.com/lobehub/lobe-icons) (MIT), `app/web/agents/ATTRIBUTION.txt`. The logos
-  are trademarks of their owners and only identify compatible apps.
-- Updates: [Sparkle](https://sparkle-project.org) (MIT)
+- Built with [Electron](https://www.electronjs.org) (MIT), [React](https://react.dev) (MIT) and
+  [Rust](https://www.rust-lang.org); the libraries it uses are listed in `desktop/package.json` and the
+  `Cargo.toml` files under `core/`.
+- Icons: [Lucide](https://lucide.dev) (ISC), `desktop/src/lib/LUCIDE-LICENSE.txt`
+- Agent logos: [LobeHub icons](https://github.com/lobehub/lobe-icons) (MIT),
+  `desktop/src/lib/AGENT-LOGOS-ATTRIBUTION.txt`. The logos are trademarks of their owners and only identify
+  compatible apps.
 - Palettes: DawnBringer 16/32 (Richard Fhager), PICO-8 (Lexaloffle), Endesga 32 (Endesga)
+
+OpenPixel began as a Mac-only app written in Swift; that app was replaced by this one and is in the repository's
+history.
 
 OpenPixel is released under the [MIT licence](LICENSE).

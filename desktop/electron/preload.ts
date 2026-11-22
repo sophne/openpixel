@@ -1,8 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-/* The only door between the page and the app (docs/desktop-architecture.md §1). The page gets `window.openpixel`
-   and, so the old page in app/web runs unchanged, the names the Mac app gave it: `window.webkit.messageHandlers.pc`
-   and the OPENPIXEL_* flags. Nothing else of Electron or Node reaches the page. */
+/* The only door between the page and the app (docs/desktop-architecture.md §1): the page gets `window.openpixel`
+   and nothing else of Electron or Node. */
 
 interface Hello {
   platform: 'darwin' | 'win32' | 'linux';
@@ -21,11 +20,6 @@ async function post(msg: unknown): Promise<unknown> {
 }
 
 contextBridge.exposeInMainWorld('openpixel', { post, platform: hello.platform, flags: hello.flags });
-contextBridge.exposeInMainWorld('webkit', { messageHandlers: { pc: { postMessage: post } } });
-contextBridge.exposeInMainWorld('OPENPIXEL_START', hello.flags.start);
-if (hello.flags.uitest) contextBridge.exposeInMainWorld('OPENPIXEL_UITEST', hello.flags.uitest);
-if (hello.flags.screenshot) contextBridge.exposeInMainWorld('OPENPIXEL_SCREENSHOT', true);
-if (hello.flags.demo !== undefined) contextBridge.exposeInMainWorld('OPENPIXEL_DEMO', hello.flags.demo);
 
 // The classes go on <html> the moment it exists, before any style applies, so nothing is drawn without them.
 const mark = (): boolean => {

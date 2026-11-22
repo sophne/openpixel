@@ -1,4 +1,4 @@
-//! Built-in palettes (port of Palettes.swift). Index 0 is the "empty" slot, so palette colours start at index 1.
+//! Built-in palettes. Index 0 is the "empty" slot, so palette colours start at index 1.
 //! These are well-known community palettes (credited in README); the colour values are plain data.
 use crate::model::Rgba;
 

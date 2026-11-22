@@ -1,4 +1,4 @@
-//! Pixel-art craft for agents (port of Craft.swift): the style guide they read before drawing, hue-shifted
+//! Pixel-art craft for agents: the style guide they read before drawing, hue-shifted
 //! colour ramps, checks for the classic mistakes (doubled line corners, stray pixels, pillow shading, too
 //! many or near-identical colours) and the extra review pictures (pixel grid, values, silhouette, real size).
 use std::collections::{BTreeMap, BTreeSet, HashSet};

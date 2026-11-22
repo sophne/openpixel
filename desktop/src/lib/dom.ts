@@ -1,4 +1,4 @@
-/* The old page's DOM helpers. $ and $$ search the whole document, as before (ids are unique on the page). */
+/* DOM helpers. $ and $$ search the whole document (ids are unique on the page). */
 import { useEffect, useRef } from 'react';
 
 /** document.querySelector. Typed as found, like the old code assumed; it is still null when nothing matches. */
@@ -17,7 +17,7 @@ export const stopKeys = (e: { stopPropagation(): void }): void => e.stopPropagat
 
 type Target = Window | Document | Element | MediaQueryList | null | undefined;
 /** addEventListener for the life of a component, always calling the newest handler: for window and document
- *  listeners, and for native events React does not offer (an input's real `change`, i.e. `.onchange` in app.js).
+ *  listeners, and for native events React does not offer (an input's real `change`, which React's onChange is not).
  *  `target` is window, document, an element or a ref to one. */
 export function useEvent<E extends Event = Event>(
   target: Target | { current: Target },

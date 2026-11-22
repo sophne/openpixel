@@ -1,10 +1,28 @@
 'use strict';
-/* OpenPixel UI test. Runs only when the app is started with `--ui-test <folder>`: it clicks through the
-   editor like a person would, resizes every panel and the window, checks that nothing spills out or gets
-   cut off, saves pictures of the checkpoints and writes report.json into that folder. */
+/* OpenPixel UI test. Runs only when the app is started with `--ui-test <folder>` (`npm run test:ui`): it clicks
+   through the editor like a person would, resizes every panel and the window, checks that nothing spills out or
+   gets cut off, saves pictures of the checkpoints and writes report.json into that folder.
+   The shell runs this file inside the page with the page's own names in scope (S, ui, $, call, setMode, …: see
+   desktop/src/testing/compat.ts), so it reads and calls them as if they were its globals. */
 (function () {
-  const CFG = window.OPENPIXEL_UITEST;
+  const CFG = window.openpixel && window.openpixel.flags.uitest;
   if (!CFG) return;
+  /* The system the page is shown for: 'darwin', 'win32' or 'linux' (the runner can ask for another one than the
+     machine's). Wording that differs between them (key names, "Show in Finder") is checked against this. */
+  const PLATFORM = window.openpixel.platform;
+  const MAC = PLATFORM === 'darwin';
+  /** A shortcut written the Mac's way ('⇧⌘S') as the key caps this system shows: the menu bar binds ⌘ shortcuts to
+      Ctrl on Windows and Linux, where keys are named and modifiers come in the order Ctrl, Alt, Shift. */
+  function capsOf(shortcut) {
+    const mods = [...shortcut].filter((c) => '⌘⇧⌥'.includes(c)), key = [...shortcut].filter((c) => !'⌘⇧⌥'.includes(c)).join('');
+    if (MAC) return [...mods, key];
+    const names = { '⌘': 'Ctrl', '⌥': 'Alt', '⇧': 'Shift', '⌫': 'Backspace', '↩': 'Enter' };
+    return [...['⌘', '⌥', '⇧'].filter((m) => mods.includes(m)).map((m) => names[m]), names[key] || key];
+  }
+  /** Words and key names that belong to another system than the one the page is shown for. (A guide may still say
+      "Ctrl+C" on a Mac: that is the key that stops a program in its Terminal.) */
+  const FOREIGN = MAC ? /Explorer|Recycle Bin|file manager|(your|this) computer|in a terminal/ : /[⌘⇧⌥⌃⌫]|\bMac\b|Finder|in Terminal\b|Application Support|\.app\//;
+  const FOREIGN_KEYS = MAC ? /\b(Ctrl|Alt|Shift|Backspace|Enter)\b/ : /[⌘⇧⌥⌃⌫↩]/;
   // Snapshots capture the page alone, without the window's glass behind it; a dark stand-in keeps them readable.
   document.documentElement.style.background = '#2b2b2e';
   const results = [];
@@ -191,16 +209,25 @@
         'the website, GitHub and X icons share one colour');
       assert(appIcon && appIcon.querySelector('.px') && getComputedStyle(appIcon.querySelector('.px')).fill !== 'none', 'the website link shows the app icon (the 2D file mark, its pixel in the accent)');
       assert(side.bottom - links[0].getBoundingClientRect().bottom < 20, 'GitHub and X should sit at the bottom of the sidebar');
-      // The tab bar is the title bar: room for the window buttons on the left, Home first.
+      // The tab bar is the title bar, Home first. On macOS the window's buttons (close, minimise, zoom) sit at its
+      // left end and Home comes after them; on Windows and Linux they sit at its right end (drawn by the window
+      // over the bar) and Home starts the bar.
       const bar = $('#tabbar').getBoundingClientRect(), homeBtn = $('#tab-home').getBoundingClientRect();
-      assert(bar.top === 0 && homeBtn.left >= 72, `Home should sit after the window buttons (at ${homeBtn.left})`);
+      assert(bar.top === 0, `the tab bar should be the top of the window (at ${bar.top})`);
+      if (MAC) assert(homeBtn.left >= 72, `Home should sit after the window buttons (at ${homeBtn.left})`);
+      else assert(homeBtn.left >= 8 && homeBtn.left < 24, `Home should start the bar (at ${homeBtn.left})`);
       assert($('#tab-home svg'), 'Home has no icon');
-      // GitHub stars at the right end of the bar, lined up with the page's right edge (Create new), the bar's height,
-      // on its centre line; counts are shortened.
+      // GitHub stars at the right end of the bar, the bar's height, on its centre line; counts are shortened.
+      // On macOS that end is the page's right edge (Create new). On Windows and Linux the bar stops 8px before the
+      // window's own buttons: the window says where they begin (the title-bar area).
       const stars = $('#tab-stars'), sr = stars.getBoundingClientRect(), hr = $('#tab-home').getBoundingClientRect();
       const pageRight = $('#home-create').getBoundingClientRect().right;
-      assert(stars.querySelector('svg') && Math.abs(sr.right - pageRight) < 1 && Math.abs(sr.height - hr.height) < 1 && Math.abs((sr.top + sr.bottom) - (hr.top + hr.bottom)) < 1,
-        `stars button: GitHub icon, right edge at the page's (${Math.round(sr.right)} vs ${Math.round(pageRight)}), same height and centre as Home`);
+      const overlay = navigator.windowControlsOverlay, area = overlay && overlay.visible ? overlay.getTitlebarAreaRect() : null;
+      const barEnd = MAC ? pageRight : area ? area.x + area.width - 8 : null;
+      assert(MAC || area, 'the window does not say where its own buttons are (no title-bar area)');
+      assert(MAC || (area.width < window.innerWidth && barEnd < pageRight), `the window's buttons should take the bar's right end (title-bar area ${area && area.x}+${area && area.width} of ${window.innerWidth})`);
+      assert(stars.querySelector('svg') && Math.abs(sr.right - barEnd) < 1 && Math.abs(sr.height - hr.height) < 1 && Math.abs((sr.top + sr.bottom) - (hr.top + hr.bottom)) < 1,
+        `stars button: GitHub icon, right edge at the bar's end (${Math.round(sr.right)} vs ${Math.round(barEnd)}), same height and centre as Home`);
       // Liquid Glass: the tab bar and the home sidebar share the window's glass (no fill, no line between them);
       // the page is a solid rounded sheet.
       const clear = (el) => getComputedStyle(el).backgroundColor === 'rgba(0, 0, 0, 0)';
@@ -482,7 +509,20 @@
       // Near the top edge it flips below.
       over($('#undo')); await sleep(30);
       assert(t.classList.contains('on') && t.dataset.side === 'bottom', 'top bar tooltip should sit below');
-      out($('#undo'), document.body);
+      // Shortcuts are shown with this system's keys: ⌘Z on macOS, Ctrl Z on Windows and Linux.
+      const capsShown = async (el) => { over(el); await sleep(30); return [...t.querySelectorAll('kbd')].map((k) => k.textContent).join(' '); };
+      let caps = await capsShown($('#undo'));
+      assert(caps === capsOf('⌘Z').join(' '), `Undo's tooltip shows ${caps}`);
+      await sleep(150);
+      await snap('18c-tooltip-shortcut');
+      out($('#undo'), $('#redo'));
+      caps = await capsShown($('#redo'));
+      assert(caps === capsOf('⇧⌘Z').join(' '), `Redo's tooltip shows ${caps}`);
+      out($('#redo'), $('#layer-del'));
+      caps = await capsShown($('#layer-del'));
+      assert(caps === capsOf('⌘⌫').join(' '), `Delete layer's tooltip shows ${caps}`);
+      assert(!FOREIGN_KEYS.test(t.textContent), `the tooltip names another system's keys: ${t.textContent}`);
+      out($('#layer-del'), document.body);
     });
     await test('Help ▸ Keyboard Shortcuts (⌘/ or ?) lists every group with key caps', async () => {
       PC.command('shortcuts');
@@ -491,6 +531,16 @@
       for (const g of ['Tools', 'Drawing', 'Layers', 'Frames', 'View', 'File']) assert(groups.includes(g), `${g} missing`);
       assert($$('#shortcuts-body kbd').length > 60, 'too few keys listed');
       assert($('#shortcuts-body').textContent.includes('Delete layer'), 'delete layer missing');
+      // The keys are this system's: ⌘ ⇧ ⌥ on macOS; Ctrl, Alt, Shift (in that order) on Windows and Linux.
+      const rowCaps = (name) => {
+        const r = $$('#shortcuts-body kbd').map((k) => k.parentElement.parentElement).find((x) => x.firstElementChild.textContent === name);
+        return r ? [...r.querySelectorAll('kbd')].map((k) => k.textContent).join(' ') : null;
+      };
+      for (const [name, keys] of [['Undo', '⌘Z'], ['Redo', '⇧⌘Z'], ['New layer', '⇧⌘N'], ['Delete layer', '⌘⌫'], ['New frame', '⌥⌘N'], ['Save as', '⇧⌘S']]) {
+        assert(rowCaps(name) === capsOf(keys).join(' '), `${name} is listed as ${rowCaps(name)}, not ${capsOf(keys).join(' ')}`);
+      }
+      const foreignKeys = $$('#shortcuts-body kbd').map((k) => k.textContent).filter((k) => FOREIGN_KEYS.test(k));
+      assert(!foreignKeys.length, `the shortcuts name another system's keys: ${foreignKeys.join(' ')}`);
       noSpill($('#shortcuts-dialog .modal'), 'shortcuts dialog');
       await sleep(220);
       await snap('17-shortcuts');
@@ -599,8 +649,14 @@
     });
     await test('2D zoom buttons and fit', async () => {
       const z = sv.zoom;
-      $('#zoom-in').click(); await sleep(250); assert(sv.zoom > z && ZOOMS.includes(sv.zoom), `zoom in (${sv.zoom})`);
-      $('#zoom-out').click(); await sleep(250); $('#zoom-out').click(); await sleep(250); assert(sv.zoom < z && ZOOMS.includes(sv.zoom), `zoom out (${sv.zoom})`);
+      /* A button's zoom glides to the next step in 160 ms of drawn frames. Where frames are slow (no graphics card,
+         a busy machine) the glide is still on its way after a fixed pause, which then read a zoom between two
+         steps. So the test waits for the glide to arrive: the zoom has left where it was and is on a step again.
+         Which step it arrives on is what is checked. */
+      const arrived = async (from, what) => { await until(() => sv.zoom !== from && ZOOMS.includes(sv.zoom), `${what} to arrive on a step (zoom ${sv.zoom})`); return sv.zoom; };
+      $('#zoom-in').click(); const zin = await arrived(z, 'zoom in'); assert(zin > z, `zoom in (${zin})`);
+      $('#zoom-out').click(); const zback = await arrived(zin, 'zoom out'); assert(zback < zin, `zoom out, once (${zback})`);
+      $('#zoom-out').click(); const zout = await arrived(zback, 'zoom out'); assert(zout < z && zout < zback, `zoom out (${zout})`);
       $('#zoom-fit').click(); assert(sv.zoom === z, 'fit');
     });
     await test('trackpad: two fingers move the canvas, a pinch zooms smoothly around the fingers and settles on even pixels', async () => {
@@ -692,18 +748,36 @@
       pick('pencil');
       await sleep(200);
       const g = glCanvas.getBoundingClientRect();
+      /* Where to click: the point nearest the middle of the canvas where a click lands on the model or on the
+         ground. The camera fits the model to the canvas, so what lies under the exact middle depends on the
+         canvas's size (in a 1440×900 window the ray through it passes the model and the ground): the test asks the
+         page (pick3d, the function the mouse handler itself uses) instead of assuming it. */
+      let at = null, place = null;
+      search: for (let ring = 0; ring * 6 < Math.max(g.width, g.height) / 2; ring++) {
+        for (let i = 0; i < Math.max(1, ring * 8); i++) {
+          const a = (i / Math.max(1, ring * 8)) * 2 * Math.PI;
+          const x = g.width / 2 + Math.cos(a) * ring * 6, y = g.height / 2 + Math.sin(a) * ring * 6;
+          if (x < 1 || y < 1 || x > g.width - 1 || y > g.height - 1) continue;
+          const p = pick3d(x, y);
+          if (p && p.place) { at = [g.left + x, g.top + y]; place = p.place; break search; }
+        }
+      }
+      assert(at, 'no point of the 3D canvas has the model or the ground under it');
+      assert(await vox(...place) === 0, `the cell a click should fill (${place}) is not empty`);
       const before = await count();
       let rev = S.revision;
-      ev(glCanvas, 'mousedown', g.left + g.width / 2, g.top + g.height / 2);
-      ev(window, 'mouseup', g.left + g.width / 2, g.top + g.height / 2);
+      ev(glCanvas, 'mousedown', at[0], at[1]);
+      ev(window, 'mouseup', at[0], at[1]);
       await edited(rev);
       assert(await count() === before + 1, 'no voxel added');
+      assert(await vox(...place) !== 0, `the voxel was not added where the click landed (${place})`);
       pick('eraser');
       rev = S.revision;
-      ev(glCanvas, 'mousedown', g.left + g.width / 2, g.top + g.height / 2);
-      ev(window, 'mouseup', g.left + g.width / 2, g.top + g.height / 2);
+      ev(glCanvas, 'mousedown', at[0], at[1]);
+      ev(window, 'mouseup', at[0], at[1]);
       await edited(rev);
       assert(await count() === before, 'voxel not erased');
+      assert(await vox(...place) === 0, `the voxel at ${place} is still there`);
     });
     await test('3D: orbit with right-drag, ortho camera, edges and bounds toggles', async () => {
       const g = glCanvas.getBoundingClientRect(), yaw = cam.yaw;
@@ -782,6 +856,13 @@
         if (id === 'chatgpt') assert(!pr, 'ChatGPT cannot set itself up; no prompt');
         else assert(pr && pr.textContent.includes('--mcp') && pr.textContent.includes('openpixel') && $('#ai-body .setup-prompt .copy'), `${id}: no setup prompt with the command and a Copy button`);
         if (id === 'cursor') assert($('#ai-extra').textContent.includes('Add to Cursor'), 'no Add to Cursor button');
+        // The guide is written for this system: its own words for the computer and the terminal, and the command
+        // the app really has here (the one the host answers, never a path made up for another system).
+        const guide = $('#agent-info .modal').textContent;
+        assert(!FOREIGN.test(guide), `${id}: the guide speaks of another system: “${(guide.match(FOREIGN) || [])[0]}”`);
+        assert($$('#ai-body pre').some((p) => p.textContent.includes(JSON.stringify(agentsState.data.command).slice(1, -1)) || p.textContent.includes(agentsState.data.command)),
+          `${id}: the guide does not give the app's own command (${agentsState.data.command})`);
+        if (id === 'chatgpt') assert(guide.includes(MAC ? 'on your Mac' : 'on your computer') && guide.includes(MAC ? 'in Terminal' : 'in a terminal'), 'ChatGPT: the words for this computer');
         if (id === 'claude-code') {
           // Copy answers in the button: "Copy" swaps to "Copied" without changing the button's width, then back.
           const c = $('#ai-body .codebox .copy');
@@ -794,7 +875,14 @@
             const [idle, done] = c.children;
             assert(idle.classList.contains('out') && !done.classList.contains('out') && done.textContent.includes('Copied'), 'copy button did not show Copied');
             assert(Math.abs(c.getBoundingClientRect().width - w) < 1, 'copy button changed width');
-            await sleep(260);
+            /* The cross-fade lasts 180 ms, counted from the first frame drawn after the click. That frame can
+               itself take longer than that where the page is drawn without a graphics card (the dialog's blurred
+               backdrop), so a fixed pause measured a fade that had only just begun. The test waits for the fade
+               itself to end; it has to end well before "Copied" turns back (1500 ms after the click), and "Copied"
+               must then be fully there and sharp. */
+            const fades = [...idle.getAnimations(), ...done.getAnimations()];
+            await Promise.race([Promise.all(fades.map((f) => f.finished)).catch(() => {}), sleep(1000)]);
+            assert(idle.classList.contains('out') && !done.classList.contains('out'), '"Copied" turned back before its cross-fade ended');
             const cs = getComputedStyle(done);
             assert(cs.opacity === '1' && !/blur\((?!0)/.test(cs.filter), `"Copied" did not settle sharp (opacity ${cs.opacity}, filter ${cs.filter})`);
             await snap('14-agent-info');
@@ -1004,6 +1092,10 @@
         $('#doc-title').click(); await sleep(200);
         const dm = $('#doc-menu');
         assert(dm.classList.contains('open') && ['saveAs', 'close'].every((k) => shown(dm.querySelector(`[data-doc="${k}"]`))), 'the file name opens its menu');
+        const reveal = { darwin: 'Show in Finder', win32: 'Show in Explorer', linux: 'Show in file manager' }[PLATFORM];
+        assert(dm.querySelector('[data-doc="reveal"]').textContent.trim() === reveal, `the file menu says “${dm.querySelector('[data-doc="reveal"]').textContent.trim()}”, not “${reveal}”`);
+        const menuKeys = $$('#file-menu .menu-list .k').map((k) => k.textContent).join(' ');
+        assert(menuKeys === ['⌘N', '⌘O', '⌘S', '⇧⌘S'].map((k) => capsOf(k).join(MAC ? '' : '+')).join(' '), `the main menu's shortcuts read ${menuKeys}`);
         await snap('09c-doc-menu');
         closeMenus();
       } finally {

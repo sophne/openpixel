@@ -1,4 +1,4 @@
-/* The colour picker and the two ways into it (app.js 505–513, 538–591). The Picker component (EditorDialogs.tsx) has
+/* The colour picker and the two ways into it. The Picker component (EditorDialogs.tsx) has
    the markup and what wirePicker() attached; the colour square is drawn here, by hand, as before. */
 import { $ } from '../lib/dom';
 import { lastInput, originFrom, popIn } from '../lib/motion';

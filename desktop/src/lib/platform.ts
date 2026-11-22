@@ -1,6 +1,7 @@
 /* What differs between macOS, Windows and Linux in the page's wording.
-   Markup keeps the Mac's glyphs everywhere ("Undo (⌘Z)", ['⇧', '⌘', 'S']), as the old page had them; these helpers
-   turn them into what the person's keyboard says when they are shown. On macOS everything comes back unchanged. */
+   Shortcuts are written once, the Mac's way ("Undo (⌘Z)", ['⇧', '⌘', 'S']); these helpers turn them into what the
+   person's keyboard says when they are shown. ⌘ becomes Ctrl, which is what the menu bar binds there (`CmdOrCtrl`
+   in electron/menu.ts). On macOS everything comes back unchanged. */
 import { platform } from './host';
 
 export { platform };
@@ -31,21 +32,34 @@ export function shortcutLabel(shortcut: string): string {
   return isMac ? shortcut : shortcutKeys(shortcut).join('+');
 }
 
-/** A row of caps from the shortcuts dialog (['⌘', '1', '⌘', '2']): each cap named for this platform. */
+/** A row of caps from the shortcuts dialog, which may hold several shortcuts (['⌘', '1', '⌘', '2']): each cap named
+ *  for this platform, and each shortcut's modifiers in this platform's order, as tooltips and menu rows show them
+ *  (['⇧', '⌘', 'N'] is ['Ctrl', 'Shift', 'N'] on Windows and Linux). */
 export function keyCaps(keys: string[]): string[] {
-  return isMac ? keys : keys.map(keyLabel);
+  if (isMac) return keys;
+  const out: string[] = [];
+  let mods: string[] = [];
+  for (const k of keys) {
+    if (k.length === 1 && MODS.includes(k)) { mods.push(k); continue; }
+    out.push(...shortcutKeys(mods.join('') + k));
+    mods = [];
+  }
+  return [...out, ...mods.map(keyLabel)];
 }
 
 /** True when the menu-bar modifier is down (⌘ on the Mac, Ctrl elsewhere): those shortcuts belong to the app's
- *  menu, which sends them as PC.command(cmd); the page's own key handling ignores them (app.js 3230). */
+ *  menu, which sends them as PC.command(cmd); the page's own key handling ignores them. */
 export function menuModifier(e: { metaKey: boolean; ctrlKey: boolean }): boolean {
   return isMac ? e.metaKey : e.ctrlKey;
 }
 
+/** "has no skills on this Mac", "It listens on this Mac only". */
+export const THIS_COMPUTER = isMac ? 'this Mac' : 'this computer';
+
 /** "Show in Finder", by platform (the doc and card menus). */
 export const REVEAL_LABEL = isMac ? 'Show in Finder' : platform === 'win32' ? 'Show in Explorer' : 'Show in file manager';
 
-/** A path with the home folder shortened to ~ (tab tooltips, app.js 1701). */
+/** A path with the home folder shortened to ~ (tab tooltips). */
 export function tildePath(path: string): string {
   if (isMac) return path.replace(/^\/Users\/[^/]+/, '~');
   return platform === 'win32' ? path.replace(/^[A-Za-z]:\\Users\\[^\\]+/, '~') : path.replace(/^\/home\/[^/]+/, '~');

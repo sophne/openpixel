@@ -1,5 +1,8 @@
-/* Icons from Lucide (https://lucide.dev), ISC licence: see app/web/LUCIDE-LICENSE.txt.
-   Generated from app/web/icons.js (same data, typed); do not edit by hand.  */
+/* Icons from Lucide (https://lucide.dev), ISC licence: see LUCIDE-LICENSE.txt next to this file.
+   This table is the source: only the icons the app uses, each as Lucide's own list of SVG nodes. It was collected
+   from several Lucide releases (some of these icons have since been redrawn, renamed or dropped upstream), so no one
+   release reproduces it. To add an icon, copy its nodes from Lucide's dist/esm/icons/<name>.js as one line of JSON;
+   an icon that is the app's own drawing goes in icons.tsx instead. */
 export type IconNode = [tag: string, attrs: Record<string, string>];
 
 export const LUCIDE_ICONS: Record<string, IconNode[]> = {

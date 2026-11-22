@@ -1,8 +1,9 @@
-/* Reading and writing values the way the Mac app's Swift did, so the port answers the same for the same input.
+/* Reading and writing values the way the Swift app did (the app this logic was ported from: see
+   docs/desktop-architecture.md, History), so the same agent output gives the same answer and saved chats read back.
 
-   The Swift read each agent's JSON with casts (`o["x"] as? String`): a value of another type counted as missing, and
+   The Swift app read each agent's JSON with casts (`o["x"] as? String`): a value of another type counted as missing, and
    a JSON null was a value (NSNull), not nil. It trimmed with Foundation's character sets and counted characters as
-   people see them (an emoji is one). These helpers keep those rules in one place; the parsers read like the Swift. */
+   people see them (an emoji is one). These helpers keep those rules in one place; the parsers read like the Swift app's. */
 
 import { randomUUID } from 'node:crypto';
 
@@ -46,7 +47,7 @@ export const isSet = (v: unknown): boolean => v !== undefined && v !== null;
 /** ChatRunner.first: the first value that is set. */
 export const firstSet = (...vs: unknown[]): unknown => vs.find(isSet);
 
-/** A line of JSON as an object, or undefined (the Swift ignored everything else: arrays, bare values, noise). */
+/** A line of JSON as an object, or undefined (the Swift app ignored everything else: arrays, bare values, noise). */
 export function parseObject(text: string): Dict | undefined {
   try { return dict(JSON.parse(text)); } catch { return undefined; }
 }

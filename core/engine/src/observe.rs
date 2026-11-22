@@ -1,4 +1,4 @@
-//! Findings and scores, the critique after each edit, and text views (port of Observe.swift).
+//! Findings and scores, the critique after each edit, and text views.
 use serde_json::json;
 
 use crate::craft;

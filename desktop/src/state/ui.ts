@@ -1,8 +1,8 @@
-/* The stores more than one area reads or writes, with the old page's names and shapes.
-   S: the open document as the engine reports it, and how it is being looked at (app.js 30–41).
-   ui: which page fills the window and the open tabs (app.js 1668).
-   leftSide: the editor's sidebar (app.js 654–656); the chat reads it to know whether its panel shows.
-   home: the library as the app last sent it (app.js 1814); the editor's "Move to…" fills it too.
+/* The stores more than one area reads or writes.
+   S: the open document as the engine reports it, and how it is being looked at.
+   ui: which page fills the window and the open tabs.
+   leftSide: the editor's sidebar; the chat reads it to know whether its panel shows.
+   home: the library as the app last sent it; the editor's "Move to…" fills it too.
    Stores that one area alone uses (sv, cam, pk, homePrefs, chatState, agentsState, …) live with that area. */
 import { store } from '../lib/store';
 

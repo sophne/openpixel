@@ -1,5 +1,10 @@
 /* The app's logic for whoever hosts it: Electron's main process today (desktop/electron), a browser later.
-   See docs/desktop-architecture.md, section 3, and platform.ts. */
+   See docs/desktop-architecture.md, section 3, and platform.ts.
+
+   It began as a port of the logic of OpenPixel's first version, a Mac-only app written in Swift ("the Swift app" in
+   comments here; it is in the repository's history). Where a comment says something is done as the Swift app did,
+   it is because files that app wrote (the library, saved chats) are still read, or because the page and agents
+   rely on the same answers. */
 import { AppHost } from './documents';
 import type { Host, HostOptions } from './platform';
 

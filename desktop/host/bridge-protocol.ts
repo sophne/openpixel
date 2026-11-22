@@ -1,4 +1,4 @@
-/* The words on the agents' socket (Bridge.swift): one JSON request per line,
+/* The words on the agents' socket: one JSON request per line,
    {"tool": name, "args": {...}} → {"ok": true, "json": {...}, "images": [base64 PNG]} or {"ok": false, "error": ".."}.
    host/node/bridge.ts moves the lines; this decides what they say. */
 import type { ToolOutput } from './core';

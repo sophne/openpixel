@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------- the New file page (the + in the tab bar) and the
-   New 2D / 3D file dialog (app.js 2475–2610). The drawing is library/NewPage.tsx. */
+   New 2D / 3D file dialog. The drawing is library/NewPage.tsx. */
 import { actions } from '../app/actions';
 import { showEditor } from '../app/pages';
 import { closeMenus, closeModals, openModal, toast, type DropdownApi } from '../kit';

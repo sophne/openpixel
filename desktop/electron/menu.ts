@@ -1,9 +1,10 @@
 import { Menu, type MenuItemConstructorOptions } from 'electron';
 
-/* The menu bar: the same menus, items and shortcuts as the Mac app's `buildMenu` (AppDelegate.swift), with
-   ⌘ becoming Ctrl on Windows and Linux. Editor commands reach the page as `PC.command(cmd)`; file commands go to
-   the host (desktop/host), which owns the documents. On Windows and Linux the window has no title bar and therefore no visible
-   menu bar: the shortcuts still work there, and the page's own menus cover the rest. */
+/* The menu bar. Shortcuts are `CmdOrCtrl`: ⌘ on macOS, Ctrl on Windows and Linux; the page shows them that way
+   (desktop/src/lib/platform.ts), and tests/shell-smoke.mjs checks that what it shows is what is bound here.
+   Editor commands reach the page as `PC.command(cmd)`; file commands go to the host (desktop/host), which owns the
+   documents. On Windows and Linux the window has no title bar and therefore no visible menu bar: the shortcuts
+   still work there, and the page's own menus cover the rest. */
 
 export interface MenuActions {
   /** Calls `window.PC.<fn>(...args)` in the page. */

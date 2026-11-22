@@ -1,10 +1,12 @@
-# Static security analysis of the Swift app and the JavaScript/TypeScript (app UI and website).
-# JavaScript/TypeScript (about a minute) also checks pull requests that change it. Swift needs a macOS build and
-# takes about ten minutes, so it runs weekly and on demand (Actions → codeql → Run workflow).
+# Static security analysis of the JavaScript/TypeScript (the desktop app's shell, logic and page, and the website)
+# and of the Rust core.
+# JavaScript/TypeScript (about a minute, nothing to build) also checks pull requests that change it. Rust runs
+# weekly and on demand (Actions → codeql → Run workflow): CodeQL reads Rust sources without building them
+# (build-mode none), but resolves the workspace's dependencies first, which takes a few minutes.
 name: codeql
 on:
   pull_request:
-    paths: ["web/**", "app/web/**", ".github/workflows/codeql.yml"]
+    paths: ["web/**", "desktop/**", ".github/workflows/codeql.yml"]
   schedule:
     - cron: "17 4 * * 1"
   workflow_dispatch:
@@ -34,10 +36,10 @@ jobs:
         with:
           category: /language:javascript-typescript
 
-  swift:
-    name: codeql (swift)
+  rust:
+    name: codeql (rust)
     if: github.event_name != 'pull_request'
-    runs-on: macos-15
+    runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
       actions: read
@@ -49,10 +51,8 @@ jobs:
           persist-credentials: false
       - uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
-          languages: swift
-          build-mode: manual
-      - working-directory: app
-        run: swift build
+          languages: rust
+          build-mode: none
       - uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
-          category: /language:swift
+          category: /language:rust

@@ -1,7 +1,6 @@
 /* What the Agents page shows: live connections to this window (each `openpixel --mcp` process introduces
    itself with the agent's name from the MCP handshake) and, per known agent app, whether it is installed
-   and whether its settings already mention OpenPixel. Settings files are only read, never changed.
-   Port of Agents.swift. */
+   and whether its settings already mention OpenPixel. Settings files are only read, never changed. */
 import type { Platform } from './platform';
 import { type Json, int, str, text } from './util';
 
@@ -20,7 +19,7 @@ export interface Session {
 }
 
 /** Where each agent keeps its MCP settings, and how to tell it is installed. Paths are from the home folder;
-    `apps` are Mac app bundles, `tools` command-line programs. */
+    `apps` are macOS app bundles, `tools` command-line programs. */
 export const KNOWN: { id: string; configs: string[]; apps: string[]; tools: string[]; folders: string[] }[] = [
   { id: 'chatgpt', configs: [], apps: ['ChatGPT.app'], tools: [], folders: [] },
   { id: 'codex', configs: ['.codex/config.toml'], apps: ['Codex.app'], tools: ['codex'], folders: ['.codex'] },

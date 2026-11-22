@@ -1,6 +1,5 @@
 /* Reading the event streams of Claude Code, Codex, Cursor's agent and Gemini CLI: each line of an agent's JSON output
-   becomes the page's simple events (see runner.ts). Ported from the "reading the event stream" part of Chat.swift;
-   the other agents are in agents.ts. */
+   becomes the page's simple events (see runner.ts). The other agents are in agents.ts. */
 import { rememberClaudeInit } from './skills.ts';
 import type { ChatContext, Run } from './types.ts';
 import type { Dict } from './values.ts';

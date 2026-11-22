@@ -1,5 +1,4 @@
-/* The colour picker, the keyboard shortcuts dialog and the review dialog (index.html 355–366, 391–408; app.js
-   592–618 wirePicker, 2995–3013 showReview, 4335–4342 showShortcuts). */
+/* The colour picker, the keyboard shortcuts dialog and the review dialog. */
 import { useRef, type ReactElement } from 'react';
 import { Modal } from '../kit';
 import { $, useEvent } from '../lib/dom';

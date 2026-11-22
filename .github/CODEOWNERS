@@ -1,8 +1,13 @@
-# Every change needs a maintainer's review. The release pipeline and the app's identity always need @eminvkc.
-*                       @eminvkc
-/.github/               @eminvkc
-/app/scripts/           @eminvkc
-/app/Info.plist         @eminvkc
-/app/Package.swift      @eminvkc
-/app/Package.resolved   @eminvkc
-/web/Dockerfile         @eminvkc
+# Every change needs a maintainer's review. The release pipeline and the app's identity always need @eminvkc:
+# the workflows, how the app is packaged and named (electron-builder.yml), the scripts a build and a release run,
+# what gets installed and how it updates itself, and the versions and dependencies of what ships.
+*                               @eminvkc
+/.github/                       @eminvkc
+/desktop/electron-builder.yml   @eminvkc
+/desktop/scripts/               @eminvkc
+/desktop/electron/updater.ts    @eminvkc
+/desktop/package.json           @eminvkc
+/desktop/package-lock.json      @eminvkc
+/core/Cargo.toml                @eminvkc
+/core/Cargo.lock                @eminvkc
+/web/Dockerfile                 @eminvkc

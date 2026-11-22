@@ -1,7 +1,7 @@
-/* Agent Chat's state (app.js 3312–3328).
-   chatState is the old object, field for field. What the old page then drew by hand (the conversation, the message
-   box's buttons, the "/" list, the two menus) is described by the small stores below: one per old render function,
-   holding what that function last drew. The functions keep their old names in chat.ts: they fill the store and call
+/* Agent Chat's state.
+   chatState is the chat's data. What is on screen (the conversation, the message box's buttons, the "/" list, the
+   two menus) is described by the small stores below: one per render function, holding what that function last drew.
+   The functions are in chat.ts: they fill the store and call
    changed(), and the components in ChatPane/ChatLog/ChatMenus draw it. So the DOM changes exactly when it did
    before: when a render function runs, not whenever some state changes. */
 import type { DropdownApi, DropdownOption } from '../kit';
@@ -19,7 +19,7 @@ export const CHAT_TOOLS_SHOWN = 4; // tool rows shown per run of calls; earlier 
 export interface ChatPick { provider?: string; model?: string; effort: Record<string, string> }
 interface SkillCache { list?: ChatSkill[]; at: number; loading?: Promise<ChatSkill[]> | null }
 
-/* ------------------------------------------------------------------ what is on screen (the old page's DOM) */
+/* ------------------------------------------------------------------ what is on screen */
 
 /** A text part while shown. Text that is still streaming is drawn by its Reveal; a finished reply by <Markdown>. */
 export interface TextView { kind: 'text'; key: number; part: TextPart; live: boolean; el: HTMLElement | null; reveal: Reveal | null }

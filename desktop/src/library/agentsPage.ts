@@ -1,13 +1,15 @@
-/* ---------------------------------------------------------------- Agents page (app.js 2632–2640, 2726–2810, 2836–2900)
+/* ---------------------------------------------------------------- Agents page
    The list of agents with their statuses, asked from the app every 2.5 seconds while the page shows, and each
    agent's set-up guide. The drawing is library/Agents.tsx; the steps are library/agentSteps.tsx. */
 import { openModal } from '../kit';
 import { nativeAction } from '../lib/host';
+import { isMac, platform } from '../lib/platform';
 import { timeAgo } from '../lib/format';
 import { changed, store } from '../lib/store';
 import { AGENTS, type AgentInfo } from '../state/agents';
 import { agentSteps, shq, type Step } from './agentSteps';
 import { showHome } from './homePage';
+import { COMPUTER } from './wording';
 
 /** One connection of an agent to the app (AgentRegistry.snapshot). */
 interface AgentSession {
@@ -26,34 +28,57 @@ export const agentsState: { data: AgentsData | null; timer: ReturnType<typeof se
 /** The Agents page stops asking for statuses when another page shows. */
 export function stopAgentsPolling(): void { clearInterval(agentsState.timer); }
 
-export function exeCommand(): string { return (agentsState.data && agentsState.data.command) || '/Applications/OpenPixel.app/Contents/MacOS/OpenPixel'; }
+/** The command agents run: the native `openpixel` program, as the app says it is on this computer (the host's
+ *  `mcpCommand`). The page opened without the app has nobody to ask and shows where an installed OpenPixel has it. */
+const NO_HOST_COMMAND = {
+  darwin: '/Applications/OpenPixel.app/Contents/MacOS/OpenPixel',
+  win32: 'C:\\Users\\you\\AppData\\Local\\Programs\\OpenPixel\\resources\\core\\openpixel.exe',
+  linux: '/home/you/.local/share/OpenPixel/bin/openpixel',
+};
+export function exeCommand(): string { return (agentsState.data && agentsState.data.command) || NO_HOST_COMMAND[platform]; }
 
-/* Every guide (but ChatGPT's, which can't change anything on this Mac) starts with a prompt to paste into the agent:
-   it then adds OpenPixel to its own settings. The hint says where that agent keeps them, or the one-line command. */
-const AGENT_HINTS: Record<string, (exe: string) => string> = {
-  codex: (exe) => `Easiest: run \`codex mcp add openpixel -- ${shq(exe)} --mcp\` (or add it to ~/.codex/config.toml).`,
-  claude: () => 'Your settings file is ~/Library/Application Support/Claude/claude_desktop_config.json (under "mcpServers").',
+/* Where each agent keeps its MCP settings, as the guides name it. On macOS these are the paths the guides have always
+   shown. On Windows and Linux the guide shows the file the app itself looks at to tell whether the agent is set up
+   (the host's detection: `config_file`), and no path at all when there is none to go by. */
+const MAC_FILES: Record<string, string> = {
+  codex: '~/.codex/config.toml', claude: '~/Library/Application Support/Claude/claude_desktop_config.json', cursor: '~/.cursor/mcp.json',
+  openclaw: '~/.openclaw/openclaw.json', hermes: '~/.hermes/config.yaml', windsurf: '~/.codeium/windsurf/mcp_config.json',
+  'gemini-cli': '~/.gemini/settings.json', kiro: '~/.kiro/settings/mcp.json', opencode: '~/.config/opencode/opencode.json',
+  goose: '~/.config/goose/config.yaml', 'lm-studio': '~/.lmstudio/mcp.json',
+};
+export function settingsFile(id: string): string | null {
+  if (isMac) return MAC_FILES[id] || null;
+  const setup = ((agentsState.data || {}).setup || {})[id];
+  return (setup && setup.config_file) || null;
+}
+
+/* Every guide (but ChatGPT's, which can't change anything on the person's computer) starts with a prompt to paste
+   into the agent: it then adds OpenPixel to its own settings. The hint says where that agent keeps them (`file`,
+   when it is known: settingsFile), or the one-line command. */
+const AGENT_HINTS: Record<string, (exe: string, file: string | null) => string> = {
+  codex: (exe, file) => `Easiest: run \`codex mcp add openpixel -- ${shq(exe)} --mcp\`${file ? ` (or add it to ${file})` : ''}.`,
+  claude: (_, file) => `Your settings file is ${file || 'claude_desktop_config.json'} (under "mcpServers").`,
   'claude-code': (exe) => `Easiest: run \`claude mcp add --scope user openpixel -- ${shq(exe)} --mcp\``,
-  cursor: () => 'Your MCP settings are in ~/.cursor/mcp.json (under "mcpServers").',
-  openclaw: () => 'Use your MCP support (mcporter), or ~/.openclaw/openclaw.json.',
-  hermes: () => 'Your MCP settings are under "mcp_servers" in ~/.hermes/config.yaml.',
+  cursor: (_, file) => `Your MCP settings are in ${file || 'your user mcp.json'} (under "mcpServers").`,
+  openclaw: (_, file) => `Use your MCP support (mcporter)${file ? `, or ${file}` : ''}.`,
+  hermes: (_, file) => `Your MCP settings are under "mcp_servers" in ${file || 'your config.yaml'}.`,
   copilot: () => 'In VS Code this is the user mcp.json (Command Palette: "MCP: Open User Configuration"), under "servers", with type "stdio".',
-  windsurf: () => 'Your MCP settings are in ~/.codeium/windsurf/mcp_config.json (under "mcpServers").',
-  'gemini-cli': () => 'Your MCP settings are in ~/.gemini/settings.json (under "mcpServers").',
+  windsurf: (_, file) => `Your MCP settings are in ${file || 'mcp_config.json'} (under "mcpServers").`,
+  'gemini-cli': (_, file) => `Your MCP settings are in ${file || 'your user settings.json'} (under "mcpServers").`,
   cline: () => 'Your MCP settings are in cline_mcp_settings.json (under "mcpServers").',
-  kiro: () => 'Your MCP settings are in ~/.kiro/settings/mcp.json (under "mcpServers").',
-  opencode: () => 'Your settings are in ~/.config/opencode/opencode.json: add it under "mcp" as a "local" server whose command is the program followed by --mcp.',
-  goose: () => 'Add it as a stdio extension under "extensions" in ~/.config/goose/config.yaml (or with goose configure).',
-  'lm-studio': () => 'Your MCP settings are in ~/.lmstudio/mcp.json (under "mcpServers").',
+  kiro: (_, file) => `Your MCP settings are in ${file || 'your user mcp.json'} (under "mcpServers").`,
+  opencode: (_, file) => `Your settings are in ${file || 'opencode.json'}: add it under "mcp" as a "local" server whose command is the program followed by --mcp.`,
+  goose: (_, file) => `Add it as a stdio extension under "extensions" in ${file || 'your config.yaml'} (or with goose configure).`,
+  'lm-studio': (_, file) => `Your MCP settings are in ${file || 'mcp.json'} (under "mcpServers").`,
 };
 export const AGENT_PROMPT_CAVEAT: Record<string, string> = {
-  claude: 'Claude needs access to files on your Mac for this (for example the Filesystem extension); otherwise follow the steps below.',
+  claude: `Claude needs access to files on ${COMPUTER} for this (for example the Filesystem extension); otherwise follow the steps below.`,
   'lm-studio': 'This needs a model with file tools; otherwise follow the steps below.',
 };
 function agentPrompt(a: AgentInfo): string | null {
   if (a.id === 'chatgpt' || a.id === 'other') return null;
   const exe = exeCommand();
-  const hint = AGENT_HINTS[a.id] ? AGENT_HINTS[a.id](exe) : '';
+  const hint = AGENT_HINTS[a.id] ? AGENT_HINTS[a.id](exe, settingsFile(a.id)) : '';
   return ['Please add the OpenPixel MCP server to your own MCP settings, for my user account:', '',
     '- Name: openpixel', `- Command: ${exe}`, '- Argument: --mcp',
     '- Type: local (stdio). It needs no API key or environment variables.', ...(hint ? [`- ${hint}`] : []), '',
@@ -126,7 +151,7 @@ export const agentInfo = store({
 });
 export function showAgentInfo(a: AgentInfo): void {
   Object.assign(agentInfo, {
-    seq: agentInfo.seq + 1, a, st: agentStatus(a), prompt: agentPrompt(a), steps: agentSteps(a.id, exeCommand()), exe: exeCommand(),
+    seq: agentInfo.seq + 1, a, st: agentStatus(a), prompt: agentPrompt(a), steps: agentSteps(a.id, exeCommand(), settingsFile(a.id)), exe: exeCommand(),
     setup: ((agentsState.data || {}).setup || {})[a.id] || null,
   });
   changed(agentInfo);

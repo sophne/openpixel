@@ -1,4 +1,4 @@
-/* The palette presets (app.js 1576–1582): the editor's "Palette preset…" menu and the New file dialog list them. */
+/* The palette presets: the editor's "Palette preset…" menu and the New file dialog list them. */
 export interface PalettePreset { value: string; label: string; colors: string[] }
 export const PRESETS: PalettePreset[] = [
   { value: 'db32', label: 'DawnBringer 32', colors: ['#222034', '#663931', '#df7126', '#fbf236', '#6abe30', '#306082', '#5b6ee1', '#d95763'] },

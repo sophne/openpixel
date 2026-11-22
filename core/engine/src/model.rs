@@ -1,4 +1,4 @@
-//! The document model: colours, layers, frames and the voxel grids (port of Model.swift).
+//! The document model: colours, layers, frames and the voxel grids.
 use std::sync::Arc;
 
 use crate::palettes;

@@ -1,4 +1,4 @@
-//! `openpixel`: the MCP program agents start. Port of main.swift's modes that are not the window.
+//! `openpixel`: the MCP program agents start.
 use openpixel::{mcp, mcp_mode, selftest};
 
 fn main() {

@@ -1,8 +1,7 @@
 /* The home screen's library: recently opened or saved files (path, name, size and a small preview picture),
    the folders the person sorts them into, what they archived, and the built-in samples. Folders and the archive
    only organise this list; files stay where they are on disk until they are deleted forever (then they go to the
-   Trash). Kept in the data folder (recents.json, library.json and thumbs/). Nothing leaves this computer.
-   Port of Recents.swift. */
+   Trash). Kept in the data folder (recents.json, library.json and thumbs/). Nothing leaves this computer. */
 import type { Core, Engine } from './core';
 import type { Platform } from './platform';
 import { type Json, errorText, obj, pngDataURL, text } from './util';
@@ -47,7 +46,7 @@ const isNumber = (v: unknown): v is number => typeof v === 'number';
 const optional = <T>(v: unknown, is: (v: unknown) => v is T): v is T | undefined | null => v === undefined || v === null || is(v);
 const isFlag = (v: unknown): v is boolean => typeof v === 'boolean';
 
-/** The files as they were written (by this app or the Mac app). One entry that does not fit and nothing is read,
+/** The files as they were written (by this app or the Swift app). One entry that does not fit and nothing is read,
     as before. */
 function readEntries(v: unknown): Entry[] | null {
   if (!Array.isArray(v)) return null;
@@ -311,7 +310,7 @@ export class Recents {
     return true;
   }
 
-  /** Deletes an item for good: a sample disappears from the library, a file goes to the Trash.
+  /** Deletes an item for good: a sample disappears from the library, a file goes to the system's Trash (Recycle Bin).
       Answers null when done, or why it couldn't be. */
   async deleteForever(id: string): Promise<string | null> {
     if (SAMPLE_IDS.includes(id)) {
@@ -327,7 +326,9 @@ export class Recents {
         if (ui.trash) await ui.trash(e.path);
         else fs.remove(e.path);
       } catch (err) {
-        return `Could not move “${e.name}” to the Trash: ${errorText(err)}`;
+        // The words the page uses for it on each system (desktop/src/library/wording.ts).
+        const trash = this.platform.os === 'darwin' ? 'the Trash' : this.platform.os === 'win32' ? 'the Recycle Bin' : 'the trash';
+        return `Could not move “${e.name}” to ${trash}: ${errorText(err)}`;
       }
     }
     if (e.thumb !== undefined) {

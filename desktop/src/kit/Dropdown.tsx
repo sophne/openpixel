@@ -1,4 +1,4 @@
-/* The app's own dropdown (app.js 1594–1633): a button showing the choice and a list that opens under it (above when
+/* The app's own dropdown: a button showing the choice and a list that opens under it (above when
    there is no room), fixed to the window so a scrolling panel never clips it.
    Same markup as dropdown(el, options, …) built inside `el`:
      <div …el's own attributes… class="… dropdown menu">

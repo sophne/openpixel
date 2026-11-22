@@ -1,7 +1,7 @@
 // Development: Vite serves the React page (with hot reload), esbuild keeps the Electron side bundled, and Electron
 // shows the page from Vite. Electron starts again whenever its own code changes; closing the window ends it all.
 //
-//   npm run dev [-- <the app's arguments>]      e.g.  npm run dev -- --legacy-ui   or   npm run dev -- model.openpixel
+//   npm run dev [-- <the app's arguments>]      e.g.  npm run dev -- model.openpixel
 //
 // Linux without a graphics card or as root (containers): OPENPIXEL_SOFTWARE_GL=1 npm run dev -- --no-sandbox
 import { spawn } from 'node:child_process';

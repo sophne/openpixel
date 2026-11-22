@@ -27,7 +27,7 @@ test('saving and loading: the chats come back, with the file they belong to', ()
   assert.deepEqual(chat.loadHistory('/drive/art/hero.openpixel'), { ...threads, key: '/drive/art/hero.openpixel' });
   assert.equal(threads.hasOwnProperty('key'), false, 'what the page sent is left as it was');
   assert.deepEqual(files(), [nodePath.basename(historyFile(store, '/drive/art/hero.openpixel'))]);
-  // Compact JSON as the Mac app wrote it ("/" as "\/"), so both read each other's files.
+  // Compact JSON as the Swift app wrote it ("/" as "\/"), so both read each other's files.
   const text = nodeFS.readFileSync(historyFile(store, '/drive/art/hero.openpixel'), 'utf8');
   assert.equal(text, '{"v":1,"current":"c1","threads":[{"id":"c1","title":"Draw a heart ♥","messages":[{"role":"user","text":"a\\/b \\"c\\""}]}],"key":"\\/drive\\/art\\/hero.openpixel"}');
 });
