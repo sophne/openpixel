@@ -1,0 +1,21 @@
+{
+  // host/node/ and the host's checks: Node (Electron's main process).
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "types": ["node"]
+  },
+  "include": ["**/*.ts", "../test/**/*.ts"],
+  // Agent Chat has its own project (host/node/chat/tsconfig.json): its files import each other with .ts endings.
+  "exclude": ["chat/**"]
+}

@@ -7,3 +7,13 @@ license.workspace = true
 
 [dependencies]
 serde_json = "1"
+base64 = "0.22"
+flate2 = "1"
+png = "0.17"
+gif = "0.13"
+# sin and cos for the renderer: the same results on every platform and under WebAssembly.
+libm = "0.2"
+
+# The update feed over HTTPS. Not under WebAssembly: there the host fetches it (HostIo::http_get).
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+ureq = { version = "2", default-features = false, features = ["tls"] }
