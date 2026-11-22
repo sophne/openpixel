@@ -10,10 +10,13 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { createServer } from 'vite';
 import { buildElectron } from './build-electron.mjs';
+import { devElectron } from './dev-app-bundle.mjs';
 
 const desktop = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const appArgs = process.argv.slice(2);
-const electron = createRequire(import.meta.url)('electron'); // the path of the Electron program
+const require = createRequire(import.meta.url);
+// The path of the Electron program; on a Mac, a copy named OpenPixel with its icon (dev-app-bundle.mjs).
+const electron = devElectron(require('electron'), desktop, require('../package.json').version);
 
 const vite = await createServer({ root: desktop, configFile: path.join(desktop, 'vite.config.ts') });
 await vite.listen();
