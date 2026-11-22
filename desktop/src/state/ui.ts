@@ -68,7 +68,9 @@ if (!['layers', 'chat', 'activity'].includes(leftSide.pane)) leftSide.pane = 'la
 /** A file in the library (Recents, folders, the archive, the built-in samples). */
 export interface LibraryFile {
   id: string; name: string; path: string; kind?: string; folder?: string | null;
-  archived?: boolean; sample?: boolean; exists?: boolean; thumb?: string; size?: number;
+  archived?: boolean; sample?: boolean; exists?: boolean; thumb?: string;
+  /** [width, height, depth] in cells (Recents.listForPage). */
+  size?: number[];
   [k: string]: any;
 }
 export interface LibraryFolder { id: string; name: string; parent?: string | null; [k: string]: any }
