@@ -182,9 +182,11 @@ pub fn render_grid(doc: &Document, vox: &[u8], o: &RenderOptions) -> Result<Pict
     let yaw = o.yaw * PI / 180.0;
     let pitch = (-89.999f64).max(89.999f64.min(o.pitch)) * PI / 180.0;
     // v points from the scene toward the camera.
-    let v = V3::new(yaw.sin() * pitch.cos(), pitch.sin(), yaw.cos() * pitch.cos());
+    // libm's sin and cos, not the platform's: every build then draws the same pixels.
+    let (sin_yaw, cos_yaw, sin_pitch, cos_pitch) = (libm::sin(yaw), libm::cos(yaw), libm::sin(pitch), libm::cos(pitch));
+    let v = V3::new(sin_yaw * cos_pitch, sin_pitch, cos_yaw * cos_pitch);
     let f = v.mul(-1.0);
-    let r = V3::new(yaw.cos(), 0.0, -yaw.sin());
+    let r = V3::new(cos_yaw, 0.0, -sin_yaw);
     let u = r.cross(f);
     let c = V3::new(sx as f64 / 2.0, sy as f64 / 2.0, sz as f64 / 2.0);
 
