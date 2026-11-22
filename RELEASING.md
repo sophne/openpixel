@@ -204,6 +204,11 @@ against the disk image it is about to upload.
 >    Agents page must show the new command, and your recent files must still be there.
 > 4. Remove the override: `defaults delete com.sophne.openpixel SUFeedURL`.
 >
+> Found with 2.0.0: Sparkle refuses an update whose app no longer names the old app's public key in its
+> `Info.plist` (`SUPublicEDKey`), even with a valid signature and the same Developer ID ("The update is improperly
+> signed and could not be validated"). `electron-builder.yml` now sets it (`mac.extendInfo`), and the release tests
+> and the packed-app check fail without it.
+>
 > What could go wrong, so look for it: Sparkle refusing the EdDSA signature (a key in another form than the one the
 > old app was built with); Sparkle refusing the new app's code signature (Sparkle 2 also compares the code signing
 > of the old and the new app when the old one has a Developer ID; SECURITY.md says releases so far were not signed
