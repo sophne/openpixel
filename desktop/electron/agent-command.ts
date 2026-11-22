@@ -107,6 +107,9 @@ export function agentArguments(argv: string[], packaged: boolean): string[] | nu
 /** `OpenPixel --mcp` / `OpenPixel --mcp-http [port]`: runs the native program in this process's place and exits with
     its exit code. It never returns then. Nothing is written to standard output here (that is the MCP channel), no
     window opens, and the app is not asked whether another copy runs: an agent's server lives next to the window.
+    On Windows, Electron itself writes one blank line ("\r\n") to standard output at every start, before this runs;
+    nothing here can take it back. MCP clients skip or report a blank line and go on, and agents on Windows are
+    given the program inside the app (agentCommand), which never writes it.
     The wait is synchronous on purpose: while it lasts, Electron does not get to start anything of its own. */
 export function handOverToAgentProgram(o: AppLocation, argv: string[] = process.argv): void {
   const list = agentArguments(argv, o.packaged);

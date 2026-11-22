@@ -6,7 +6,8 @@
 // On every system:
 //   - the native `openpixel` program inside the app says the app's version and answers an MCP `initialize`;
 //   - the app's own executable started with `--mcp` (the old Mac app's agent command) answers `initialize` on
-//     standard output and writes nothing else there;
+//     standard output and writes nothing else there (on Windows, after the one blank line Electron itself writes
+//     at every start: see below);
 //   - the app starts: `--screenshot` saves a picture of the window and quits.
 // Linux (the AppImage, run unpacked so no FUSE is needed): after a start the copy of the agent program is at
 //   ~/.local/share/OpenPixel/bin/openpixel, executable, and answers; it is left alone when unchanged and restored
@@ -114,7 +115,12 @@ await check('the agent program answers MCP `initialize` (as `openpixel --mcp`)',
 await check('the app\'s own executable with `--mcp` hands over to it: the answer on standard output, and nothing else', async () => {
   // Linux: the program inside the AppImage, started directly (what a mounted AppImage runs).
   const exe = linux ? path.join(release, 'linux-unpacked', 'openpixel-desktop') : app.exe;
-  assertInitialized(await mcp(exe, [...app.switches, '--mcp', '--headless'], runEnv), 'OpenPixel --mcp');
+  const r = await mcp(exe, [...app.switches, '--mcp', '--headless'], runEnv);
+  // Electron on Windows writes "\r\n" to standard output at every start, before any of the app's code runs (every
+  // version from 32 to 45 does, whatever the switches or ELECTRON_NO_ATTACH_CONSOLE): the app cannot stop it. That
+  // one blank line is all that may come before the answer. Agents on Windows are given the program inside the app
+  // (resources\core\openpixel.exe), which writes nothing of the kind; this path is only for an agent set up by hand.
+  assertInitialized(win ? { ...r, stdout: r.stdout.replace(/^\r\n/, '') } : r, 'OpenPixel --mcp');
 });
 
 if (linux) {
