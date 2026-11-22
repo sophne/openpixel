@@ -17,6 +17,8 @@ export interface NodePlatformOptions {
   home?: string;
   env?: Record<string, string | undefined>;
   os?: NodeJS.Platform;
+  /** For tests: how a text file is read (`~/.config/user-dirs.dirs`), so one system's rules can be checked on another's. */
+  readText?: (file: string) => string;
 }
 
 /** The Node half of Platform, where the agents' socket is for this run, and the agents' side (`local`). */
@@ -103,14 +105,15 @@ export function socketPath(system: NodeJS.Platform, data: string, env: Record<st
 
 /** The person's Documents folder: `~/Documents`, or on Linux what `~/.config/user-dirs.dirs` names (as the MCP
     program finds it). On Windows a Documents folder moved elsewhere is not followed. */
-export function documentsFolder(system: NodeJS.Platform, home: string, env: Record<string, string | undefined>): string {
+export function documentsFolder(system: NodeJS.Platform, home: string, env: Record<string, string | undefined>,
+                                readText: (file: string) => string = (file) => fs.readFileSync(file, 'utf8')): string {
   const p = system === 'win32' ? path.win32 : path.posix;
   const usual = p.join(home, 'Documents');
   if (system !== 'linux') return usual;
   const config = env.XDG_CONFIG_HOME !== undefined && p.isAbsolute(env.XDG_CONFIG_HOME) ? env.XDG_CONFIG_HOME : p.join(home, '.config');
   let dirs: string;
   try {
-    dirs = fs.readFileSync(p.join(config, 'user-dirs.dirs'), 'utf8');
+    dirs = readText(p.join(config, 'user-dirs.dirs'));
   } catch {
     return usual;
   }
@@ -130,7 +133,7 @@ export function nodePaths(options: NodePlatformOptions = {}): PlatformPaths {
   return {
     home,
     data: uiTest ?? dataFolder(system, home, env),
-    files: uiTest !== null ? p.join(uiTest, 'Files') : p.join(documentsFolder(system, home, env), 'OpenPixel'),
+    files: uiTest !== null ? p.join(uiTest, 'Files') : p.join(documentsFolder(system, home, env, options.readText), 'OpenPixel'),
     temp: os.tmpdir(),
     sep: p.sep,
     join: (...parts) => p.join(...parts),

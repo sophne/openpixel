@@ -18,6 +18,15 @@ rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
 
 let failed = 0, passed = 0;
+/** The size a window asked for `want` gets on this screen. Some systems keep a window inside the screen's free area
+    (macOS: a CI machine's screen is 1024×768), others let it run past; both are right, so both are accepted. */
+async function fitted(app, want) {
+  const area = await app.evaluate(({ screen }) => screen.getPrimaryDisplay().workAreaSize);
+  const got = await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].getContentSize());
+  const kept = [Math.min(want[0], area.width), Math.min(want[1], area.height)];
+  return got[0] === want[0] && got[1] === want[1] ? want : kept;
+}
+
 async function check(name, fn) {
   try { await fn(); passed++; console.log(`  ok    ${name}`); }
   catch (e) { failed++; console.log(`  FAIL  ${name}\n        ${String(e && e.message ? e.message : e).split('\n').join('\n        ')}`); }
@@ -134,7 +143,9 @@ console.log('\nold page (app/web), pretending to be a Mac');
       walk(Menu.getApplicationMenu());
       return flat;
     });
-    assert.deepEqual([...new Set(menu.map((i) => i.top))], ['File', 'Edit', 'View', 'Layer', 'Frame', 'Window', 'Help']);
+    // The app menu (named after the app) comes first on a Mac only; elsewhere its items live in File and Help.
+    assert.deepEqual([...new Set(menu.map((i) => i.top))],
+      [...(process.platform === 'darwin' ? ['OpenPixel'] : []), 'File', 'Edit', 'View', 'Layer', 'Frame', 'Window', 'Help']);
     const keyOf = (id) => menu.find((i) => i.id === id)?.key;
     assert.equal(keyOf('command:viewSlice'), 'CmdOrCtrl+1');
     assert.equal(keyOf('command:deleteFrame'), 'CmdOrCtrl+Alt+Backspace');
@@ -173,7 +184,7 @@ console.log('\nold page (app/web), pretending to be a Mac');
   });
   await check('resizeWindow resizes the page; haptic answers', async () => {
     assert.equal(await post({ kind: 'resizeWindow', width: 1000, height: 700 }), true);
-    assert.deepEqual(await page.evaluate(() => [innerWidth, innerHeight]), [1000, 700]);
+    assert.deepEqual(await page.evaluate(() => [innerWidth, innerHeight]), await fitted(app, [1000, 700]));
     assert.equal(await post({ kind: 'native', action: 'haptic' }), true);
   });
   await check('the window cannot leave the app\'s page, open windows or load remote content', async () => {
@@ -329,10 +340,12 @@ console.log('\ndemo recording');
   const done = exited(app);
   const page = await app.firstWindow();
   await page.waitForFunction(() => typeof stateReady !== 'undefined' && stateReady, null, { timeout: 30_000 });
+  let shown = [0, 0, 1];
   const demo = (action, extra = {}) => page.evaluate((m) => window.openpixel.post(m), { kind: 'demo', action, ...extra });
   await check('--demo hands its config to the page and sizes the window for the website\'s shots', async () => {
     assert.deepEqual(await page.evaluate(() => [window.openpixel.flags.demo, window.OPENPIXEL_DEMO]), Array(2).fill({ name: 'Smoke', width: 16, height: 16 }));
-    assert.deepEqual(await page.evaluate(() => [innerWidth, innerHeight]), [1440, 855]);
+    shown = await page.evaluate(() => [innerWidth, innerHeight, devicePixelRatio]);
+    assert.deepEqual(shown.slice(0, 2), await fitted(app, [1440, 855]));
   });
   await check('demo record / mark / stop: frames, manifest.json and the final picture, then the app quits', async () => {
     assert.equal(await demo('record', { fps: 10 }), true);
@@ -346,7 +359,8 @@ console.log('\ndemo recording');
     assert.deepEqual(manifest.marks.map((m) => m.name), ['sent', 'stop']);
     for (const f of manifest.frames.slice(0, -1)) assert.ok(existsSync(path.join(folder, `f${String(f.n).padStart(6, '0')}.png`)), `frame ${f.n} missing`);
     const png = PNG.sync.read(readFileSync(path.join(folder, 'final.png')));
-    assert.deepEqual([png.width, png.height], [1440, 855]);
+    // The final picture is the window's page at its pixel density.
+    assert.deepEqual([png.width, png.height], [Math.round(shown[0] * shown[2]), Math.round(shown[1] * shown[2])]);
   });
 }
 

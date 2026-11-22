@@ -154,16 +154,24 @@ test('folders on each system, by the same rules as the MCP program', (t) => {
   assert.equal(socketPath('win32', 'C:\\x', { USERNAME: 'Ada L' }, () => 'other'), '\\\\.\\pipe\\openpixel-Ada_L');
   assert.equal(socketPath('win32', 'C:\\x', {}, () => 'ada'), '\\\\.\\pipe\\openpixel-ada');
 
-  const home = tempFolder(t);
-  assert.equal(documentsFolder('linux', home, {}), path.join(home, 'Documents'));
-  fs.mkdirSync(path.join(home, '.config'));
-  fs.writeFileSync(path.join(home, '.config', 'user-dirs.dirs'), '# made by xdg-user-dirs\nXDG_DESKTOP_DIR="$HOME/Bureau"\nXDG_DOCUMENTS_DIR="$HOME/Dokumente"\n');
-  assert.equal(documentsFolder('linux', home, {}), path.join(home, 'Dokumente'));
-  assert.equal(documentsFolder('darwin', home, {}), path.join(home, 'Documents'));
-  fs.writeFileSync(path.join(home, '.config', 'user-dirs.dirs'), 'XDG_DOCUMENTS_DIR="$HOME/"\n');
-  assert.equal(documentsFolder('linux', home, {}), path.join(home, 'Documents'));
-  fs.writeFileSync(path.join(home, '.config', 'user-dirs.dirs'), 'XDG_DOCUMENTS_DIR="/srv/docs"\n');
-  assert.equal(nodePaths({ os: 'linux', home, env: {} }).files, '/srv/docs/OpenPixel');
+  // Each system's rules with that system's paths, whichever system runs the test: the settings file is read from
+  // a map instead of the disk.
+  const files = new Map<string, string>();
+  const readText = (file: string): string => { const text = files.get(file); if (text === undefined) throw new Error('no such file'); return text; };
+  const home = '/home/ada', dirs = '/home/ada/.config/user-dirs.dirs';
+  assert.equal(documentsFolder('linux', home, {}, readText), '/home/ada/Documents');
+  files.set(dirs, '# made by xdg-user-dirs\nXDG_DESKTOP_DIR="$HOME/Bureau"\nXDG_DOCUMENTS_DIR="$HOME/Dokumente"\n');
+  assert.equal(documentsFolder('linux', home, {}, readText), '/home/ada/Dokumente');
+  assert.equal(documentsFolder('linux', home, { XDG_CONFIG_HOME: '/elsewhere' }, readText), '/home/ada/Documents');
+  assert.equal(documentsFolder('darwin', '/Users/ada', {}, readText), '/Users/ada/Documents');
+  assert.equal(documentsFolder('win32', 'C:\\Users\\ada', {}, readText), 'C:\\Users\\ada\\Documents');
+  files.set(dirs, 'XDG_DOCUMENTS_DIR="$HOME/"\n');
+  assert.equal(documentsFolder('linux', home, {}, readText), '/home/ada/Documents');
+  files.set(dirs, 'XDG_DOCUMENTS_DIR="/srv/docs"\n');
+  assert.equal(nodePaths({ os: 'linux', home, env: {}, readText }).files, '/srv/docs/OpenPixel');
+  // And once from the disk, with this system's own paths.
+  const disk = tempFolder(t);
+  assert.equal(documentsFolder(process.platform, disk, {}), path.join(disk, 'Documents'));
 
   const paths = nodePaths({ os: 'linux', home: '/home/ada', env: {} });
   assert.deepEqual([paths.data, paths.files, paths.sep], ['/home/ada/.local/share/OpenPixel', '/home/ada/Documents/OpenPixel', '/']);
