@@ -1,9 +1,13 @@
 [package]
 name = "openpixel"
-description = "OpenPixel's core program: MCP server, the link to the open window, and the host the desktop app talks to."
+description = "OpenPixel's MCP program: what agents start. Forwards tool calls to the open window, or works headless."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+
+[lib]
+name = "openpixel"
+path = "src/lib.rs"
 
 [[bin]]
 name = "openpixel"
@@ -12,3 +16,6 @@ path = "src/main.rs"
 [dependencies]
 openpixel-core = { path = "../engine" }
 serde_json = "1"
+base64 = "0.22"
+dirs = "6"
+uuid = { version = "1", features = ["v4"] }
