@@ -21,7 +21,6 @@ fn http_paths_are_confined() {
 }
 
 #[test]
-#[ignore = "needs the ported engine"]
 fn tools_are_listed_and_called() {
     let mut c = Checks::new(false);
     selftest::tool_checks(&mut c);

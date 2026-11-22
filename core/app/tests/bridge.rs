@@ -166,7 +166,6 @@ fn the_mcp_program_says_hello_and_reconnects() {
 
 /// Forwarding a tool call needs the tool catalogue: tools/call refuses names the engine does not list.
 #[test]
-#[ignore = "needs the ported engine"]
 fn the_mcp_program_forwards_tool_calls_to_the_window() {
     let path = socket("forward");
     let w = window(&path);

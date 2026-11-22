@@ -137,7 +137,6 @@ fn connection_version_picks_the_newest() {
 /// A backend that answers by itself, to see what tools/call makes of a result. It needs the tool catalogue
 /// (tools/call refuses names the engine does not list), so it waits for the engine.
 #[test]
-#[ignore = "needs the ported engine"]
 fn tool_results_are_pretty_text_plus_pictures() {
     let mut s = McpServer::new(|tool, args| {
         if tool == "get_model_info" {
