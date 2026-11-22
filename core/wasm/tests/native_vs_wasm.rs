@@ -15,14 +15,8 @@ use std::sync::{Arc, Mutex};
 use openpixel_core::{sample, tools, updates, Engine, HostIo, Json, JsonMap, PcError, StdIo, ToolOutput};
 use serde_json::json;
 
-const APPCAST: &str = r#"<?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel><title>OpenPixel</title>
-<item><title>OpenPixel 9.10.1</title><sparkle:version>1</sparkle:version>
-<sparkle:shortVersionString>9.10.1</sparkle:shortVersionString>
-<sparkle:fullReleaseNotesLink>https://github.com/sophne/openpixel/releases/tag/v9.10.1</sparkle:fullReleaseNotesLink>
-<enclosure url="https://github.com/sophne/openpixel/releases/download/v9.10.1/OpenPixel.dmg" sparkle:edSignature="x" length="1" type="application/octet-stream"/>
-</item>
-</channel></rss>"#;
+/// What the canned feed says (run-session.mjs has the same text): Linux's file, as electron-builder writes it.
+const FEED: &str = "version: 9.10.1\nfiles:\n  - url: OpenPixel.AppImage\n    sha512: c2hhNTEy\n    size: 1\n    blockMapSize: 1\npath: OpenPixel.AppImage\nsha512: c2hhNTEy\nreleaseDate: '2026-11-22T11:24:00.000Z'\n";
 
 /// The host of the native run: real files, the same ticking clock and canned update feed as run-session.mjs.
 struct TestIo {
@@ -54,10 +48,11 @@ impl HostIo for TestIo {
         1700000000.5 + 1.25 * self.clock.fetch_add(1, Ordering::SeqCst) as f64
     }
     fn http_get(&self, url: &str) -> Result<Vec<u8>, String> {
-        if url != updates::DEFAULT_FEED {
+        // Both runs read Linux's feed, whatever system this test runs on (run_native says so to the core).
+        if url != updates::default_feed_for(updates::Os::Linux) {
             return Err(format!("unexpected address {url}"));
         }
-        Ok(APPCAST.as_bytes().to_vec())
+        Ok(FEED.as_bytes().to_vec())
     }
 }
 
@@ -98,6 +93,8 @@ fn run_native(session: &Path, out_dir: &Path) {
     std::fs::create_dir_all(out_dir.join("images")).expect("the output folder");
     let steps: Vec<Json> = serde_json::from_slice(&std::fs::read(session).expect("session.json")).expect("the session is JSON");
     let clock = Arc::new(AtomicU64::new(0));
+    // As run-session.mjs tells the WebAssembly core: this session reads Linux's feed on every system.
+    updates::set_os(Some(updates::Os::Linux));
     let mut engines: HashMap<String, Session> = HashMap::new();
     let mut lines: Vec<String> = Vec::new();
     for (i, step) in steps.iter().enumerate() {

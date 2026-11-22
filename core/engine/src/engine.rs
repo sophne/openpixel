@@ -1227,7 +1227,7 @@ impl Engine {
                     o.insert(
                         "install".into(),
                         json!(if available {
-                            "No OpenPixel window is open, so no dialog was shown. Ask the person to open OpenPixel and click Update at the bottom of the sidebar, or to download it from the link."
+                            "No OpenPixel window is open, so no dialog was shown. Ask the person to open OpenPixel and click Update in the tab bar, or to download it from the link."
                         } else {
                             "Nothing to install."
                         }),

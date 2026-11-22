@@ -347,29 +347,53 @@ pub fn open_sample_3d(engine: &Engine) -> Result<(), JsError> {
 
 // MARK: - small pure helpers for the app's logic
 
-/// Where the release feed lives.
-#[wasm_bindgen(js_name = updateFeedUrl)]
-pub fn update_feed_url() -> String {
-    op::updates::DEFAULT_FEED.to_string()
+/// The system a host names: Node's `process.platform` ("darwin", "win32", "linux") or the plain names.
+fn os_named(name: &str) -> Result<op::updates::Os, JsError> {
+    op::updates::Os::from_name(name).ok_or_else(|| JsError::new(&format!("OpenPixel has no update feed for \"{name}\" (expected darwin, win32 or linux)")))
 }
 
-/// What check_for_updates answers, as JSON text, from feed XML the host fetched itself. It assumes the
+/// Tells the core which system it runs on, so its own check_for_updates (through `HostIo.httpGet`) reads that
+/// system's feed. A core built to WebAssembly cannot know; the native build does and needs no telling.
+#[wasm_bindgen(js_name = setUpdatePlatform)]
+pub fn set_update_platform(os: &str) -> Result<(), JsError> {
+    op::updates::set_os(Some(os_named(os)?));
+    Ok(())
+}
+
+/// Where the release feed for a system lives: electron-builder's `latest-mac.yml`, `latest.yml` (Windows) or
+/// `latest-linux.yml` of the newest release. `os` is "darwin", "win32" or "linux"; without it, the system
+/// `setUpdatePlatform` named. Throws when neither says which.
+#[wasm_bindgen(js_name = updateFeedUrl)]
+pub fn update_feed_url(os: Option<String>) -> Result<String, JsError> {
+    match os {
+        Some(name) => Ok(op::updates::default_feed_for(os_named(&name)?)),
+        None => op::updates::feed_url().ok_or_else(|| JsError::new("OpenPixel does not know which system's update feed to read: pass \"darwin\", \"win32\" or \"linux\"")),
+    }
+}
+
+/// What check_for_updates answers, as JSON text, from feed text the host fetched itself (the file
+/// `updateFeedUrl(os)` names). `os` says which system the feed is for; it is checked, and every system gets
+/// the same answer today (the download link is the downloads page), so it may be left out. It assumes the
 /// running program is this core (its `version()`), that the feed text is fresh (the host decides when to
 /// fetch again; nothing is cached here) and that no newer copy is known to be installed on disk (so no
 /// `installed_version`/`restart_needed`; `updateReportFor` takes those). Throws when the feed lists no release.
 #[wasm_bindgen(js_name = updateReport)]
-pub fn update_report(feed_xml: &str) -> Result<String, JsError> {
-    update_report_for(feed_xml, op::VERSION, None)
+pub fn update_report(feed_text: &str, os: Option<String>) -> Result<String, JsError> {
+    if let Some(name) = os {
+        os_named(&name)?;
+    }
+    update_report_for(feed_text, op::VERSION, None)
 }
 
 /// `updateReport` for a program running version `running`, when `installed` is the version on disk (if known).
 #[wasm_bindgen(js_name = updateReportFor)]
-pub fn update_report_for(feed_xml: &str, running: &str, installed: Option<String>) -> Result<String, JsError> {
-    let report = op::updates::report_from_feed(feed_xml, running, installed.as_deref()).map_err(to_js_error)?;
+pub fn update_report_for(feed_text: &str, running: &str, installed: Option<String>) -> Result<String, JsError> {
+    let report = op::updates::report_from_feed(feed_text, running, installed.as_deref()).map_err(to_js_error)?;
     Ok(serde_json::to_string(&report).unwrap_or_else(|_| "{}".to_string()))
 }
 
-/// -1, 0 or 1, comparing dotted version numbers ("1.10.0" is newer than "1.9.2").
+/// -1, 0 or 1, comparing versions as the updater does ("1.10.0" is newer than "1.9.2"; "1.3.0-beta.1" is
+/// older than "1.3.0").
 #[wasm_bindgen(js_name = compareVersions)]
 pub fn compare_versions(a: &str, b: &str) -> i32 {
     op::updates::compare(a, b)

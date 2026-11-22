@@ -15,14 +15,11 @@ if (!pkgDir || !sessionFile || !outDir) {
 const pkg = await import(pathToFileURL(path.join(pkgDir, "openpixel_wasm.js")).href);
 pkg.initSync({ module: fs.readFileSync(path.join(pkgDir, "openpixel_wasm_bg.wasm")) });
 
-const APPCAST = `<?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel><title>OpenPixel</title>
-<item><title>OpenPixel 9.10.1</title><sparkle:version>1</sparkle:version>
-<sparkle:shortVersionString>9.10.1</sparkle:shortVersionString>
-<sparkle:fullReleaseNotesLink>https://github.com/sophne/openpixel/releases/tag/v9.10.1</sparkle:fullReleaseNotesLink>
-<enclosure url="https://github.com/sophne/openpixel/releases/download/v9.10.1/OpenPixel.dmg" sparkle:edSignature="x" length="1" type="application/octet-stream"/>
-</item>
-</channel></rss>`;
+// What the canned feed says (native_vs_wasm.rs has the same text): Linux's file, as electron-builder writes it.
+const FEED =
+  "version: 9.10.1\nfiles:\n  - url: OpenPixel.AppImage\n    sha512: c2hhNTEy\n    size: 1\n    blockMapSize: 1\npath: OpenPixel.AppImage\nsha512: c2hhNTEy\nreleaseDate: '2026-11-22T11:24:00.000Z'\n";
+// A core in WebAssembly cannot know which system it runs on: the host says so.
+pkg.setUpdatePlatform("linux");
 
 fs.mkdirSync(path.join(outDir, "images"), { recursive: true });
 
@@ -45,8 +42,8 @@ const io = {
   homeDir: () => outDir,
   now: () => 1700000000.5 + 1.25 * clock++,
   httpGet: (url) => {
-    if (url !== pkg.updateFeedUrl()) throw new Error(`unexpected address ${url}`);
-    return new TextEncoder().encode(APPCAST);
+    if (url !== pkg.updateFeedUrl() || url !== pkg.updateFeedUrl("linux")) throw new Error(`unexpected address ${url}`);
+    return new TextEncoder().encode(FEED);
   },
 };
 
@@ -74,8 +71,9 @@ steps.forEach((step, i) => {
     } else if (step.catalog) {
       text = pkg.toolCatalog();
     } else if (step.updateReport) {
-      const [xml, running, installed] = step.updateReport;
-      text = running === null ? pkg.updateReport(xml) : pkg.updateReportFor(xml, running, installed ?? undefined);
+      // [feed text, running version or null for this core's, installed version, the system (optional)]
+      const [feed, running, installed, os] = step.updateReport;
+      text = running !== null ? pkg.updateReportFor(feed, running, installed ?? undefined) : os === undefined ? pkg.updateReport(feed) : pkg.updateReport(feed, os);
     } else {
       const e = engines.get(step.e);
       if (step.tool) {

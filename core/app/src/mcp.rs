@@ -83,22 +83,10 @@ impl Prompt {
     }
 }
 
-/// -1, 0 or 1, comparing dotted version numbers ("1.10.0" is newer than "1.9.2").
+/// -1, 0 or 1, comparing versions as the update check does ("1.10.0" is newer than "1.9.2", a pre-release
+/// is older than its release).
 pub fn compare_versions(a: &str, b: &str) -> i32 {
-    fn parts(s: &str) -> Vec<u64> {
-        s.split('.')
-            .filter(|p| !p.is_empty())
-            .map(|p| p.chars().take_while(|c| c.is_numeric()).collect::<String>().parse().unwrap_or(0))
-            .collect()
-    }
-    let (x, y) = (parts(a), parts(b));
-    for i in 0..x.len().max(y.len()) {
-        let (p, q) = (x.get(i).copied().unwrap_or(0), y.get(i).copied().unwrap_or(0));
-        if p != q {
-            return if p < q { -1 } else { 1 };
-        }
-    }
-    0
+    openpixel_core::updates::compare(a, b)
 }
 
 /// The version of OpenPixel installed on disk now, when it can differ from the one running. The Mac app read

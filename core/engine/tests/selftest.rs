@@ -727,28 +727,24 @@ fn set_review() {
 
 #[test]
 fn update_feed() {
-    // UPDATES: agents read the same appcast Sparkle uses (here a local file in release.sh's format).
+    // UPDATES: agents read the feed the app's own updater reads (here a local file as electron-builder writes it).
     assert!(
         updates::compare("1.10.0", "1.9.2") == 1 && updates::compare("1.0", "1.0.0") == 0 && updates::compare("1.99.99", "2.0.0") == -1,
         "updates: versions compare by number, not as text"
     );
-    fn appcast(versions: &[&str]) -> String {
-        let items: String = versions
-            .iter()
-            .map(|v| {
-                format!(
-                    "    <item><title>OpenPixel {v}</title><sparkle:version>1</sparkle:version>\n      <sparkle:shortVersionString>{v}</sparkle:shortVersionString>\n      <sparkle:fullReleaseNotesLink>https://github.com/sophne/openpixel/releases/tag/v{v}</sparkle:fullReleaseNotesLink>\n      <enclosure url=\"https://github.com/sophne/openpixel/releases/download/v{v}/OpenPixel.dmg\" sparkle:edSignature=\"x\" length=\"1\" type=\"application/octet-stream\"/>\n    </item>"
-                )
-            })
-            .collect();
+    assert!(
+        updates::compare("1.3.0-beta.1", "1.3.0") == -1 && updates::compare("1.3.0-beta.2", "1.3.0-beta.10") == -1 && updates::compare("1.3.0-beta.1", "1.2.9") == 1,
+        "updates: a pre-release is older than its release and newer than the release before"
+    );
+    fn feed_text(version: &str) -> String {
         format!(
-            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<rss version=\"2.0\" xmlns:sparkle=\"http://www.andymatuschak.org/xml-namespaces/sparkle\"><channel><title>OpenPixel</title>\n{items}\n</channel></rss>"
+            "version: {version}\nfiles:\n  - url: OpenPixel.AppImage\n    sha512: c2hhNTEy\n    size: 1\n    blockMapSize: 1\npath: OpenPixel.AppImage\nsha512: c2hhNTEy\nreleaseDate: '2026-11-22T11:24:00.000Z'\n"
         )
     }
     let dir = temp("updates");
-    let feed = dir.join("appcast.xml");
+    let feed = dir.join("latest-linux.yml");
     updates::set_feed_override(Some(feed.to_string_lossy().into_owned()));
-    std::fs::write(&feed, appcast(&["9.8.0", "9.10.1"])).expect("writes the feed");
+    std::fs::write(&feed, feed_text("9.10.1")).expect("writes the feed");
     let mut upd = Engine::new();
     let newer = js(&mut upd, "check_for_updates", json!({"refresh": true}));
     let install_note = js(&mut upd, "check_for_updates", json!({"install": true}));
@@ -756,28 +752,51 @@ fn update_feed() {
     assert!(
         text(&newer, "latest_version") == "9.10.1"
             && newer.get("update_available") == Some(&json!(true))
-            && text(&newer, "download").ends_with("/v9.10.1/OpenPixel.dmg")
-            && text(&newer, "release_notes").ends_with("v9.10.1")
+            && text(&newer, "download") == "https://openpixel.dev/downloads"
+            && text(&newer, "release_notes") == "https://github.com/sophne/openpixel/releases/tag/v9.10.1"
+            && text(&newer, "release_date") == "2026-11-22T11:24:00.000Z"
             && text(&newer, "next").contains("install=true")
             && text(&install_note, "install").contains("No OpenPixel window"),
-        "updates: the newest release in the feed is found, with its download and notes; without a window, install says what to do ({newer:?})"
+        "updates: the release in the feed is found, with its download page and notes; without a window, install says what to do ({newer:?})"
     );
-    std::fs::write(&feed, appcast(&["0.0.1"])).expect("writes the feed");
+    std::fs::write(&feed, feed_text("0.0.1")).expect("writes the feed");
     let cached_answer = text(&js(&mut upd, "check_for_updates", json!({})), "latest_version");
     let current = js(&mut upd, "check_for_updates", json!({"refresh": true}));
     assert!(
         cached_answer == "9.10.1" && current.get("update_available") == Some(&json!(false)) && text(&current, "next").contains("up to date"),
         "updates: answers are cached for a while, refresh asks again, and an older feed means up to date"
     );
-    std::fs::write(&feed, "<rss><channel></channel></rss>").expect("writes the feed");
-    assert_eq!(
-        error_of(&mut upd, "check_for_updates", json!({"refresh": true})),
-        "the update feed lists no release",
-        "updates: a feed without releases is an error, not \"up to date\""
-    );
+    // Damaged feeds: an error page, the old appcast, a file cut short, one far too large. An error, never
+    // "up to date", never a crash.
+    for damaged in [
+        "<html><body><h1>Not Found</h1></body></html>".to_string(),
+        "<rss><channel></channel></rss>".to_string(),
+        "versi".to_string(),
+        "version: \"9.10".to_string(),
+        "files:\n  - url: OpenPixel.AppImage\n    version: 9.9.9\n".to_string(),
+        String::new(),
+    ] {
+        std::fs::write(&feed, &damaged).expect("writes the feed");
+        assert_eq!(
+            error_of(&mut upd, "check_for_updates", json!({"refresh": true})),
+            "the update feed lists no release",
+            "updates: a feed without a release is an error, not \"up to date\" ({damaged:?})"
+        );
+    }
+    std::fs::write(&feed, format!("version: 9.10.1\n{}", "x".repeat(updates::MAX_FEED_BYTES))).expect("writes the feed");
+    assert_eq!(error_of(&mut upd, "check_for_updates", json!({"refresh": true})), "the update feed is too large to be one");
+    std::fs::write(&feed, [0xffu8, 0xfe, 0x00, 0x80, 0xc3, 0x28]).expect("writes the feed");
+    assert_eq!(error_of(&mut upd, "check_for_updates", json!({"refresh": true})), "the update feed lists no release");
     // The same answer from feed text a host fetched itself, and the restart note when a newer one is installed.
-    let pure = updates::report_from_feed(&appcast(&["9.8.0", "9.10.1"]), "9.9.0", Some("9.10.1")).expect("reads the feed");
+    let pure = updates::report_from_feed(&feed_text("9.10.1"), "9.9.0", Some("9.10.1")).expect("reads the feed");
     assert!(text(&pure, "latest_version") == "9.10.1" && text(&pure, "installed_version") == "9.10.1" && text(&pure, "restart_needed").contains("still runs 9.9.0"));
+    // Each system reads its own file of the newest release.
+    assert!(
+        updates::default_feed_for(updates::Os::Mac).ends_with("/releases/latest/download/latest-mac.yml")
+            && updates::default_feed_for(updates::Os::Windows).ends_with("/releases/latest/download/latest.yml")
+            && updates::default_feed_for(updates::Os::Linux).ends_with("/releases/latest/download/latest-linux.yml"),
+        "updates: the feed is electron-builder's file for the system"
+    );
     updates::set_feed_override(None);
     let _ = std::fs::remove_dir_all(&dir);
 }

@@ -4,16 +4,38 @@
  },
  {
   "updateReport": [
-   "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<rss version=\"2.0\" xmlns:sparkle=\"http://www.andymatuschak.org/xml-namespaces/sparkle\"><channel><title>OpenPixel</title>\n<item><title>OpenPixel 9.10.1</title><sparkle:version>1</sparkle:version>\n<sparkle:shortVersionString>9.10.1</sparkle:shortVersionString>\n<sparkle:fullReleaseNotesLink>https://github.com/sophne/openpixel/releases/tag/v9.10.1</sparkle:fullReleaseNotesLink>\n<enclosure url=\"https://github.com/sophne/openpixel/releases/download/v9.10.1/OpenPixel.dmg\" sparkle:edSignature=\"x\" length=\"1\" type=\"application/octet-stream\"/>\n</item>\n</channel></rss>",
+   "version: 9.10.1\nfiles:\n  - url: OpenPixel.AppImage\n    sha512: c2hhNTEy\n    size: 1\n    blockMapSize: 1\npath: OpenPixel.AppImage\nsha512: c2hhNTEy\nreleaseDate: '2026-11-22T11:24:00.000Z'\n",
    null,
    null
   ]
  },
  {
   "updateReport": [
-   "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<rss version=\"2.0\" xmlns:sparkle=\"http://www.andymatuschak.org/xml-namespaces/sparkle\"><channel><title>OpenPixel</title>\n<item><title>OpenPixel 9.10.1</title><sparkle:version>1</sparkle:version>\n<sparkle:shortVersionString>9.10.1</sparkle:shortVersionString>\n<sparkle:fullReleaseNotesLink>https://github.com/sophne/openpixel/releases/tag/v9.10.1</sparkle:fullReleaseNotesLink>\n<enclosure url=\"https://github.com/sophne/openpixel/releases/download/v9.10.1/OpenPixel.dmg\" sparkle:edSignature=\"x\" length=\"1\" type=\"application/octet-stream\"/>\n</item>\n</channel></rss>",
+   "version: 9.10.1\nfiles:\n  - url: OpenPixel.AppImage\n    sha512: c2hhNTEy\n    size: 1\n    blockMapSize: 1\npath: OpenPixel.AppImage\nsha512: c2hhNTEy\nreleaseDate: '2026-11-22T11:24:00.000Z'\n",
+   null,
+   null,
+   "darwin"
+  ]
+ },
+ {
+  "updateReport": [
+   "version: 9.10.1\nfiles:\n  - url: OpenPixel.AppImage\n    sha512: c2hhNTEy\n    size: 1\n    blockMapSize: 1\npath: OpenPixel.AppImage\nsha512: c2hhNTEy\nreleaseDate: '2026-11-22T11:24:00.000Z'\n",
    "9.9.0",
    "9.10.1"
+  ]
+ },
+ {
+  "updateReport": [
+   "version: 9.10.1\nfiles:\n  - url: OpenPixel.AppImage\n    sha512: c2hhNTEy\n    size: 1\n    blockMapSize: 1\npath: OpenPixel.AppImage\nsha512: c2hhNTEy\nreleaseDate: '2026-11-22T11:24:00.000Z'\n",
+   "9.10.1-beta.2",
+   null
+  ]
+ },
+ {
+  "updateReport": [
+   "\ufeffversion: \"10.0.0-beta.1\"  # a pre-release\r\nreleaseDate: 2026-01-02T03:04:05Z\r\n",
+   "10.0.0-alpha.9",
+   null
   ]
  },
  {
@@ -21,6 +43,21 @@
    "<rss></rss>",
    "1.0.0",
    null
+  ]
+ },
+ {
+  "updateReport": [
+   "files:\n  - url: OpenPixel.AppImage\n    version: 9.9.9\nversion: '../../9.9.9'\n",
+   "1.0.0",
+   null
+  ]
+ },
+ {
+  "updateReport": [
+   "version: 1.2.3 <script>\n",
+   null,
+   null,
+   "win32"
   ]
  },
  {
