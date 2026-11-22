@@ -40,7 +40,8 @@ function parseArgs(argv: string[], cwd = process.cwd()): Args {
     if (valued[a]) { if (i + 1 < list.length) out[valued[a]] = path.resolve(cwd, list[++i]); }
     else if (a === '--legacy-ui') out.legacy = true;
     // Everything else that starts with a dash is Chromium's or Electron's own switch.
-    else if (!a.startsWith('-') && !out.file) out.file = path.resolve(cwd, a);
+    // Linux launchers may hand a file over as an address (file:///…).
+    else if (!a.startsWith('-') && !out.file) out.file = a.startsWith('file://') ? fileURLToPath(a) : path.resolve(cwd, a);
   }
   return out;
 }
