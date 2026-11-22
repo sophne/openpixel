@@ -5,10 +5,11 @@ look and behave exactly like the old page: same pages, interactions, animations 
 `app/web/style.css` copied byte for byte and is never edited (additions go in `platform.css`), and the old UI test
 (`app/web/uitest.js`, 59 cases) is run against this page. Both only work if the DOM is the old DOM.
 
-The port is split in four: the **kit** (`lib/`, `kit/`, `state/`, `app/`, `testing/`, `App.tsx`, `main.tsx`: done, do
-not edit from an area; ask for a change instead) and three areas built on it, each in its own folder:
+The page is in four parts: the **kit** (`lib/`, `kit/`, `state/`, `app/`, `testing/`, `App.tsx`, `main.tsx`), which
+everything shares, and three areas built on it, each in its own folder. While both apps ship, a change to `app/web`
+needs the same change here (and the other way round); the line numbers below say where each part came from.
 
-| Area | Folder | From app.js (lines) | Replaces these placeholders |
+| Area | Folder | From app.js (lines) | Its root components |
 |---|---|---|---|
 | editor | `editor/` | 22–28, 43–44, 220–231, 233–1663, 2918–3284, 4321–4342, minus the kit's parts below | `Editor.tsx`, `EditorDialogs.tsx` |
 | library | `library/` | 1664–2900, 3286–3300, minus the kit's parts below | `TabBar.tsx`, `Home.tsx`, `NewPage.tsx`, `Agents.tsx`, `LibraryMenus.tsx` |
@@ -21,8 +22,8 @@ http://localhost:5173/; it runs without the app (see `lib/host.ts`), `?screensho
 ## Rules
 
 1. **Same DOM.** Components render what `index.html` holds and what `app.js` builds: same tags, ids, classes, `data-`
-   and `aria-` attributes, text, and order. Do not add wrappers, rename classes or restyle. The placeholders are
-   `index.html` turned into JSX mechanically (866 nodes, checked equal): start from them and keep every node.
+   and `aria-` attributes, text, and order. Do not add wrappers, rename classes or restyle. The static markup is
+   `index.html` turned into JSX mechanically (866 nodes, checked equal): keep every node.
 2. **Real React.** Function components and hooks. What a `render…()` function drew becomes JSX that reads a store;
    what `wire…()` attached becomes `onClick`, `onKeyDown`… on the element. Drawing code for the canvases (WebGL, the
    2D slice, the colour square) stays in plain `.ts` modules that get their canvas from a ref.
@@ -137,7 +138,7 @@ paths and export names.
 Three things sit in one area's line range but belong to another: `showUpdate` and the two lines after it
 (3286–3300, the `#tab-update` button) are the **library's**; `renameFolderTo` (726–730) is the **library's** (only it
 calls it); `#doc-menu` is rendered by `library/LibraryMenus`, but `openDocMenu`/`docMenuAction` (735–757) are the
-**editor's** and its rows call `actions.docMenuAction(act)` (already wired in the placeholder).
+**editor's** and its rows call `actions.docMenuAction(act)` (wired in `LibraryMenus`).
 
 ## Pages
 
@@ -231,7 +232,7 @@ first render, and the script waits for `stateReady` itself). `demo.js` runs the 
 
 ## How to port a piece of app.js
 
-1. Find its DOM: the nodes in `index.html` (already JSX in your placeholder) and what the function builds
+1. Find its DOM: the nodes in `index.html` (already JSX in the area's components) and what the function builds
    (`innerHTML`, `createElement`). Write that as JSX in the component at the same place in the tree, node for node.
 2. Its state: object stores become `export const x = store({ … })` with the old name and fields; the function's
    reads of other state become `useStore(S)` etc. in the component.

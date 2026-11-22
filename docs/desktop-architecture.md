@@ -127,4 +127,8 @@ this computer only, with file access confined to the files folder. `OPENPIXEL_SO
 - `cd desktop && npm test`: the host's checks (library, tabs, autosave, agents registry, chat stream parsing: the
   port of `ChatSelfTest.swift`).
 - `cd desktop && npm run test:ui`: the old 59-case UI test against the old page and the React page in Electron, a
-  picture of every checkpoint from both, a pixel comparison, and a video of the run.
+  picture of every checkpoint from both, a pixel comparison, and a video of the run. The old page is the yardstick:
+  the run fails when the React page fails something the old page passes. The record of the comparison made when the
+  port landed is in `docs/desktop-port`.
+- `cd desktop && npm run test:web`: the same core package in a plain browser (`desktop/web`, files in memory), with
+  one session's answers compared with the Node side's.
