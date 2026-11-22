@@ -127,9 +127,11 @@ fn connection_version_picks_the_newest() {
         note,
         format!("Your OpenPixel MCP connection runs {v}, but OpenPixel 99.1.0 is installed. Restart or reconnect the OpenPixel MCP server in your agent (for Claude Code: /mcp, then reconnect openpixel) to work on the new version.", v = mcp::VERSION)
     );
+    // A window no newer than this program (a release dry run builds as 0.0.0-dryrun.N, so nothing lower is safe
+    // to name here).
     let mut old = JsonMap::new();
-    old.insert("running_version".into(), json!("0.0.1"));
-    mcp::add_connection_version(&mut old, None);
+    old.insert("running_version".into(), json!(mcp::VERSION));
+    mcp::add_connection_version(&mut old, Some(mcp::VERSION));
     assert!(!old.contains_key("reconnect_needed"));
     assert_eq!(old["agent_connection_version"], mcp::VERSION);
 }

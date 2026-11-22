@@ -761,12 +761,13 @@ fn update_feed() {
             && text(&install_note, "install").contains("No OpenPixel window"),
         "updates: the release in the feed is found, with its download page and notes; without a window, install says what to do ({newer:?})"
     );
-    std::fs::write(&feed, feed_text("0.0.1")).expect("writes the feed");
+    // The release this build is (a release dry run builds as 0.0.0-dryrun.N, so no lower number is safe here).
+    std::fs::write(&feed, feed_text(openpixel_core::VERSION)).expect("writes the feed");
     let cached_answer = text(&js(&mut upd, "check_for_updates", json!({})), "latest_version");
     let current = js(&mut upd, "check_for_updates", json!({"refresh": true}));
     assert!(
         cached_answer == "9.10.1" && current.get("update_available") == Some(&json!(false)) && text(&current, "next").contains("up to date"),
-        "updates: answers are cached for a while, refresh asks again, and an older feed means up to date"
+        "updates: answers are cached for a while, refresh asks again, and a feed no newer than this build means up to date"
     );
     // Damaged feeds: an error page, the old appcast, a file cut short, one far too large. An error, never
     // "up to date", never a crash.
