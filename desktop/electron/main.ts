@@ -337,6 +337,13 @@ const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms
 /** The window's page as a PNG, as the person sees it. */
 async function capture(): Promise<Buffer> {
   if (!win || win.isDestroyed()) throw new Error('window closed');
+  // What the page has just changed is only in the picture once it has been painted: wait two frames first (or a
+  // moment, should the page be too busy to answer), or a checkpoint can show the state before it.
+  await Promise.race([
+    win.webContents.executeJavaScript('new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(true))))').catch(() => false),
+    new Promise((r) => setTimeout(r, 500)),
+  ]);
+  if (!win || win.isDestroyed()) throw new Error('window closed');
   return (await win.webContents.capturePage()).toPNG();
 }
 
