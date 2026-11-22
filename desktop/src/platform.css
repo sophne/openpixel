@@ -14,3 +14,9 @@ html[data-platform="linux"] :is(.mono, pre.code, .cmd code, .md code, kbd) { fon
 /* The tab bar is the window's title bar. On the Mac its first 80px are left to the close, minimise and zoom
    buttons; Windows and Linux have none there. */
 html:not([data-platform="darwin"]) #tabbar { padding-left: 8px; }
+/* There the window's own buttons (minimise, maximise, close) sit over the bar's right end: the bar stops before
+   them. The window says where they are (the title-bar area); in full screen there are none. */
+html:not([data-platform="darwin"]) body:not(.fullscreen) #tabbar {
+  padding-left: calc(env(titlebar-area-x, 0px) + 8px);
+  padding-right: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw) + 8px);
+}
