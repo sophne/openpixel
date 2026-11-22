@@ -1,0 +1,14 @@
+[workspace]
+resolver = "2"
+members = ["engine", "app"]
+
+[workspace.package]
+version = "1.0.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/sophne/openpixel"
+
+[profile.release]
+# Keep overflow and bounds checks: this code parses files from the internet.
+overflow-checks = true
+opt-level = 3

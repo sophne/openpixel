@@ -1,0 +1,38 @@
+{
+  "name": "openpixel-desktop",
+  "private": true,
+  "version": "1.0.0",
+  "description": "OpenPixel's desktop app: Electron shell, React + Vite editor, Rust core.",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist-electron/main.cjs",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build:core": "cargo build --release --manifest-path ../core/Cargo.toml",
+    "build:electron": "node scripts/build-electron.mjs",
+    "build:ui": "vite build",
+    "build": "npm run build:electron && npm run build:ui",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p electron/tsconfig.json",
+    "start": "electron .",
+    "test:ui": "node tests/run-ui-test.mjs",
+    "dist": "npm run build:core && npm run build && electron-builder"
+  },
+  "dependencies": {
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "electron": "45.4.1",
+    "electron-builder": "^26.18.0",
+    "esbuild": "^0.28.2",
+    "pixelmatch": "^8.0.0",
+    "playwright": "1.63.0",
+    "pngjs": "^7.0.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8"
+  }
+}

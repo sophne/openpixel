@@ -1,0 +1,9 @@
+[package]
+name = "openpixel-core"
+description = "OpenPixel's engine: the document, every tool, rendering and file formats."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde_json = "1"
