@@ -8,15 +8,16 @@ permissions:
   contents: read
 jobs:
   probe:
+    name: probe (Electron ${{ matrix.electron }})
     strategy:
       fail-fast: false
       matrix:
-        shell: [bash, pwsh]
+        electron: [32.3.3, 36.9.5, 39.8.10, 41.10.7, 43.8.12, 44.11.5, 45.0.0, 45.4.1]
     runs-on: windows-latest
     timeout-minutes: 15
     defaults:
       run:
-        shell: ${{ matrix.shell }}
+        shell: bash
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -24,7 +25,9 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
-      - name: Electron 45.4.1
-        run: npm install --prefix probe-root --no-save --no-fund electron@45.4.1
+      - name: Electron ${{ matrix.electron }}
+        env:
+          VERSION: ${{ matrix.electron }}
+        run: npm install --prefix probe-root --no-save --no-fund "electron@$VERSION"
       - name: Probe
-        run: node .github/probe/stdout-probe.mjs probe-root
+        run: node .github/probe/stdout-probe.mjs probe-root --short

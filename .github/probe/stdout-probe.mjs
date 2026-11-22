@@ -40,13 +40,18 @@ function run(dir, args, env) {
   });
 }
 
-const variants = [
+const short = process.argv.includes('--short');
+const allVariants = [
   ['plain', [], {}],
   ['--mcp --headless', ['--mcp', '--headless'], {}],
   ['ELECTRON_NO_ATTACH_CONSOLE=1', [], { ELECTRON_NO_ATTACH_CONSOLE: '1' }],
   ['--headless only', ['--headless'], {}],
 ];
-for (const [name, dir] of Object.entries(apps)) {
+const variants = short ? allVariants.slice(0, 1) : allVariants;
+const chosen = short ? ['exit', 'stdoutWrite'] : Object.keys(apps);
+console.log(`Electron ${createRequire(path.join(root, 'x.js'))('electron/package.json').version}`);
+for (const name of chosen) {
+  const dir = apps[name];
   for (const [vname, args, env] of variants) {
     const r = await run(dir, args, env);
     console.log(`${name.padEnd(24)} ${vname.padEnd(30)} exit ${r.code}  stdout ${JSON.stringify(r.out)}  stderr ${JSON.stringify(r.err.slice(0, 160))}`);
