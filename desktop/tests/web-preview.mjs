@@ -167,8 +167,9 @@ async function nodeSide(folder) {
 
 // ---------------------------------------------------------------- comparing
 
-/** What may differ between two runs of one session: when a file was touched. */
-const withoutTimes = (text) => text.replace(/"(touched|created)":[0-9.e+-]+/g, '"$1":0');
+/** What may differ between two runs of one session: when a file was touched. And one thing that differs on
+    purpose: a desktop copy can look for updates, a page in a browser never needs to (`native version`). */
+const withoutTimes = (text) => text.replace(/"(touched|created)":[0-9.e+-]+/g, '"$1":0').replace(/"updates":(true|false),"automatic"/, '"updates":0,"automatic"');
 
 function pngSize(bytes) {
   const b = Buffer.from(bytes);

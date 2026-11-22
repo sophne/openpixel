@@ -181,6 +181,9 @@ jobs:
       - name: UI test, old page against React page
         if: runner.os == 'Linux'
         run: npm run test:ui -- --ui both --no-video --no-build
+      - name: The same core package in a plain browser
+        if: runner.os == 'Linux'
+        run: npx playwright install chromium && npm run test:web
       - name: Known vulnerabilities in dependencies
         run: npm audit --audit-level=high
 

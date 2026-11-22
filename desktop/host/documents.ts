@@ -768,9 +768,10 @@ export class AppHost implements Host {
 
   // MARK: - updates
 
-  /** This copy looks at the release feed and can show the update dialog. Checks and tests leave updates alone. */
+  /** This copy looks at the release feed and can show the update dialog. Checks and tests leave updates alone, and
+      a page in a browser is always the newest there is. */
   get canUpdate(): boolean {
-    return !this.headless;
+    return !this.headless && this.platform.os !== 'web';
   }
 
   private async lookForUpdate(): Promise<void> {

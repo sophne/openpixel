@@ -13,5 +13,5 @@
     "allowImportingTsExtensions": false,
     "types": ["vite/client"]
   },
-  "include": ["src"]
+  "include": ["src", "web", "vite.web.config.ts"]
 }
