@@ -2,6 +2,8 @@
    (desktop/electron); a browser build can provide an in-memory one. Nothing in host/ outside host/node/ may reach
    for Node or Electron directly: it goes through this. See docs/desktop-architecture.md. */
 
+import type { ChatRunner, ChatRunnerOptions } from './chat-api';
+
 /** A message from the page: {kind: 'tool' | 'native' | 'chat' | ..., ...}. */
 export type PageMessage = Record<string, unknown> & { kind: string };
 
@@ -49,6 +51,9 @@ export interface PlatformUI {
   setTitle(title: string, path: string | null, edited: boolean): void;
   /** Calls window.PC[fn](...args) in the page. */
   page(fn: string, ...args: unknown[]): void;
+  /** Moves a file to the system's Trash; rejects with Error(text) when it cannot. Without it, deleting a file
+      from the library removes it for good. */
+  trash?(path: string): Promise<void>;
 }
 
 export interface Platform {
@@ -62,6 +67,8 @@ export interface Platform {
   fetchText(url: string, headers?: Record<string, string>): Promise<string | null>;
   /** Things only a desktop has; absent in a browser. host/node/ builds them for Electron. */
   desktop?: DesktopServices;
+  /** The agents' socket and the test agents, from `nodePlatform`; absent in a browser. */
+  local?: LocalServices;
 }
 
 /** Agents on this computer: the socket `openpixel --mcp` connects to, and the person's own agent CLIs for Agent Chat. */
@@ -70,6 +77,36 @@ export interface DesktopServices {
   mcpCommand: string;
   /** Unix socket path, or the Windows pipe name. */
   socketPath: string;
+}
+
+/** What `nodePlatform` (host/node/platform-node.ts) adds for the agents on this computer. It arrives on the
+    Platform as `local`; a shell that spreads the Node half into its Platform passes it along without knowing. */
+export interface LocalServices {
+  /** Starts the agents' socket at `path` (host/node/bridge.ts). Throws Error(text) when it cannot listen. */
+  listen(path: string, handlers: BridgeHandlers): BridgeListener;
+  /** UI tests: starts `command --mcp` like an agent would, introduces it as `client` and, with `call`, makes one
+      tool call (host/node/test-agents.ts). Throws Error(text) when the program does not start. */
+  spawnAgent(options: { command: string; socketPath: string; client: string; call: boolean }): void;
+  /** UI tests: lets the agents `spawnAgent` started finish (closes their input and waits for them). */
+  stopAgents(): Promise<void>;
+  /** Ends whatever `spawnAgent` started, at once. */
+  killAgents(): void;
+}
+
+/** What the agents' socket hands to the host. One connection is one agent's `openpixel --mcp`. */
+export interface BridgeHandlers {
+  /** One request line in, one reply line out (see Bridge.swift). A connection's lines are answered in order. */
+  line(line: string, connection: number): string | Promise<string>;
+  opened(connection: number): void;
+  closed(connection: number): void;
+  /** The socket could not be had after all (errors from the system arrive late): nothing listens. */
+  failed?(error: string): void;
+}
+
+export interface BridgeListener {
+  /** Where it listens: the path it was given, or on Windows the pipe that stands for it. */
+  path: string;
+  stop(): void;
 }
 
 export interface HostOptions {
@@ -82,6 +119,8 @@ export interface HostOptions {
   screenshot?: boolean;
   /** A file to open at launch. */
   open?: string;
+  /** Agent Chat (host/node/chat). Without it the chat answers as in a UI test: no agents, nothing starts. */
+  chat?: (options: ChatRunnerOptions) => ChatRunner;
 }
 
 export interface Host {

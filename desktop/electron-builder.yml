@@ -1,0 +1,69 @@
+# Installers for the desktop app: `npm run dist` builds for the system it runs on; `npx electron-builder --mac`,
+# `--win` or `--linux` for one of them. `npm run pack` only assembles the app folder (release/<os>-unpacked).
+# Nothing here signs or notarizes: that needs the maintainer's certificates and is set up where releases are made.
+appId: dev.openpixel.app
+productName: OpenPixel
+copyright: Open source.
+directories:
+  output: release
+asar: true
+# Updates are a dialog with a download link (electron/main.ts: showUpdateDialog); nothing is published from here.
+publish: null
+npmRebuild: false
+# The page (dist/) and the Electron side (dist-electron/: main.cjs with the app's logic and the core's glue
+# bundled in, preload.cjs, core.wasm). Everything from node_modules is already inside those bundles.
+files:
+  - dist/**
+  - dist-electron/**
+  - package.json
+  - "!**/*.map"
+  - "!node_modules/**"
+# The native `openpixel` program (the MCP server agents start; `mcpCommand` in electron/host.ts) for the system and
+# processor being packed. scripts/stage-core.cjs copies the right build into release/.core/<os>-<arch>/ first.
+beforePack: scripts/stage-core.cjs
+extraResources:
+  - from: release/.core/${os}-${arch}
+    to: core
+icon: ../app/assets/icon/icon_1024.png
+fileAssociations:
+  - ext: openpixel
+    name: OpenPixel Model
+    description: OpenPixel Model
+    mimeType: application/x-openpixel
+    role: Editor
+# deb packages need a home page and a maintainer.
+extraMetadata:
+  homepage: https://openpixel.dev
+
+mac:
+  category: public.app-category.graphics-design
+  darkModeSupport: true
+  identity: null
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+  # As the Mac app's Info.plist: .vox files open too (imported, never written back).
+  fileAssociations:
+    - ext: openpixel
+      name: OpenPixel Model
+      role: Editor
+    - ext: vox
+      name: MagicaVoxel Model
+      role: Viewer
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+nsis:
+  oneClick: true
+  perMachine: false
+
+linux:
+  executableName: openpixel-desktop
+  category: Graphics
+  synopsis: Pixel art and voxel editor that AI agents can draw in
+  maintainer: OpenPixel contributors <noreply@openpixel.dev>
+  target:
+    - AppImage
+    - deb
