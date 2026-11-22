@@ -203,7 +203,9 @@ export function createUpdater(shell: UpdaterShell, settings: { feed?: string; se
       defaultId: 0,
       cancelId: info.url ? 1 : 0,
     });
-    if (info.url && got.response === 0) await shell.openExternal(info.url);
+    // Not waited for: the browser is the system's business, and a launcher that never returns (as on a machine without
+    // a browser) must not hold up the update flow.
+    if (info.url && got.response === 0) void shell.openExternal(info.url).catch(() => {});
   }
 
   async function offerRestart(info: UpdateDialogInfo): Promise<void> {

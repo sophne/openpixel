@@ -129,6 +129,8 @@ jobs:
       # same on all three systems; here a pull request finds out first.
       - name: "Desktop: packed as for a release, the packed app and its update path"
         working-directory: desktop
+        # About three minutes normally; a hang (a process that never ends) fails here, not at the job's hour.
+        timeout-minutes: 15
         run: npm run release:build && npm run test:packaged && npm run test:update
       - name: "Desktop: known vulnerabilities in dependencies"
         working-directory: desktop

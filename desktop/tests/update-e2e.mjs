@@ -86,6 +86,12 @@ async function start(name, feed, answers) {
   const env = appEnv({ HOME: home, APPIMAGE_EXTRACT_AND_RUN: '1', OPENPIXEL_UPDATE_FEED: feed, TMPDIR: path.join(home, 'tmp'), ELECTRON_DISABLE_SANDBOX: '1' });
   for (const k of ['XDG_DATA_HOME', 'XDG_CONFIG_HOME', 'XDG_CACHE_HOME', 'OPENPIXEL_MCP', 'OPENPIXEL_SOCKET', 'OPENPIXEL_NO_UPDATE_CHECK']) delete env[k];
   mkdirSync(env.TMPDIR);
+  // Links the app opens go to a stand-in for xdg-open, which writes them down: on a machine without a browser the
+  // real one can wait for ever (and keep the app's output open, so the run would never end).
+  const bin = path.join(home, 'bin'), opened = path.join(home, 'opened.txt');
+  mkdirSync(bin);
+  writeFileSync(path.join(bin, 'xdg-open'), `#!/bin/sh\nprintf '%s\\n' "$1" >> '${opened}'\n`, { mode: 0o755 });
+  env.PATH = `${bin}${path.delimiter}${env.PATH ?? ''}`;
   const { _electron } = await import('playwright');
   const electronApp = await _electron.launch({ executablePath: appImage, args: ['--no-sandbox'], env, timeout: 120_000 });
   const stderr = [];
@@ -105,6 +111,8 @@ async function start(name, feed, answers) {
   return {
     electronApp, page, home, appImage, stderr, original: statSync(appImage), pid: await electronApp.evaluate(() => process.pid),
     dialogs: () => electronApp.evaluate(() => globalThis.__dialogs),
+    /** The links the app opened, in order. */
+    opened: () => (existsSync(opened) ? readFileSync(opened, 'utf8').split('\n').filter(Boolean) : []),
     facts: () => electronApp.evaluate(({ app }) => ({ packaged: app.isPackaged, version: app.getVersion(), appImage: process.env.APPIMAGE, appDir: process.env.APPDIR, exe: process.execPath })),
   };
 }
@@ -223,6 +231,10 @@ if (!install) {
       const fallback = await until(async () => (await run.dialogs()).find((d) => d.detail.includes('could not download the update by itself')), 'the refusal', 180_000);
       assert.match(fallback.detail, /sha512 checksum mismatch/);
       assert.deepEqual(fallback.buttons, ['Download…', 'Later']);
+      if (fallback.answered === 'Download…') {
+        await until(() => run.opened().length > 0, 'the download page to open', 15_000);
+        assert.deepEqual(run.opened(), ['https://openpixel.dev/downloads'], 'Download… opens the download page');
+      }
       assert.equal((await run.dialogs()).some((d) => d.message.includes('ready to install')), false, 'it is never offered for installing');
       const before = statSync(run.appImage);
       await run.electronApp.close();
