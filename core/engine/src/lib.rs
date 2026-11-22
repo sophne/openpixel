@@ -40,7 +40,7 @@ pub use model::{Document, Frame, Grid, Layer, Rgba};
 pub type Json = serde_json::Value;
 pub type JsonMap = serde_json::Map<String, Json>;
 
-/// The app's version (app/VERSION, Cargo's workspace version).
+/// The app's version: Cargo's workspace version, which a release stamps from its tag.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// What a tool call returns: a JSON object, plus PNG pictures for review tools.

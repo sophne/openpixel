@@ -1,5 +1,5 @@
 /* Empty states: a small animated pixel-art scene (drawn with OpenPixel by
-   app/tools/make-empty-states.py, in the accent orange and grays) over the message. The picture is decoration; the
+   desktop/tools/make-empty-states.py, in the accent orange and grays) over the message. The picture is decoration; the
    text says what is going on. */
 import type { ReactElement } from 'react';
 

@@ -204,7 +204,7 @@ export const homeFiles = store({
   filesTitle: 'Files', filesTitleHidden: false,
   /** "Folders" is a heading only when files follow. */
   foldersHeadHidden: false,
-  /* Empty states: a small animated pixel-art scene (drawn with OpenPixel by app/tools/make-empty-states.py, in the
+  /* Empty states: a small animated pixel-art scene (drawn with OpenPixel by desktop/tools/make-empty-states.py, in the
      accent orange and grays) over the message. The picture is decoration; the text says what is going on. */
   empty: null as { art: string; text: string } | null,
   sort: homePrefs.sort, dir: homePrefs.dir,
