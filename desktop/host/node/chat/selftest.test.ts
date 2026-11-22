@@ -16,6 +16,9 @@ import { trimSpaces } from './values.ts';
 
 assert.equal(cases.length, 24, 'every case of ChatSelfTest.swift is here');
 
+// The replays keep what Claude says it loaded in a folder of their own, as the Swift's did; it goes when this ends.
+process.on('exit', () => nodeFS.rmSync(nodePath.join(os.tmpdir(), `openpixel-chat-replay-${process.pid}`), { recursive: true, force: true }));
+
 for (const c of cases) {
   test(`agent chat · ${c.provider} · ${c.name}`, () => {
     const lines = c.lines.split('\n').filter((l) => trimSpaces(l) !== '');
