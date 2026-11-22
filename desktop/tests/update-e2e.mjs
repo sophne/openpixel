@@ -15,6 +15,7 @@
 //
 // The dialogs are answered through Electron's `dialog.showMessageBox`, replaced in the main process for this run.
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { copyFileSync, createReadStream, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
@@ -77,7 +78,9 @@ async function start(name, feed, answers) {
   mkdirSync(path.join(home, 'Applications'), { recursive: true });
   const appImage = path.join(home, 'Applications', 'OpenPixel.AppImage');
   copyFileSync(built, appImage);
-  const env = appEnv({ HOME: home, APPIMAGE_EXTRACT_AND_RUN: '1', OPENPIXEL_UPDATE_FEED: feed, TMPDIR: path.join(home, 'tmp') });
+  // ELECTRON_DISABLE_SANDBOX: the copy that opens again after an install is started by the updater, without this
+  // run's `--no-sandbox`; containers and CI machines cannot run Chromium's sandbox.
+  const env = appEnv({ HOME: home, APPIMAGE_EXTRACT_AND_RUN: '1', OPENPIXEL_UPDATE_FEED: feed, TMPDIR: path.join(home, 'tmp'), ELECTRON_DISABLE_SANDBOX: '1' });
   for (const k of ['XDG_DATA_HOME', 'XDG_CONFIG_HOME', 'XDG_CACHE_HOME', 'OPENPIXEL_MCP', 'OPENPIXEL_SOCKET', 'OPENPIXEL_NO_UPDATE_CHECK']) delete env[k];
   mkdirSync(env.TMPDIR);
   const { _electron } = await import('playwright');
@@ -97,7 +100,7 @@ async function start(name, feed, answers) {
   }, answers);
   const page = await electronApp.firstWindow();
   return {
-    electronApp, page, home, appImage, stderr,
+    electronApp, page, home, appImage, stderr, original: statSync(appImage), pid: await electronApp.evaluate(() => process.pid),
     dialogs: () => electronApp.evaluate(() => globalThis.__dialogs),
     facts: () => electronApp.evaluate(({ app }) => ({ packaged: app.isPackaged, version: app.getVersion(), appImage: process.env.APPIMAGE, appDir: process.env.APPDIR, exe: process.execPath })),
   };
@@ -145,9 +148,12 @@ console.log(`OpenPixel ${version} (AppImage) against a local feed offering ${NEW
       assert.deepEqual(ready.buttons, ['Restart to Update', 'Later']);
       const got = feed.requests.filter((r) => r.path === '/OpenPixel.AppImage' && r.method === 'GET');
       assert.equal(got.length, 1, `one download of the whole file (${JSON.stringify(feed.requests.map((r) => `${r.method} ${r.path}`))})`);
-      const saved = existsSync(pending) ? readdirSync(pending).filter((n) => n.endsWith('.AppImage')) : [];
-      assert.equal(saved.length, 1, `the download is kept in ${pending}: ${existsSync(pending) ? readdirSync(pending) : 'no such folder'}`);
-      assert.equal(sha512(path.join(pending, saved[0])), sha512(path.join(root, 'feed', 'OpenPixel.AppImage')), 'what was saved is what the feed describes');
+      // (With --install the file has already been moved into the AppImage's place when this looks.)
+      if (!install) {
+        const saved = existsSync(pending) ? readdirSync(pending).filter((n) => n.endsWith('.AppImage')) : [];
+        assert.equal(saved.length, 1, `the download is kept in ${pending}: ${existsSync(pending) ? readdirSync(pending) : 'no such folder'}`);
+        assert.equal(sha512(path.join(pending, saved[0])), sha512(path.join(root, 'feed', 'OpenPixel.AppImage')), 'what was saved is what the feed describes');
+      }
     });
 
     if (!install) {
@@ -161,18 +167,27 @@ console.log(`OpenPixel ${version} (AppImage) against a local feed offering ${NEW
       });
     } else {
       await check('"Restart to Update": the AppImage is replaced by the download and the app opens again', async () => {
-        const before = statSync(run.appImage);
-        const exited = new Promise((r) => run.electronApp.process().once('exit', r));
-        await Promise.race([exited, new Promise((_, no) => setTimeout(() => no(new Error(`the app did not quit to install\n${run.stderr.join('').slice(-1500)}`)), 60_000))]);
-        const after = statSync(run.appImage);
-        assert.notEqual(after.ino, before.ino, 'a new file is in the AppImage\'s place');
-        assert.equal(sha512(run.appImage), sha512(path.join(root, 'feed', 'OpenPixel.AppImage')), 'and it is the download');
-        // The new copy starts and asks the feed again.
-        await until(() => feed.requests.filter((r) => r.path === '/latest-linux.yml' && r.agent.startsWith('OpenPixel/')).length >= 3, 'the new copy to start and read the feed', 60_000);
+        // So far the app itself asked for the feed twice: at launch and when Update was clicked.
+        const asked = 2;
+        await until(() => statSync(run.appImage, { throwIfNoEntry: false })?.ino !== run.original.ino && existsSync(run.appImage), 'a new file in the AppImage\'s place', 60_000);
+        assert.equal(sha512(run.appImage), sha512(path.join(root, 'feed', 'OpenPixel.AppImage')), 'it is the download');
+        assert.equal(statSync(run.appImage).mode & 0o111, 0o111, 'and it can be started');
+        // The old copy quits (this run's debugger connection is all that holds it), the new one starts by itself
+        // and reads the feed again.
+        await Promise.race([run.electronApp.close().catch(() => {}), new Promise((r) => setTimeout(r, 10_000))]);
+        try { process.kill(run.pid, 'SIGKILL'); } catch { /* it has gone by itself */ }
+        try {
+          await until(() => feed.requests.filter((r) => r.path === '/latest-linux.yml' && r.agent === `OpenPixel/${version}`).length > asked, 'the new copy to start and read the feed', 90_000);
+        } catch (e) {
+          const running = spawnSync('pgrep', ['-fa', run.home], { encoding: 'utf8' }).stdout.split('\n').map((l) => l.slice(0, 160)).join('\n');
+          throw new Error(`${e.message}\nrequests: ${feed.requests.map((r) => `${r.method} ${r.path} (${r.agent})`).join(', ')}\nrunning:\n${running}`);
+        } finally {
+          spawnSync('pkill', ['-f', run.home]);
+        }
       });
     }
   } finally {
-    await run.electronApp.close().catch(() => {});
+    await Promise.race([run.electronApp.close().catch(() => {}), new Promise((r) => setTimeout(r, 10_000))]);
     await feed.close();
     if (failures.length) console.log(`        stderr of the app:\n        ${run.stderr.join('').split('\n').slice(-25).join('\n        ')}`);
   }

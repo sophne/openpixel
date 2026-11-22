@@ -515,10 +515,11 @@ const updater = createUpdater({
     let ok = false;
     try { ok = await host.quitting(); } catch (e) { console.error(`OpenPixel: could not save before updating: ${(e as Error).message}`); }
     asking = false;
-    if (ok) closing = true;
+    // The new version starts while this one is on its way out: it must not find OpenPixel "already open".
+    if (ok) { closing = true; app.releaseSingleInstanceLock(); }
     return ok;
   },
-  stayOpen: () => { closing = false; },
+  stayOpen: () => { closing = false; app.requestSingleInstanceLock(); },
 }, updates);
 
 app.on('before-quit', (e) => { if (!closing) { e.preventDefault(); askToQuit(); } });
