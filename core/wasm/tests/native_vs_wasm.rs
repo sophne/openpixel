@@ -65,6 +65,15 @@ fn place(v: &Json, out: &str) -> Json {
     }
 }
 
+/// The run's own folder taken out of the transcript, however it appears there: as it is, escaped once (inside a
+/// JSON answer) and escaped again (by `one_line`). Only Windows paths have backslashes, so only there do the escaped
+/// forms differ.
+fn without_folder(text: &str, folder: &str) -> String {
+    let once = folder.replace('\\', "\\\\");
+    let twice = once.replace('\\', "\\\\");
+    text.replace(&twice, "$OUT").replace(&once, "$OUT").replace(folder, "$OUT")
+}
+
 fn one_line(s: &str) -> String {
     s.replace('\\', "\\\\").replace('\n', "\\n").replace('\r', "\\r")
 }
@@ -167,7 +176,7 @@ fn run_native(session: &Path, out_dir: &Path) {
         lines.push(format!("#{} {} images={} changes={} state={}", i, ok, images.len(), seen.join(","), one_line(&state)));
         lines.push(one_line(text));
     }
-    std::fs::write(out_dir.join("transcript.txt"), lines.join("\n").replace(&out, "$OUT") + "\n").expect("writes the transcript");
+    std::fs::write(out_dir.join("transcript.txt"), without_folder(&lines.join("\n"), &out) + "\n").expect("writes the transcript");
 }
 
 fn tree(dir: &Path) -> BTreeMap<String, Vec<u8>> {

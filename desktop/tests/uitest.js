@@ -913,8 +913,11 @@
       await snap('16-agents-connected');
       await post({ kind: 'stopAgents' });
       await until(async () => { await loadAgents(); return !$('#agents-body .agent-row[data-agent="claude-code"] .pill').classList.contains('live'); }, 'the connection to close', 8000);
-      const after = $('#agents-body .agent-row[data-agent="claude-code"] .pill').dataset.activity;
-      assert(['Last used', 'Not used yet', 'not set up', 'Not installed'].some((t) => after.includes(t)), `activity after closing: ${after}`);
+      const pill = $('#agents-body .agent-row[data-agent="claude-code"] .pill'), after = pill.dataset.activity;
+      // What it says next depends on this computer: set up, installed but not set up, or not installed at all (then
+      // "Not found" says it all and there is no activity line, as on a CI machine without Claude Code).
+      const notFound = after === '' && pill.textContent.includes('Not found');
+      assert(notFound || ['Last used', 'Not used yet', 'not set up'].some((t) => after.includes(t)), `activity after closing: "${after}" (${pill.textContent.trim()})`);
       // Only two statuses, and no settings-file paths in the activity column.
       for (const tr of $$('#agents-body .agent-row')) {
         const label = tr.querySelector('.pill').textContent.trim();
