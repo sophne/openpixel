@@ -1,7 +1,7 @@
 //! MCP over HTTP ("streamable HTTP" with plain JSON replies) for agents that can't start a local program,
 //! such as ChatGPT connectors. It listens on this computer only (127.0.0.1); to reach it from the internet
 //! the person runs a tunnel of their choice. The endpoint path holds a random secret, so only someone who has
-//! the full address can use it. Port of MCPHTTP.swift.
+//! the full address can use it.
 use crate::json;
 use crate::mcp::McpServer;
 use crate::paths;

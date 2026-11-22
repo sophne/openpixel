@@ -12,12 +12,22 @@ body:
     id: version
     attributes:
       label: OpenPixel version
-      description: OpenPixel menu → About OpenPixel
+      description: "About OpenPixel: in the OpenPixel menu on macOS, in the Help menu on Windows and Linux"
+    validations: { required: true }
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS
+        - Windows
+        - Linux
     validations: { required: true }
   - type: input
-    id: macos
+    id: os-version
     attributes:
-      label: macOS version and Mac (Apple silicon or Intel)
+      label: Its version, and how you installed OpenPixel
+      description: For example "macOS 15.3, Apple silicon", "Windows 11", "Ubuntu 24.04, AppImage" or "Debian 12, .deb"
   - type: input
     id: agent
     attributes:

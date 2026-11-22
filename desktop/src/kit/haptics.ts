@@ -1,5 +1,5 @@
 /* Buttons that answer a press with a small spring (.haptic in style.css) and, on a Force Touch trackpad, a tap
-   (app.js 2468–2472). The app ignores the message where there is nothing to tap. */
+  . The app ignores the message where there is nothing to tap. */
 import { nativeAction } from '../lib/host';
 
 export function haptic(): void { nativeAction('haptic'); }

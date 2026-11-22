@@ -1,4 +1,4 @@
-/* The left sidebar: rail, panel, file name and the file's menu (app.js 651–757).
+/* The left sidebar: rail, panel, file name and the file's menu.
    The rail picks what the panel shows (Layers, Agent Chat or Activity); picking the open one again, the collapse
    button or ⌘\ hides the panel, and any rail button brings it back. Both choices are remembered. */
 import { actions } from '../app/actions';

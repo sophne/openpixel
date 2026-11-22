@@ -1,7 +1,6 @@
 /* The editor's left side, like Figma's: a rail (the app menu, then Layers, Agent Chat and Activity) and the panel the
-   active one fills (index.html 54–120; app.js 340–415 renderLayers, 514–530 renameLayer, 620–640 the activity list,
-   683–687 the file's name, and the left side's lines of wire()). The panel starts with the file's name and where it
-   lives, and hides with the collapse button (⌘\). */
+   active one fills: the layers, the activity list, the file's name. The panel starts with the file's name and where
+   it lives, and hides with the collapse button (⌘\). */
 import { useLayoutEffect, useRef, type DragEvent, type KeyboardEvent, type ReactElement, type RefObject } from 'react';
 import { actions } from '../app/actions';
 import { ChatPane } from '../chat/ChatPane';

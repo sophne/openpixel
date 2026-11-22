@@ -1,5 +1,10 @@
 # Old page against React page
 
+> A historical record. The old Mac app (`app/`), its page (`app/web`) and the `--legacy-ui` switch that ran that page
+> in the Electron shell were removed after this comparison; they are in git history, whole in commit `c8ebd04` (the
+> last one before the removal). The commands and paths below are those of that commit, and the three results that
+> failed on both pages were fixed afterwards.
+
 What was run to check that the Electron + React app looks and behaves like the Mac app's editor. Nothing here is
 needed to build or use the app; it is the record of the comparison at the time the port was made.
 

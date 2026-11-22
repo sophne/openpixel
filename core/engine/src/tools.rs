@@ -1,4 +1,4 @@
-//! The tool catalogue: what agents see in MCP `tools/list` (port of Tools.swift).
+//! The tool catalogue: what agents see in MCP `tools/list`.
 use std::sync::OnceLock;
 
 use serde_json::json;
@@ -39,7 +39,7 @@ impl ToolSpec {
     }
 }
 
-/// ToolCatalog.conventions in the Swift source.
+/// The conventions every tool shares; part of the instructions agents read (`\(ToolCatalog.conventions)` there).
 pub const CONVENTIONS: &str = "A model is a voxel grid; a 2D sprite is a model 1 voxel deep (new_sprite). \
 3D coordinates: x grows to the right, y grows UP (y=0 is the ground), z grows toward the FRONT (the viewer). \
 2D tools (set_pixels, paint_slice on axis z) use image rows instead: row 0 is the TOP. \

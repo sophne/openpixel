@@ -1,4 +1,4 @@
-//! Tools for production pipelines (port of Pipeline.swift): automatic critique after edits, text views, the
+//! Tools for production pipelines: automatic critique after edits, text views, the
 //! style lock, batches of calls and reviewing a set of files together.
 use std::collections::BTreeSet;
 
@@ -176,7 +176,7 @@ impl Engine {
         if !text_view::VIEWS.contains(&view) {
             return Err(PcError::invalid(format!("view must be one of {}", text_view::VIEWS.join(", "))));
         }
-        // The list counts only when every entry is text (as the Swift cast did).
+        // The list counts only when every entry is text (as the Swift app cast did).
         let mut maps: Vec<String> = a
             .array("maps")
             .and_then(|l| l.iter().map(|v| v.as_str().map(String::from)).collect::<Option<Vec<_>>>())

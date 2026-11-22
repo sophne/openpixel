@@ -1,4 +1,4 @@
-/* The Agent Chat part of the Mac app's `OpenPixel --selftest` (ChatSelfTest.swift): replays each agent's own output
+/* Agent Chat's self-test: replays each agent's own output
    through the parser the chat uses and checks what the page would show: the session, the reply text (once, not
    doubled), every tool call with the right result (a call that worked must never show as failed, a failed one must),
    errors, and the end of the run. The streams are in selftest.fixtures.ts. */
@@ -14,9 +14,9 @@ import { tomlString } from './streams.ts';
 import { nodeFiles, timeline } from './test-support.ts';
 import { trimSpaces } from './values.ts';
 
-assert.equal(cases.length, 24, 'every case of ChatSelfTest.swift is here');
+assert.equal(cases.length, 24, 'every recorded case is here');
 
-// The replays keep what Claude says it loaded in a folder of their own, as the Swift's did; it goes when this ends.
+// The replays keep what Claude says it loaded in a folder of their own, as the Swift app's did; it goes when this ends.
 process.on('exit', () => nodeFS.rmSync(nodePath.join(os.tmpdir(), `openpixel-chat-replay-${process.pid}`), { recursive: true, force: true }));
 
 for (const c of cases) {

@@ -1,8 +1,8 @@
-/* The page's link to the app (app.js 6–20, 3329).
-   In Electron the preload script provides window.openpixel; the messages are the ones the old page posted to
-   window.webkit.messageHandlers.pc (docs/desktop-architecture.md, section 1). Opened in a plain browser there is no
-   host, and the page behaves as the old one did without `bridge`: tools fail with "OpenPixel engine is not
-   connected", native actions answer null, and Agent Chat talks to the scripted agent the chat area registers. */
+/* The page's link to the app.
+   In Electron the preload script provides window.openpixel (docs/desktop-architecture.md, section 1); the browser
+   preview (desktop/web/main.ts) provides the same object itself. Opened without either (`npx vite`), there is no
+   host: tools fail with "OpenPixel engine is not connected", native actions answer null, and Agent Chat talks to
+   the scripted agent the chat area registers. */
 
 export type Platform = 'darwin' | 'win32' | 'linux';
 export interface HostFlags {
@@ -14,7 +14,7 @@ export interface HostFlags {
 export interface OpenPixelHost {
   /** Rejects with Error(text) on failure. */
   post(msg: Record<string, unknown>): Promise<any>;
-  /** Tests can force 'darwin'. */
+  /** The system the page is shown for (a test can ask for another one's layout and wording). */
   platform: Platform;
   flags: HostFlags;
 }
@@ -38,51 +38,26 @@ declare global {
   interface Window {
     openpixel?: OpenPixelHost;
     PC: PageCalls;
-    /** The Mac app's web view (and Electron's preload, for the old page). */
-    webkit?: { messageHandlers?: { pc?: { postMessage(msg: Record<string, unknown>): Promise<any> } } };
-    OPENPIXEL_START?: string;
-    OPENPIXEL_UITEST?: { folder: string; [k: string]: unknown };
-    OPENPIXEL_SCREENSHOT?: boolean;
-    OPENPIXEL_DEMO?: unknown;
   }
 }
 
 const query = new URLSearchParams(location.search);
 
-function findHost(): OpenPixelHost | null {
-  if (window.openpixel) return window.openpixel;
-  // The same page inside the Mac app's web view: the old bridge and the old globals.
-  const pc = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.pc;
-  if (!pc) return null;
-  return {
-    post: (msg) => pc.postMessage(msg),
-    platform: 'darwin',
-    flags: {
-      start: window.OPENPIXEL_START === 'home' ? 'home' : 'editor',
-      uitest: window.OPENPIXEL_UITEST,
-      screenshot: window.OPENPIXEL_SCREENSHOT === true,
-      demo: window.OPENPIXEL_DEMO,
-    },
-  };
-}
-
 /** The host, or null when the page is opened without the app. */
-export const host: OpenPixelHost | null = findHost();
+export const host: OpenPixelHost | null = window.openpixel ?? null;
 export const hasHost = host !== null;
 
-/** Without a host the page shows what the old page showed: the Mac's labels. `?platform=win32` tries another one. */
+/** Without a host the page shows macOS's wording, the one the markup is written in (lib/platform.ts);
+ *  `?platform=win32` or `linux` tries another. */
 const asked = query.get('platform');
 export const platform: Platform = host ? host.platform : asked === 'win32' || asked === 'linux' ? asked : 'darwin';
 
-export const flags: HostFlags = host ? host.flags : {
-  start: window.OPENPIXEL_START === 'home' ? 'home' : 'editor',
-  uitest: window.OPENPIXEL_UITEST,
-  demo: window.OPENPIXEL_DEMO,
-};
+export const flags: HostFlags = host ? host.flags : { start: 'editor' };
 /** A --screenshot picture is of the page alone: it paints the glass's colour itself (html.screenshot in style.css). */
-export const SCREENSHOT = flags.screenshot === true || window.OPENPIXEL_SCREENSHOT === true || query.has('screenshot');
+export const SCREENSHOT = flags.screenshot === true || query.has('screenshot');
 
-/** The old page's `bridge` (null without the app). New code uses post(); this is for the UI test and the demo script. */
+/** `bridge.postMessage(msg)`: the name tests/uitest.js and tests/demo.js post through (null without the app).
+ *  The page's own code uses post(). */
 export const bridge: { postMessage(msg: Record<string, unknown>): Promise<any> } | null =
   host ? { postMessage: (msg) => host.post(msg) } : null;
 
@@ -110,7 +85,7 @@ export function nativeAction(action: string, extra: Record<string, unknown> = {}
 
 type ChatMock = (action: string, extra: Record<string, any>) => unknown;
 let chatMock: ChatMock | null = null;
-/** The chat area registers its scripted agent (chatMock, app.js 4219) for the page opened without the app. */
+/** The chat area registers its scripted agent (chat/mock.ts) for the page opened without the app. */
 export function setChatMock(fn: ChatMock | null): void { chatMock = fn; }
 /** Agent Chat messages: providers, send, stop, skills, login, history, saveHistory. */
 export function chatNative(action: string, extra: Record<string, unknown> = {}): Promise<any> {

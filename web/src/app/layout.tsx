@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import { OG_IMAGE, SITE_NAME, SITE_URL, TWITTER_IMAGE, X_HANDLE } from "@/lib/seo";
+import { OS_SCRIPT } from "@/lib/platforms";
+import { DESCRIPTION, OG_IMAGE, SITE_NAME, SITE_URL, TAGLINE, TWITTER_IMAGE, X_HANDLE } from "@/lib/seo";
 import CookieBanner from "@/components/CookieBanner";
 import DownloadTracking from "@/components/DownloadTracking";
 import "./globals.css";
@@ -12,9 +13,8 @@ const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", displ
 // Defaults for every page; each page sets its own title, description and canonical address with pageMeta().
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: "OpenPixel: the agentic pixel editor for Mac", template: `%s · ${SITE_NAME}` },
-  description:
-    "Free, open-source pixel art and voxel editor for the Mac with a built-in MCP server. Draw sprites, animations and 3D models with Claude, Codex, Cursor or any agent.",
+  title: { default: TAGLINE, template: `%s · ${SITE_NAME}` },
+  description: DESCRIPTION,
   applicationName: SITE_NAME,
   icons: { icon: "/icon.png", apple: "/icon.png" },
   openGraph: { siteName: SITE_NAME, type: "website", locale: "en_US", images: [OG_IMAGE] },
@@ -26,8 +26,11 @@ export const viewport: Viewport = { themeColor: "#1e1e1e", colorScheme: "dark" }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable}`}>
+    // The script below adds data-os to <html> before React starts, hence suppressHydrationWarning (one level deep).
+    <html lang="en" className={`${sans.variable} ${mono.variable}`} suppressHydrationWarning>
       <body>
+        {/* First in the body, so the visitor's system is known before anything is painted. */}
+        <script dangerouslySetInnerHTML={{ __html: OS_SCRIPT }} />
         {children}
         <CookieBanner />
         <DownloadTracking />

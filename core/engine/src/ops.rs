@@ -1,4 +1,4 @@
-//! Drawing operations on a document (port of Ops.swift).
+//! Drawing operations on a document.
 //!
 //! Loops over shapes are limited to the cells that can land inside the model. The results are the
 //! same as walking the whole shape (cells outside the model change nothing), but a far-away or huge

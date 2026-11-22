@@ -1,5 +1,7 @@
-//! The engine checks of the Mac app's `OpenPixel --selftest` (app/Sources/OpenPixel/SelfTest.swift), in the same
-//! order and with the same wording. The MCP, HTTP-path, bridge and chat checks of that file belong to core/app.
+//! The engine's self-test: every tool, the file formats and exports, reviews, and what a damaged or hostile file
+//! must do (an error or a sound model, never a crash). A file parser's new damaged-file case goes here.
+//! The list began as the Swift app's `OpenPixel --selftest` and keeps its order and wording; the MCP and HTTP-path
+//! checks of that list are in core/app, the agents' socket and Agent Chat ones in desktop/host.
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -9,7 +11,7 @@ use serde_json::json;
 
 // MARK: - helpers
 
-/// Swift's `try? engine.execute(tool, args)`.
+/// The tool's answer, or nothing when it failed.
 fn run(e: &mut Engine, tool: &str, args: Json) -> Option<ToolOutput> {
     run_as(e, tool, args, "agent")
 }
@@ -646,7 +648,7 @@ fn style_lock() {
         lit_ok && codes(&score(&mut light_lock)).contains(&"style_light".to_string()),
         "style: shading that agrees with the locked light passes; the same orb lit from the bottom-right is flagged"
     );
-    // The style file is laid out as the Mac app wrote it.
+    // The style file is laid out as the Swift app wrote it.
     let saved = std::fs::read_to_string(&style_file).expect("the style file");
     assert!(saved.starts_with("{\n  \"colors\" : [\n    \"#000000\",\n") && saved.contains("\n  \"lock_palette\" : true,\n") && saved.ends_with("\n}"));
     let _ = std::fs::remove_dir_all(&dir);
@@ -837,7 +839,7 @@ fn damaged_and_hostile_files() {
     let d = native_file::decode(short_pal.as_bytes()).expect(".openpixel with a short palette opens");
     assert!(d.cels[0][0].data().iter().all(|&v| (v as usize) < d.palette.len()), ".openpixel colours past the palette are dropped");
 
-    // Beyond the Swift list: every way of cutting a real file short, and stray bytes, end in an error or a
+    // Beyond the Swift app list: every way of cutting a real file short, and stray bytes, end in an error or a
     // document, never a panic.
     let mut e = Engine::new();
     sample::build(&mut e, true);
@@ -865,7 +867,7 @@ fn damaged_and_hostile_files() {
     ] {
         assert!(native_file::decode(text.as_bytes()).is_err(), ".openpixel {what} is refused");
     }
-    // Entries that the Swift reader skipped are skipped here too.
+    // Entries that the Swift app reader skipped are skipped here too.
     let skipped = r#"{"format":"openpixel","size":[1,1,1],"cels":[{"layer":5,"frame":0,"data":"OwEA"},{"layer":0,"frame":0,"data":"not base64!"},{"layer":"0"}]}"#;
     assert!(native_file::decode(skipped.as_bytes()).is_ok(), ".openpixel cels that point nowhere are skipped");
     for bytes in [&b"\x89PNG\r\n\x1a\n"[..], &b"GIF89a"[..], &b"GIF89a\xff\xff\xff\xff\x00\x00\x00"[..], &b""[..], &b"plain text"[..]] {
@@ -873,7 +875,7 @@ fn damaged_and_hostile_files() {
     }
 }
 
-// MARK: - beyond the Swift list: what the rest of the program relies on
+// MARK: - beyond the Swift app list: what the rest of the program relies on
 
 #[test]
 fn the_engine_can_move_between_threads() {

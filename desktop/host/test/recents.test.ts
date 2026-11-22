@@ -1,4 +1,4 @@
-// The library's rules (Recents.swift): what is kept, where folders and the archive put things, what the home
+// The library's rules (host/recents.ts): what is kept, where folders and the archive put things, what the home
 // screen is told.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
@@ -24,7 +24,7 @@ function touch(s: { p: MemoryPlatform; core: Core; recents: Recents }, path: str
   e.free();
 }
 
-test('preview names are stable per path (FNV-1a, as the Mac app named them)', () => {
+test('preview names are stable per path (FNV-1a, as the Swift app named them)', () => {
   assert.equal(thumbName(''), 'cbf29ce484222325.png');
   assert.equal(thumbName('a'), 'af63dc4c8601ec8c.png');
   assert.equal(thumbName('/Users/me/Documents/OpenPixel/Fox.openpixel'), thumbName('/Users/me/Documents/OpenPixel/Fox.openpixel'));
@@ -47,7 +47,7 @@ test('a touched file goes first, with its kind, size and a preview at a sensible
   // Touching again moves it up without doubling it.
   touch(s, `${FILES}/Fox.openpixel`);
   assert.deepEqual(s.recents.entries.map((e) => e.name), ['Fox', 'Island']);
-  // On disk as the Mac app wrote it: optional fields are left out, not null.
+  // On disk as the Swift app wrote it: optional fields are left out, not null.
   assert.deepEqual(Object.keys(JSON.parse(s.p.fs.readText(`${DATA}/recents.json`))[0]), ['path', 'name', 'kind', 'size', 'touched', 'thumb']);
 });
 
@@ -140,8 +140,13 @@ test('deleting for good: files go to the Trash, samples just leave the library',
   assert.ok(s.p.fs.exists(thumb));
   assert.equal(await r.deleteForever('/not/here.openpixel'), 'That file is no longer in the library.');
 
-  s.p.ui.trash = async () => { throw new Error('the Trash is full'); };
-  assert.equal(await r.deleteForever(path), 'Could not move “Fox” to the Trash: the Trash is full');
+  // The message names the system's own place for deleted files.
+  s.p.ui.trash = async () => { throw new Error('it is full'); };
+  for (const [os, words] of [['linux', 'the trash'], ['darwin', 'the Trash'], ['win32', 'the Recycle Bin']] as const) {
+    s.p.os = os;
+    assert.equal(await r.deleteForever(path), `Could not move “Fox” to ${words}: it is full`);
+  }
+  s.p.os = 'linux';
   assert.deepEqual(r.entries.map((e) => e.name), ['Fox']);
 
   const trashed: string[] = [];
@@ -212,7 +217,7 @@ test('the home screen hears files, samples and folders in the shapes the page re
   assert.deepEqual((r.listForPage() as { files: { id: string }[] }).files.map((f) => f.id), [`${FILES}/Fox.openpixel`, 'sample3d']);
 });
 
-test('the library is read back as written, also from the Mac app; a damaged file reads as empty', () => {
+test('the library is read back as written, also from the Swift app; a damaged file reads as empty', () => {
   const s = setup();
   // JSONEncoder's output: any key order, no nulls, sizes as whole numbers.
   s.p.fs.write(`${DATA}/recents.json`, '[{"touched":770000000.5,"size":[32,32,1],"kind":"2d","name":"Fox","path":"/Users/me/Documents/OpenPixel/Fox.openpixel","thumb":"00.png","archived":true,"later":"ignored"}]');

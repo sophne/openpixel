@@ -1,10 +1,10 @@
-/* The editor's own state (app.js 22–28, 43–44, 220–231 and the `let`s and small objects the editor's functions share).
+/* The editor's own state: its constants, and the variables and small objects the editor's functions share.
    S, ui, leftSide and home are in state/ui.ts; here is what only the editor uses.
 
-   The stores below marked "drawn by …" hold what one of the old render…()/update…() functions put on screen. The old
-   function wrote the DOM; the new one (same name) fills its store and calls changed(store), and the component that
-   reads the store draws exactly that. So the DOM changes when it changed before, and not when S merely differs
-   (a refresh in the middle of a layer drag, a tab switch before updateDocHead()). */
+   The stores below marked "drawn by …" hold what one render…()/update…() function puts on screen: the function
+   fills its store and calls changed(store), and the component that reads the store draws exactly that. So a panel
+   changes when its function runs, and not whenever S merely differs (a refresh in the middle of a layer drag, a tab
+   switch before updateDocHead()). */
 import { store } from '../lib/store';
 import { errorText } from '../lib/dom';
 import { call } from '../lib/host';
@@ -43,12 +43,12 @@ export const TOOL_LIST = TOOLS.filter((t): t is ToolDef => !t.sep);
 /** meshDirty, render3dDirty, sliceDirty: the 3D mesh must be rebuilt, the 3D view or the 2D canvas drawn again. */
 export const dirty = { mesh: true, render3d: true, slice: true };
 
-/** The 3D camera (app.js 782). */
+/** The 3D camera. */
 export const cam = store({ yaw: 45, pitch: 30, dist: 60, tx: 16, ty: 10, tz: 16 });
-/** The 2D view: screen pixels per cell and where the picture's corner is (app.js 1141). */
+/** The 2D view: screen pixels per cell and where the picture's corner is. */
 export const sv = store({ zoom: 16, panX: 0, panY: 0 });
 
-/* ---------------------------------------------------------------- a stroke in progress (app.js 1238) */
+/* ---------------------------------------------------------------- a stroke in progress */
 export type StrokeKind = 'add' | 'erase' | 'recolor' | 'rect' | 'line' | 'move';
 export interface Stroke {
   kind: StrokeKind; start: number[]; axis: number; last: number[]; cells: Map<number, number[]>;
@@ -89,7 +89,7 @@ export const fgView = store<{ hex: string | null; index: string }>({ hex: null, 
 export const layersView = store<{ n: number; layers: Layer[]; layer: number; isSprite: boolean | undefined }>({ n: 0, layers: [], layer: 0, isSprite: undefined });
 /** Drawn by renderFrames() (n counts the redraws). */
 export const framesView = store<{ n: number; frames: Frame[]; frame: number }>({ n: 0, frames: [], frame: 0 });
-/** Frame previews by frame index, as the engine rendered them (app.js 417). */
+/** Frame previews by frame index, as the engine rendered them. */
 export const thumbs: Record<number, string> = {};
 /** Drawn by the rest of updatePanels(): which buttons are off, and the onion chip. */
 export const panelsView = store({ undoOff: false, redoOff: false, onion: false, layerDelOff: false, layerMergeOff: false, frameDelOff: false });
@@ -125,7 +125,7 @@ export async function tool(name: string, args: Record<string, unknown> = {}): Pr
 }
 export function target(): { layer: number; frame: number } { return { layer: S.layer, frame: S.frame }; }
 
-/* ---------------------------------------------------------------- the slice shown in the 2D view (app.js 1145–1154) */
+/* ---------------------------------------------------------------- the slice shown in the 2D view */
 export type Axis = 'x' | 'y' | 'z';
 export function sliceSize(axis: Axis = S.axis): { cols: number; rows: number; depth: number } {
   if (axis === 'y') return { cols: S.sx, rows: S.sz, depth: S.sy };

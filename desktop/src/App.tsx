@@ -1,4 +1,4 @@
-/* The page, in the old document order (app/web/index.html): the tab bar, the editor, the home screen, the New file
+/* The page, in document order (style.css and the UI test rely on it): the tab bar, the editor, the home screen, the New file
    page, the menus that open at a point, then the dialogs. Each piece is its area's component at a fixed path; the
    name and confirm dialogs are the kit's. App itself never renders again: every piece reads the stores it needs. */
 import { useLayoutEffect, type ReactElement } from 'react';
@@ -15,7 +15,7 @@ import { TabBar } from './library/TabBar';
 import { ui } from './state/ui';
 
 /** <body data-view>: styles that depend on the page shown (the tab bar's right padding, hiding the editor under the
- *  home screen). renderTabs() set it in the old page; here it follows ui.view. */
+ *  home screen). It follows ui.view. */
 function BodyView(): null {
   const { view } = useStore(ui);
   useLayoutEffect(() => { document.body.dataset.view = view; }, [view]);

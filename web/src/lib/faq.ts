@@ -14,25 +14,26 @@ export const FAQ: FaqGroup[] = [
     items: [
       {
         q: "What is OpenPixel?",
-        a: "OpenPixel is a free pixel art and voxel editor for the Mac. You draw sprites, animations and 3D voxel models by hand, or ask an AI agent such as Claude, Codex or Cursor to draw them with you. It has a built-in MCP server, so agents work on the same canvas you see, and you can refine every pixel they place.",
+        a: "OpenPixel is a free pixel art and voxel editor for Mac, Windows and Linux. You draw sprites, animations and 3D voxel models by hand, or ask an AI agent such as Claude, Codex or Cursor to draw them with you. It has a built-in MCP server, so agents work on the same canvas you see, and you can refine every pixel they place.",
       },
       {
         q: "Is OpenPixel free?",
         a: "Yes. OpenPixel is free and open source under the MIT licence. There's no account, no subscription, no ads and no paid tier, and the source code is on GitHub.",
       },
       {
-        q: "What is the best free pixel art editor for Mac?",
-        a: "It depends on how you work. OpenPixel is a free, native Mac app with layers, frames, onion skin, palettes, voxel models and AI agents built in. Other free options include Pixelorama, Piskel and LibreSprite; Aseprite is a popular paid choice. Our comparison pages put them side by side.",
+        q: "What is the best free pixel art editor for Mac, Windows or Linux?",
+        a: "It depends on how you work. OpenPixel is a free desktop app for all three, with layers, frames, onion skin, palettes, voxel models and AI agents built in. Other free options include Pixelorama, Piskel and LibreSprite; Aseprite is a popular paid choice. Our comparison pages put them side by side.",
         link: { href: "/compare", label: "Compare pixel art editors" },
       },
       {
         q: "What are the system requirements?",
-        a: "macOS 13 Ventura or later, on Apple silicon or Intel. OpenPixel is a native Swift app, so it opens in a blink and runs well on older Macs too.",
+        a: "macOS 12 Monterey or later on Apple silicon or Intel, Windows 10 or later (64-bit), or 64-bit Linux (x64), as an AppImage or a .deb package.",
         link: { href: "/downloads", label: "Download OpenPixel" },
       },
       {
         q: "Is OpenPixel available for Windows or Linux?",
-        a: "Not yet: OpenPixel is made for the Mac. On other systems you can still open the HTML exports in any browser, and the source code is open if you'd like to help bring it elsewhere.",
+        a: "Yes. OpenPixel is one desktop app for macOS, Windows and Linux: a disk image for the Mac, an installer for Windows, and an AppImage or a .deb package for Linux. Files, tools and agents work the same on all three. There is no phone, tablet or browser version; the HTML exports open in any browser.",
+        link: { href: "/downloads", label: "All downloads" },
       },
     ],
   },
@@ -76,7 +77,7 @@ export const FAQ: FaqGroup[] = [
       },
       {
         q: "Can OpenPixel open MagicaVoxel .vox files?",
-        a: "Yes. OpenPixel opens and saves MagicaVoxel .vox files, models and palettes as they are, up to 256 voxels a side. It works well as a MagicaVoxel alternative on the Mac, with layers, frames and AI agents on top.",
+        a: "Yes. OpenPixel opens and saves MagicaVoxel .vox files, models and palettes as they are, up to 256 voxels a side. It works well as a MagicaVoxel alternative on Mac, Windows and Linux, with layers, frames and AI agents on top.",
         link: { href: "/compare/magicavoxel", label: "OpenPixel vs MagicaVoxel" },
       },
       {
@@ -116,12 +117,12 @@ export const FAQ: FaqGroup[] = [
       },
       {
         q: "Is my art sent anywhere or used to train AI?",
-        a: "OpenPixel has no account, analytics or tracking, and your files stay on your Mac. When you use an agent, what it sees and sends to its provider is covered by that provider's terms, the same as when you use the agent anywhere else.",
+        a: "OpenPixel has no account, analytics or tracking, and your files stay on your computer. When you use an agent, what it sees and sends to its provider is covered by that provider's terms, the same as when you use the agent anywhere else.",
         link: { href: "/legal/privacy", label: "Privacy" },
       },
       {
         q: "Can I run OpenPixel headless in scripts or CI?",
-        a: "Yes. Start OpenPixel with --mcp --headless and it runs without a window, so agents and scripts can draw, review and export pixel art from a terminal or a CI job.",
+        a: "Yes. Start the openpixel program inside the app with --mcp --headless and it runs without a window, so agents and scripts can draw, review and export pixel art from a terminal or a CI job.",
       },
     ],
   },

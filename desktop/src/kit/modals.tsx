@@ -1,5 +1,4 @@
-/* Dialogs (app.js 3015–3047, the [data-close] and backdrop wiring of wire(), and the name and confirm dialogs:
-   2296–2319, 2455–2467).
+/* Dialogs: opening and closing, [data-close] buttons and backdrops, and the name and confirm dialogs.
    A dialog is open while its .modal-bg has the class `open`; openModal('#id') and closeModals() put it on and take
    it off by hand, at once (the .modal-bg keeps a constant className in JSX, see kit/menus.ts). */
 import { useEffect, type ReactElement, type ReactNode, type CSSProperties } from 'react';

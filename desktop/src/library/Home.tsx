@@ -1,6 +1,6 @@
-/* The home screen, #home (index.html 229–272): Recents, All folders, Archive, Agents; what renderHome(),
-   renderTitle(), fileCard(), folderCard(), fileList() and wireItem() built and wireHome() attached (app.js 1933–2161,
-   2387–2454). The logic is in ./home. The Agents list (#home-agents-wrap) is <AgentsList/> from library/Agents. */
+/* The home screen, #home: Recents, All folders, Archive, Agents: the title, the file and folder cards, the list
+   layout and their handlers. The logic is in ./homePage. The Agents list (#home-agents-wrap) is <AgentsList/> from
+   library/Agents. */
 import { Fragment, memo, useLayoutEffect, useRef, type HTMLAttributes, type ReactElement, type ReactNode, type RefObject } from 'react';
 import { Dropdown, inlineRename, RenameText } from '../kit';
 import { $, useEvent } from '../lib/dom';
@@ -14,8 +14,8 @@ import {
   documentDragOver, documentDrop, emptyArchive, endDrag, fileRename, FILTERS, folderById, folderSummary, homeFiles, homeTop, latestInFolder, layoutSeg,
   locationText, menus, newFolder, openCardMenu, openFolder, openHomePage, openItem, renamers, renameFolderTo, renderHome, setHomeFilter, setHomeLayout,
   setHomeSort, sizeText, SORTS, startDrag, startPrefs, whenText, type LibFile, type RenameSpec,
-} from './home';
-import { openNewPage } from './newpage';
+} from './homePage';
+import { openNewPage } from './newFile';
 
 /** A class that is put on and taken off with classList after every drawing, for an element whose other classes are
  *  put on by hand (`drop-over` while something is dragged over it). */

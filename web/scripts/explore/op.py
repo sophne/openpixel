@@ -1,33 +1,39 @@
 """Tiny MCP client for OpenPixel (headless), shared by the Explore art scripts.
 
-Uses the OpenPixel at $OPENPIXEL if set, else app/OpenPixel.app, else /Applications, and refuses anything older than
-1.1.0: the Explore art is made with the 1.1.0 agent harness (pixel_art_guide, colour ramps, sprite checks).
+Starts the native `openpixel` program: the one at $OPENPIXEL if set, else this repository's build
+(core/target/release/openpixel), else the installed app's (see ../find_openpixel.py). It refuses a program without
+the agent harness the Explore art is made with (pixel_art_guide, colour ramps, sprite checks).
 """
 import json
 import os
 import subprocess
+import sys
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-APP = os.environ.get("OPENPIXEL") or os.path.join(ROOT, "app", "OpenPixel.app", "Contents", "MacOS", "OpenPixel")
-if not os.path.exists(APP):
-    APP = "/Applications/OpenPixel.app/Contents/MacOS/OpenPixel"
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+import find_openpixel  # noqa: E402
 
+ROOT = find_openpixel.ROOT
+APP = find_openpixel.program()
 
-MIN_VERSION = (1, 1, 0)
+# Tools the Explore art needs; an older OpenPixel doesn't have them all.
+NEEDS = ("pixel_art_guide", "make_color_ramp", "review_model")
 
 
 class Agent:
     def __init__(self):
-        self.p = subprocess.Popen([APP, "--mcp", "--headless"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                  stderr=subprocess.DEVNULL, text=True, bufsize=1)
+        self.p = subprocess.Popen([find_openpixel.require(APP), "--mcp", "--headless"], stdin=subprocess.PIPE,
+                                  stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, bufsize=1)
         self.n = 0
         self.info = self.rpc("initialize", {"protocolVersion": "2025-06-18",
                                             "clientInfo": {"name": "openpixel-explore", "version": "1"}})
         self.p.stdin.write(json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}) + "\n")
-        version = self.info.get("serverInfo", {}).get("version", "0")
-        if tuple(int(x) for x in version.split(".")[:3]) < MIN_VERSION:
+        version = self.info.get("serverInfo", {}).get("version", "?")
+        tools = {t["name"] for t in self.rpc("tools/list", {}).get("tools", [])}
+        missing = [t for t in NEEDS if t not in tools]
+        if missing:
             self.close()
-            raise SystemExit(f"{APP} is OpenPixel {version}; the Explore art needs 1.1.0 or newer. Set OPENPIXEL.")
+            raise SystemExit(f"{APP} is OpenPixel {version} and lacks {', '.join(missing)}: the Explore art needs a "
+                             "newer one. Set OPENPIXEL.")
 
     def rpc(self, method, params):
         self.n += 1

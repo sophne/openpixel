@@ -1,4 +1,4 @@
-//! The engine (port of Engine.swift): the document, its undo history and every tool.
+//! The engine: the document, its undo history and every tool.
 use std::collections::{BTreeSet, HashMap};
 
 use base64::Engine as _;
@@ -299,7 +299,7 @@ impl Engine {
             "review_model" | "analyze_model" => {
                 self.reviewed_revision = Some(self.revision);
                 self.reviews += 1;
-                // Only a list made of text counts (as the Swift cast did).
+                // Only a list made of text counts (as the Swift app cast did).
                 let issues: Vec<String> = out
                     .json
                     .get("issues")
@@ -1251,7 +1251,7 @@ impl Engine {
                 let limit = a.int_or("limit", 500).clamp(1, u32::MAX as i64) as usize;
                 let mut cells: Vec<[i64; 4]> = Vec::new();
                 let mut total = 0i64;
-                // A box that lies outside the model finds nothing. (The Mac app crashed on it.)
+                // A box that lies outside the model finds nothing. (The Swift app crashed on it.)
                 for y in lo.1.min(hi.1).max(0)..=lo.1.max(hi.1).min(doc.sy() - 1) {
                     for z in lo.2.min(hi.2).max(0)..=lo.2.max(hi.2).min(doc.sz() - 1) {
                         for x in lo.0.min(hi.0).max(0)..=lo.0.max(hi.0).min(doc.sx() - 1) {

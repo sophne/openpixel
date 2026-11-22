@@ -127,7 +127,7 @@ pub fn feed_url() -> Option<String> {
 
 /// How to find the version of OpenPixel installed on disk now. It differs from the running version when
 /// the app was updated while this process kept running (an agent's MCP server started before the update).
-/// The Mac app read its bundle's Info.plist; here the program that knows where it is installed sets this.
+/// The program that knows where it is installed sets this (core/app does not yet: see its `installed_version`).
 pub fn set_installed_version_lookup(lookup: Option<fn() -> Option<String>>) {
     state().installed = lookup;
 }

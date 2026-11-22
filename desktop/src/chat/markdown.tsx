@@ -1,12 +1,12 @@
-/* Markdown in replies (app.js 3334–3375): a safe subset: paragraphs, headings, lists, code, bold, italics, rules,
+/* Markdown in replies: a safe subset: paragraphs, headings, lists, code, bold, italics, rules,
    links shown as text. Everything an agent says is untrusted, so nothing here ever becomes markup: the text is turned
    into a small tree of plain nodes (eleven tag names, two class names, a title for links) and that tree is drawn
    either as React elements (<Markdown>) or as DOM nodes made one by one (mdFragment, for text that is still
    streaming in: see reveal.ts). There is no innerHTML and no dangerouslySetInnerHTML on either path, no raw HTML, no
    images, and a link is a <span> with the address as its title: nothing here is ever navigated to or fetched.
 
-   The old page built an HTML string and let the browser parse it. To give the same tree for every input, however
-   badly formed, this keeps the old string pipeline for one line of text (escape, then the same regular expressions
+   The page this was ported from built an HTML string and let the browser parse it. To give the same tree for every
+   input, however badly formed, this keeps that string pipeline for one line of text (escape, then the same regular expressions
    in the same order) and then reads the result back with a tokenizer that knows exactly the eight tags that pipeline
    can write. Markers that overlap ("**a *b** c*") make mis-nested tags; the browser repairs those with the HTML
    parser's rules for formatting elements, so the same rules are followed here (reconstructing the active formatting

@@ -1,4 +1,4 @@
-/* Play, the review dialog and the shortcuts dialog (app.js 2977–3013, 4321–4342). */
+/* Play, the review dialog and the shortcuts dialog. */
 import { errorText } from '../lib/dom';
 import { call } from '../lib/host';
 import { changed, store } from '../lib/store';

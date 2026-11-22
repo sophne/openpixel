@@ -1,5 +1,5 @@
 // The app's logic against a scripted engine and an in-memory platform: tabs, autosave, renames, closing, the
-// messages the page sends, agents on the socket, updates. What is checked is what AppDelegate.swift did.
+// messages the page sends, agents on the socket, updates.
 import assert from 'node:assert/strict';
 import { type TestContext, test } from 'node:test';
 import type { Engine } from '../core';

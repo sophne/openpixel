@@ -1,0 +1,6 @@
+The agent logos in agent-logo-data.ts (generated from the SVG files in desktop/assets/agent-logos) come from
+@lobehub/icons-static-svg (https://github.com/lobehub/lobe-icons), released under the MIT licence, © LobeHub.
+
+The logos are trademarks of their respective owners (OpenAI, Anthropic, Anysphere, the OpenClaw project,
+Nous Research, GitHub, Windsurf, Google, Cline, Amazon Web Services, the opencode project, Block, LM Studio). OpenPixel shows them only to identify which apps can connect to it; it is not affiliated
+with or endorsed by any of them.

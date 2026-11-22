@@ -1,4 +1,4 @@
-/* The tab bar, #tabbar (index.html 11–19; what renderTabs() built, app.js 1678–1747). The logic is in ./tabs. */
+/* The tab bar, #tabbar. The logic is in ./tabs. */
 import { useLayoutEffect, type DragEvent, type ReactElement } from 'react';
 import { actions } from '../app/actions';
 import { hideTip, inlineRename, RenameText } from '../kit';
@@ -8,8 +8,8 @@ import { Icon } from '../lib/icons';
 import { tildePath } from '../lib/platform';
 import { useStore } from '../lib/store';
 import type { Tab } from '../state/ui';
-import { showHome } from './home';
-import { closeNewPage, openNewPage } from './newpage';
+import { showHome } from './homePage';
+import { closeNewPage, openNewPage } from './newFile';
 import './register';
 import { closeTab, drawnTabs, reportTitlebar, switchTab, tabDragEnd, tabDragOver, tabDragStart, tabDrop, tabExtras } from './tabs';
 

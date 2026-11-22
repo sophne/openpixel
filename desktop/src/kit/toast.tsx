@@ -1,4 +1,4 @@
-/* The toast over the canvas (app.js 46–53): one line that fades after a moment; agent edits show shorter and tinted. */
+/* The toast over the canvas: one line that fades after a moment; agent edits show shorter and tinted. */
 import type { ReactElement } from 'react';
 import { $ } from '../lib/dom';
 

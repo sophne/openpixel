@@ -1,6 +1,6 @@
 /* UI tests: agents on demand. Starts `openpixel --mcp` like an agent would, introduces it under a name and lets it
-   make one call, so the Agents page has real connections to show (the `spawnAgent` / `stopAgents` test messages
-   of AppDelegate.swift). */
+   make one call, so the Agents page has real connections to show (the `spawnAgent` / `stopAgents` test
+   messages). */
 import { type ChildProcess, spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 

@@ -1,4 +1,4 @@
-//! The style lock (port of Style.swift).
+//! The style lock.
 use std::collections::BTreeSet;
 
 use serde_json::json;

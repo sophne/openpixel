@@ -1,5 +1,4 @@
-/* The right panel (index.html 148–221; app.js 318–338 renderPalette, 478–504 the View panel and the current colour,
-   and the right panel's lines of wire()): Colour, Brush, View and Preview. */
+/* The right panel: Colour (the palette and the current colour), Brush, View and Preview. */
 import { useRef, type ReactElement } from 'react';
 import { Dropdown, pressableProps, Stepper } from '../kit';
 import { $, useEvent } from '../lib/dom';

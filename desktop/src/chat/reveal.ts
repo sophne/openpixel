@@ -1,4 +1,4 @@
-/* Streamed text (app.js 3377–3441): shown at a steady pace, each newly shown run fading in. The text is drawn again
+/* Streamed text: shown at a steady pace, each newly shown run fading in. The text is drawn again
    as Markdown on every step; the runs shown in the last moment are wrapped in spans whose fade starts in the past (a
    negative delay), so drawing again never restarts a fade that is under way.
    This is the one piece of the conversation the page still patches by hand, every frame while a reply streams: the

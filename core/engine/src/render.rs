@@ -1,4 +1,4 @@
-//! Pictures and the software renderer (port of Render.swift).
+//! Pictures and the software renderer.
 use crate::model::{Document, Rgba};
 use crate::PcError;
 

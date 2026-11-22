@@ -1,13 +1,13 @@
-/* The file menu of the editor's panel head, the card menu and "Move to…" (index.html 289–309; what openCardMenu()
-   and openMoveMenu() did to the last two, app.js 2186–2239, and the rows' clicks, 2426–2454). The logic is in ./home. */
+/* The file menu of the editor's panel head, the card menu and "Move to…". openCardMenu() and openMoveMenu() decide
+   what the last two show; the logic is in ./homePage. */
 import { Fragment, type MouseEvent, type ReactElement } from 'react';
 import { actions } from '../app/actions';
 import { Icon } from '../lib/icons';
 import { REVEAL_LABEL } from '../lib/platform';
 import { useStore } from '../lib/store';
-import { cardMenu, cardMenuAction, moveMenu, moveMenuNewFolder, moveMenuPick, type CardAction } from './home';
+import { cardMenu, cardMenuAction, moveMenu, moveMenuNewFolder, moveMenuPick, type CardAction } from './homePage';
 
-const doc = (act: string) => (e: MouseEvent) => { e.stopPropagation(); actions.docMenuAction(act); }; // wire(), app.js 3209
+const doc = (act: string) => (e: MouseEvent) => { e.stopPropagation(); actions.docMenuAction(act); };
 const card = (act: CardAction) => (e: MouseEvent) => { e.stopPropagation(); cardMenuAction(act); };
 
 /** The menu of a file or folder, from its … button or a right-click. Every row is there; openCardMenu() hides the
@@ -55,7 +55,7 @@ function MoveMenu(): ReactElement {
 }
 
 /** #doc-menu, #card-menu and #move-menu: lists on their own, opened with placeMenu(). #doc-menu belongs to the
- *  editor's panel head (openDocMenu, docMenuAction in app.js 735–757): its rows call actions.docMenuAction. */
+ *  editor's panel head (openDocMenu, docMenuAction in editor/sidebar.ts): its rows call actions.docMenuAction. */
 export function LibraryMenus(): ReactElement {
   return (
     <>

@@ -1,6 +1,6 @@
-/* The agents OpenPixel knows how to connect (app.js 2613–2631): the Agents page lists them and the chat looks up
+/* The agents OpenPixel knows how to connect: the Agents page lists them and the chat looks up
    names and logos here.
-   Logos: @lobehub/icons-static-svg (MIT), see app/web/agents/ATTRIBUTION.txt. Single-colour ones are drawn as masks. */
+   Logos: @lobehub/icons-static-svg (MIT), see lib/AGENT-LOGOS-ATTRIBUTION.txt. Single-colour ones follow the text colour. */
 export interface AgentInfo { id: string; name: string; by?: string; logo: string | null; mono?: boolean; generic?: boolean }
 export const AGENTS: AgentInfo[] = [
   { id: 'chatgpt', name: 'ChatGPT', by: 'OpenAI · desktop and web app', logo: 'openai.svg', mono: true },

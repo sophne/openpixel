@@ -1,4 +1,4 @@
-/* The slice view (2D, like a sprite): drawing, fitting and zooming (app.js 1138–1235, 1496–1526, 2969–2975), and the
+/* The slice view (2D, like a sprite): drawing, fitting and zooming, and the
    two labels that follow the view (455–462, 478–489).
    Plain drawing code, as before; the Stage component hands over its canvas with attachSlice(). */
 import { batch, changed } from '../lib/store';

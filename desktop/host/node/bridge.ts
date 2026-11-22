@@ -1,4 +1,4 @@
-/* The window's end of the local link agents use (the server side of Bridge.swift): an owner-only Unix socket, or on
+/* The window's end of the local link agents use: an owner-only Unix socket, or on
    Windows a named pipe. One JSON request per line in, one reply line out; what the lines say is the host's business
    (bridge-protocol.ts). The other end is `openpixel --mcp` (core/app/src/bridge.rs). */
 import { createHash } from 'node:crypto';

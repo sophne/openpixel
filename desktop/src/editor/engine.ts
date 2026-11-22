@@ -1,6 +1,5 @@
-/* State from the engine and what the panels show of it (app.js 233–315, 318–453, 491–504, 532–536, 620–649, 683–687,
-   759–776). The old render…() functions keep their names: each fills its store in core.ts and calls changed(), and
-   the panel components draw from the stores. */
+/* State from the engine and what the panels show of it. Each render…() function fills its store in core.ts and
+   calls changed(), and the panel components draw from the stores. */
 import { actions } from '../app/actions';
 import { $, $$, errorText } from '../lib/dom';
 import { call, nativeAction } from '../lib/host';

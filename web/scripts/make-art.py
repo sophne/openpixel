@@ -5,7 +5,11 @@ Starts `OpenPixel --mcp --headless` and talks MCP to it, exactly like an AI agen
 add_frame, extrude_to_3d, draw_sphere, export_sheet… The sprites are described below as text rows (some drawn by
 hand, some generated), and every picture on the site is exported by OpenPixel.
 
-    python3 web/scripts/make-art.py            (build the app first: cd app && make)
+    python3 web/scripts/make-art.py            (build the program first:
+                                                cargo build --release --manifest-path core/Cargo.toml --bin openpixel)
+
+The program is the native `openpixel`: $OPENPIXEL if set, else core/target/release/openpixel, else the installed
+app's (find_openpixel.py).
 
 Writes web/public/art/*.png and web/src/lib/art.ts (frame counts and sizes for the <Sprite> component).
 """
@@ -16,10 +20,11 @@ import os
 import subprocess
 import sys
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-APP = os.path.join(ROOT, "app", "OpenPixel.app", "Contents", "MacOS", "OpenPixel")
-if not os.path.exists(APP):
-    APP = "/Applications/OpenPixel.app/Contents/MacOS/OpenPixel"
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import find_openpixel  # noqa: E402
+
+ROOT = find_openpixel.ROOT
+APP = find_openpixel.program()
 OUT = os.path.join(ROOT, "web", "public", "art")
 MANIFEST = os.path.join(ROOT, "web", "src", "lib", "art.ts")
 CHEST = os.path.join(ROOT, "web", "scripts", "treasure-chest.openpixel")
@@ -29,8 +34,8 @@ class Agent:
     """A minimal MCP client over stdio."""
 
     def __init__(self):
-        self.p = subprocess.Popen([APP, "--mcp", "--headless"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                  stderr=subprocess.DEVNULL, text=True, bufsize=1)
+        self.p = subprocess.Popen([find_openpixel.require(APP), "--mcp", "--headless"], stdin=subprocess.PIPE,
+                                  stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, bufsize=1)
         self.n = 0
         self.rpc("initialize", {"protocolVersion": "2025-06-18", "clientInfo": {"name": "openpixel-website", "version": "1"}})
         self.p.stdin.write(json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}) + "\n")
@@ -480,8 +485,7 @@ def write_manifest(art):
 
 
 def main():
-    if not os.path.exists(APP):
-        sys.exit("Build the app first: cd app && make")
+    find_openpixel.require(APP)
     os.makedirs(OUT, exist_ok=True)
     only = sys.argv[1:]
     if only:

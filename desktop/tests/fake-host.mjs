@@ -76,7 +76,7 @@ export function createHost(options) {
         throw new Error(`fake host: no engine (export ${m.format})`);
       }
       case 'checkUpdates': await ui.showUpdateDialog({ version: '9.9.9', url: 'https://openpixel.dev', notes: 'The fake host has nothing new.' }); return true;
-      default: return false; // as the Mac app answered actions it did not know
+      default: return false; // what the real host answers to an action it does not know
     }
   }
 

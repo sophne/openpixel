@@ -109,7 +109,7 @@ export interface LocalServices {
 
 /** What the agents' socket hands to the host. One connection is one agent's `openpixel --mcp`. */
 export interface BridgeHandlers {
-  /** One request line in, one reply line out (see Bridge.swift). A connection's lines are answered in order. */
+  /** One request line in, one reply line out (bridge-protocol.ts). A connection's lines are answered in order. */
   line(line: string, connection: number): string | Promise<string>;
   opened(connection: number): void;
   closed(connection: number): void;

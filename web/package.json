@@ -2,7 +2,7 @@
   "name": "openpixel-web",
   "version": "1.0.0",
   "private": true,
-  "description": "openpixel website: download page and changelog for the OpenPixel Mac app",
+  "description": "openpixel website: download page and changelog for the OpenPixel desktop app",
   "license": "MIT",
   "engines": { "node": ">=20.9" },
   "scripts": {

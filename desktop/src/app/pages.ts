@@ -1,4 +1,4 @@
-/* Which page fills the window (app.js 1795–1809).
+/* Which page fills the window.
    `ui.view` says it: the editor, the home screen or the New file page. Nothing sets `hidden` on #home or #newpage by
    hand any more: library/Home shows itself while ui.view is 'home', library/NewPage while it is 'new', and App puts
    the view on <body data-view>. So a function that changed pages (showHome, openNewPage, showEditor) sets ui.view

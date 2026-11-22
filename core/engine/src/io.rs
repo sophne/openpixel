@@ -112,7 +112,7 @@ impl HostIo for StdIo {
                 ureq::Error::Transport(t) => t.to_string(),
             })?;
         let mut data = Vec::new();
-        // An appcast is a few kilobytes; never read an endless answer.
+        // The update feed is a few hundred bytes; never read an endless answer.
         response.into_reader().take(8 << 20).read_to_end(&mut data).map_err(|e| e.to_string())?;
         Ok(data)
     }

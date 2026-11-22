@@ -1,5 +1,5 @@
-/* window.PC: what the app calls on the page (app.js 4263–4319; docs/desktop-architecture.md, section 1).
-   The object is the old one, function for function. Everything it reaches for in an area goes through `actions`,
+/* window.PC: what the app calls on the page (docs/desktop-architecture.md, section 1).
+   Everything it reaches for in an area goes through `actions`,
    so each area only has to fill its slots (app/actions.ts) for the app's calls to arrive. */
 import { actions } from '../app/actions';
 import { showEditor } from '../app/pages';

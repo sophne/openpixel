@@ -1,7 +1,7 @@
 //! The MCP program's end of the local link to the open OpenPixel window: an owner-only Unix socket in the person's
 //! data folder (on Windows the named pipe `\\.\pipe\openpixel-<user>`), no network port. One JSON request per line:
 //! {"tool": name, "args": {...}} → {"ok": true, "json": {...}, "images": [base64 PNG]} or {"ok": false, "error": ".."}.
-//! Port of the client side of Bridge.swift; the window's side is desktop/host/node/bridge.ts.
+//! The window's side is desktop/host/node/bridge.ts.
 use crate::json;
 use crate::mcp::ToolBackend;
 use base64::Engine as _;

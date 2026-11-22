@@ -29,7 +29,7 @@ export function appEnv(extra = {}) {
   return env;
 }
 
-/** Starts the app with Playwright. `args` are the app's own (`--legacy-ui`, `--ui-test <folder>`, …). */
+/** Starts the app with Playwright. `args` are the app's own (a file to open, `--ui-test <folder>`, …). */
 export async function launch({ args = [], env = {}, recordVideo } = {}) {
   const { _electron } = await import('playwright');
   // Chromium's sandbox needs a setuid helper that containers and CI machines rarely have.

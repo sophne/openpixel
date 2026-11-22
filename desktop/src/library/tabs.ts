@@ -1,5 +1,4 @@
-/* ---------------------------------------------------------------- open files: the tab bar (app.js 1664–1794,
-   2373–2386, 3286–3298)
+/* ---------------------------------------------------------------- open files: the tab bar
    Like Figma: Home on the left, one tab per open file (each with its own document and undo history in the app),
    and + for the New file page, which shows as a tab of its own while it is open. `ui.view` says what fills the
    window: the editor, the home screen or the New file page.
@@ -11,7 +10,7 @@ import { $, $$ } from '../lib/dom';
 import { nativeAction } from '../lib/host';
 import { changed, store, watch } from '../lib/store';
 import { S, ui, type DocState, type Tab, type UiState } from '../state/ui';
-import { showHome } from './home';
+import { showHome } from './homePage';
 
 type TabId = Tab['id'];
 const tabViews = new Map<TabId, { mode: DocState['mode']; axis: DocState['axis']; slice: number }>(); // per tab: 2D/3D mode, slice axis and position, restored when switching back
@@ -40,7 +39,7 @@ export function renderTabs(force?: boolean): void {
   Object.assign(drawnTabs, { gen: drawnTabs.gen + 1, tabs: ui.tabs, active: ui.active, view: ui.view, newOpen: ui.newOpen });
   changed(drawnTabs); // TabBar draws, then scrolls the open tab into view and calls reportTitlebar()
 }
-// Where the old page called renderTabs() after changing `ui`, the code now calls changed(ui) (README, Pages).
+// Code that changes `ui` calls changed(ui); the tab bar follows (README, Pages).
 watch(ui, () => renderTabs());
 
 /* Tabs reorder by dragging. */

@@ -1,6 +1,6 @@
 /* Finding the person's agent tools and starting them, on each system.
 
-   macOS and Linux, as the Mac app did (ChatRunner.path / find / capture): apps opened from the Finder or a launcher
+   macOS and Linux: apps opened from the Finder or a launcher
    don't get the shell's PATH, where these tools usually live, so a login shell is asked for it once and the usual
    install folders are added.
 
@@ -23,14 +23,14 @@ const windows = process.platform === 'win32';
 /** The person's home folder (%USERPROFILE% on Windows). Asked each time: tests point it at a folder of their own. */
 export const home = (): string => os.homedir();
 
-/** A path inside the home folder, written with "/" as in the Swift ("~/.codex/config.toml"). */
+/** A path inside the home folder, written with "/" as in the Swift app ("~/.codex/config.toml"). */
 export const inHome = (relative: string): string => nodePath.join(home(), ...relative.split('/'));
 
 function isFile(path: string): boolean {
   try { return nodeFS.statSync(path).isFile(); } catch { return false; }
 }
 
-/** FileManager.isExecutableFile, for a file (the Swift's also said yes to a folder one may enter; no tool is one). */
+/** FileManager.isExecutableFile, for a file (the Swift app's also said yes to a folder one may enter; no tool is one). */
 export function isExecutableFile(path: string): boolean {
   if (!isFile(path)) return false;
   if (windows) return true;

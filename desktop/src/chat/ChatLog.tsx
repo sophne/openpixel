@@ -1,4 +1,4 @@
-/* The conversation (app.js 3689–3879): the empty state, the messages, their parts (text, thinking, tool rows) and
+/* The conversation: the empty state, the messages, their parts (text, thinking, tool rows) and
    what sits under a reply. These components draw what chat.ts put in the stores of state.ts and nothing else: the
    elements, classes and text are the ones appendChatMessage(), appendChatPart(), addToolRow() and renderChatFoot()
    built by hand, in the same order.

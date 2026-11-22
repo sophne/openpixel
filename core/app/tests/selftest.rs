@@ -1,4 +1,4 @@
-//! The MCP and HTTP-path checks of the Mac app's self-test (SelfTest.swift), run as tests.
+//! The MCP and HTTP-path checks of `openpixel --selftest`, run as tests.
 use openpixel::selftest::{self, Checks};
 
 fn assert_all(c: Checks) {

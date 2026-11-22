@@ -1,4 +1,4 @@
-/* The chat's two menus (index.html 310–312): the chats kept for the open file, and the agent + model picker. Both
+/* The chat's two menus: the chats kept for the open file, and the agent + model picker. Both
    open from the chat panel and are placed at their buttons (kit/menus: placeMenu). The old code filled them each
    time they opened; openHistoryMenu() and openModelMenu() (chat.ts) now note what to show and these draw it. A new
    key per opening makes the rows new elements, as they were (the kit marks rows by hand: `kb`, a moved title). */

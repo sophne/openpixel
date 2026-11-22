@@ -1,5 +1,5 @@
 /* --- the page opened in a browser without the app (design previews): a scripted agent, never used inside OpenPixel
-   (app.js 4218–4261). lib/host.ts sends Agent Chat's messages here when there is no host. */
+  . lib/host.ts sends Agent Chat's messages here when there is no host. */
 import { actions } from '../app/actions';
 import type { ChatEvent } from './types';
 

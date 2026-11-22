@@ -1,5 +1,4 @@
-/* What the parts of Agent Chat share: one run of an agent, and what a parser may ask of the runner. In the Swift
-   these were ChatRunner.Run and ChatRunner itself (the parsers were its methods and extensions). */
+/* What the parts of Agent Chat share: one run of an agent, and what a parser may ask of the runner. */
 import type { ChildProcess } from 'node:child_process';
 import type { Writable } from 'node:stream';
 import type { PlatformFS } from '../../platform';

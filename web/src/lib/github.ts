@@ -1,16 +1,20 @@
 // Release data from GitHub, fetched on the server and cached, so visitors never call GitHub themselves.
 
+import { FILES, type DownloadFile } from "@/lib/platforms";
+
 export const REPO = process.env.GITHUB_REPO || "sophne/openpixel";
 export const REPO_URL = `https://github.com/${REPO}`;
 export const X_URL = process.env.NEXT_PUBLIC_X_URL || "https://x.com/eminvkc";
 /**
- * Whether releases are signed with a Developer ID and notarized by Apple. Until then builds are ad-hoc signed and
- * macOS asks people to confirm the first launch; the site says so. Set NEXT_PUBLIC_NOTARIZED=true once releases
- * are notarized (see RELEASING.md).
+ * Whether the Mac releases are signed with a Developer ID and notarized by Apple. Until then macOS asks people to
+ * confirm the first launch and the Mac app can't install its own updates (its Update button opens the downloads
+ * page); the site says so. Set NEXT_PUBLIC_NOTARIZED=true once releases are notarized (see RELEASING.md).
  */
 export const NOTARIZED = process.env.NEXT_PUBLIC_NOTARIZED === "true";
-/** Always the newest stable release: GitHub redirects this to the current OpenPixel.dmg. */
-export const DOWNLOAD_URL = `${REPO_URL}/releases/latest/download/OpenPixel.dmg`;
+/** Always the newest stable release: GitHub redirects this to that release's file of the same name. */
+export const assetUrl = (file: string) => `${REPO_URL}/releases/latest/download/${file}`;
+/** GitHub's API. Only tests point this elsewhere (a local file server with canned releases). */
+const API_URL = (process.env.GITHUB_API_URL || "https://api.github.com").replace(/\/$/, "");
 
 export type Release = {
   tag: string;
@@ -20,7 +24,8 @@ export type Release = {
   url: string;
   notes: string;
   prerelease: boolean;
-  dmgSize?: number;
+  /** Size in bytes of each download this release carries, by file name (lib/platforms.ts lists the names). */
+  assets: Record<string, number>;
 };
 
 type ApiAsset = { name: string; size: number };
@@ -43,7 +48,7 @@ async function api<T>(path: string): Promise<T | null> {
   };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
   try {
-    const res = await fetch(`https://api.github.com/repos/${REPO}${path}`, {
+    const res = await fetch(`${API_URL}/repos/${REPO}${path}`, {
       headers,
       next: { revalidate: 600 },
       signal: AbortSignal.timeout(5000),
@@ -65,7 +70,9 @@ function toRelease(r: ApiRelease): Release {
     url: r.html_url,
     notes: r.body ?? "",
     prerelease: r.prerelease,
-    dmgSize: r.assets.find((a) => a.name === "OpenPixel.dmg")?.size,
+    assets: Object.fromEntries(
+      (r.assets ?? []).filter((a) => FILES.some((f) => f.file === a.name)).map((a) => [a.name, a.size]),
+    ),
   };
 }
 
@@ -77,6 +84,25 @@ export async function latestRelease(): Promise<Release | null> {
 export async function allReleases(): Promise<Release[]> {
   const list = await api<ApiRelease[]>("/releases?per_page=30");
   return (list ?? []).filter((r) => !r.draft).map(toRelease);
+}
+
+/**
+ * Whether the newest release carries this file: true or false when GitHub answered, null when it didn't (then
+ * nobody knows, and links go to the file's usual address).
+ */
+export function hasFile(release: Release | null, f: DownloadFile): boolean | null {
+  return release ? release.assets[f.file] !== undefined : null;
+}
+
+/**
+ * The answer of a /downloads/<file> route: a redirect to the newest release's file on GitHub. While the newest
+ * release doesn't carry that file yet, people land on the downloads page instead of GitHub's "not found".
+ */
+export async function downloadRedirect(id: DownloadFile["id"]): Promise<Response> {
+  const f = FILES.find((x) => x.id === id)!;
+  const there = hasFile(await latestRelease(), f);
+  const to = there === false ? `/downloads#${f.os}` : assetUrl(f.file);
+  return new Response(null, { status: 302, headers: { Location: to, "Cache-Control": "no-store" } });
 }
 
 export function formatSize(bytes?: number): string | null {
