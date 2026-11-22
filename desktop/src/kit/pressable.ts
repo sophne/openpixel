@@ -1,4 +1,4 @@
-/* Keyboard access (app.js 2901–2916).
+/* Keyboard access.
    Things drawn as plain boxes that act like buttons (tools, layers, frames, swatches, toggles) get focus, a role and a
    name, and answer Return and Space like a button does. */
 import type { KeyboardEvent } from 'react';

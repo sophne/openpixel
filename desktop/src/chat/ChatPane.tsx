@@ -1,7 +1,6 @@
-/* The chat panel, #chat-sec (index.html 86–115), mounted by the editor's left panel: the title with the file's
+/* The chat panel, #chat-sec, mounted by the editor's left panel: the title with the file's
    chats, the conversation, and the message box with the "/" skills list, the agent + model button and the effort
-   dropdown under it. The markup is the old page's, node for node; what wireChat() (app.js 4168–4216) attached is
-   the handlers and effects here, and everything they call is in chat.ts under its old name.
+   dropdown under it. The handlers and effects are here; everything they call is in chat.ts.
    Chat with the person's own agents (Claude Code, Codex, Cursor, Gemini CLI) on their subscriptions: the agent works
    on this file through OpenPixel's tools. The message box grows with its text, then scrolls; send sits inside it. */
 import { useLayoutEffect, useRef, type KeyboardEvent, type ReactElement } from 'react';

@@ -1,4 +1,4 @@
-/* Motion (app.js 148–173).
+/* Motion.
    Popups grow out of whatever opened them: the point of the popup nearest the trigger is the transform origin,
    so a menu under a button grows down from the button, one that flips upward grows up, and the colour picker grows
    sideways from its swatch. Dialogs are not anchored to anything, so they grow from the centre. Only popups a pointer

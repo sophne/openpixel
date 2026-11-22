@@ -1,4 +1,4 @@
-/* Menus (app.js 1583–1593, 2171–2185, 3049–3084, and the [data-menu] buttons of wire()).
+/* Menus, and the [data-menu] buttons that open them.
    A menu is open while its element has the class `open`: `.menu` (a button with its .menu-list inside: the main
    menu, Export, every dropdown) or `.card-menu` (a list on its own, placed at a point: the doc, card, move and chat
    menus). The arrow keys move through the items of the open menu, Return chooses, Escape closes and returns focus.

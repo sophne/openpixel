@@ -1,4 +1,4 @@
-/* Copy buttons answer in place, like the website's (app.js 130–146): "Copy" cross-fades (with a touch of blur) to a
+/* Copy buttons answer in place, like the website's: "Copy" cross-fades (with a touch of blur) to a
    check and "Copied", and back after a moment. Both labels share one grid cell, so the button keeps its width.
    The swap happens in the click itself, not on the next render. */
 import { useRef, type ButtonHTMLAttributes, type ReactElement } from 'react';

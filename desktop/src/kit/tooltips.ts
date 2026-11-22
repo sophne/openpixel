@@ -35,7 +35,7 @@ export function adoptTitle(el: HTMLElement): void {
   if (!el.getAttribute('aria-label') && !(el.textContent || '').trim()) el.setAttribute('aria-label', tipParts(t).label);
 }
 /** Gives icon-only buttons their accessible names right away (titles move to data-tip on first hover anyway).
- *  Runs once after the first render, as the old page did for its static markup. */
+ *  Runs once after the first render. */
 export function adoptTitles(root: ParentNode = document): void {
   root.querySelectorAll<HTMLElement>('[title]').forEach(adoptTitle);
 }

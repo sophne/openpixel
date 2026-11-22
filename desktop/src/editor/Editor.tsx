@@ -1,20 +1,19 @@
-/* The editor: #app and everything inside it (index.html 21–227; app.js 233–1663, 2918–3284 and 4321–4342, minus the
-   kit's parts: see README.md).
-     core.ts      the editor's constants and state (22–28, 43–44, 220–231) and one store per old render function
-     engine.ts    state from the engine, the panels' redraws, thumbnails, activity, the engine's preview (233–453, 620–649, 759–776)
-     colour.ts    the colour picker (505–513, 538–591); its markup and wirePicker() are in EditorDialogs.tsx
-     sidebar.ts   the left sidebar's logic, the file's name and menu (651–757)
-     gl.ts        the WebGL2 3D view: mesh, camera, drawing, axes, picking (778–1136)
-     slice.ts     the 2D slice view, fitting and zooming (1138–1235, 1496–1526, 2969–2975)
-     strokes.ts   strokes with their local preview (1237–1327)
-     mouse.ts     the pointer, wheel and trackpad in both views, the 2D bucket (1329–1573)
-     modes.ts     tools, 2D / 3D, axis, slices, brush, the frames fold, the pixel grid (463–477, 2918–2968)
-     controls.ts  play, review, the shortcuts list (2977–3013, 4321–4342)
-     resizers.ts  panel sizes (3087–3122)
-     init.ts      startup, the key handler, the frame loop, thumbnail sizes (1654–1662, 3228–3284), actions and compat names
+/* The editor: #app and everything inside it (see README.md for how the page is put together).
+     core.ts      the editor's constants and state, and one store per piece of the panels that is drawn from state
+     engine.ts    state from the engine, the panels' redraws, thumbnails, activity, the engine's preview
+     colour.ts    the colour picker; its markup and listeners are in EditorDialogs.tsx
+     sidebar.ts   the left sidebar's logic, the file's name and menu
+     gl.ts        the WebGL2 3D view: mesh, camera, drawing, axes, picking
+     slice.ts     the 2D slice view, fitting and zooming
+     strokes.ts   strokes with their local preview
+     mouse.ts     the pointer, wheel and trackpad in both views, the 2D bucket
+     modes.ts     tools, 2D / 3D, axis, slices, brush, the frames fold, the pixel grid
+     controls.ts  play, review, the shortcuts list
+     resizers.ts  panel sizes
+     init.ts      startup, the key handler, the frame loop, thumbnail sizes, actions and compat names
    The components (this file, LeftSide.tsx, Stage.tsx, Frames.tsx, RightPanel.tsx, EditorDialogs.tsx) hold the markup
-   and what wire() attached to it. The chat panel (#chat-sec) is chat/ChatPane, mounted in the left panel; #toast is
-   the kit's <Toast/>. Editor itself renders once; each piece reads the store it draws. */
+   and its handlers. The chat panel (#chat-sec) is chat/ChatPane, mounted in the left panel; #toast is the kit's
+   <Toast/>. Editor itself renders once; each piece reads the store it draws. */
 import type { ReactElement, ReactNode } from 'react';
 import { closeMenus, onMenuButton } from '../kit';
 import { nativeAction } from '../lib/host';

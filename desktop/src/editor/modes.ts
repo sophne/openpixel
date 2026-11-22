@@ -1,4 +1,4 @@
-/* Tools, the 2D / 3D switch, the slice axis and index, the brush (app.js 2918–2968), and the two view choices that
+/* Tools, the 2D / 3D switch, the slice axis and index, the brush, and the two view choices that
    are remembered: the folded Frames strip and the pixel grid (463–477). */
 import { $ } from '../lib/dom';
 import { changed } from '../lib/store';

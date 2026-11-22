@@ -390,7 +390,7 @@ ol.steps li::marker { color: var(--accent); font-weight: 600; }
 
 /* ======================================================= motion and interaction states
    Presses answer at once with a small squeeze. Hover colours stay instant (they happen constantly).
-   Popups grow out of their trigger and dialogs out of the centre; app.js animates them (popIn) only when a
+   Popups grow out of their trigger and dialogs out of the centre; the page animates them (popIn) only when a
    pointer opened them, so keyboard use is never slowed down. */
 .btn, .tool, .chip, .seg button, .dd-btn, .stepper button, .action-tile, .home-nav, .tog { transition: transform 120ms var(--ease-out); }
 .btn:active:not(:disabled), .tool:active, .chip:active, .seg button:active, .dd-btn:active, .action-tile:active, .home-nav:active { transform: scale(0.97); }
@@ -410,7 +410,7 @@ button:focus-visible, .dd-btn:focus-visible, [tabindex]:focus-visible, .action-t
   .stepper button:active, .tog:active, #palette .sw:hover { transform: none; }
 }
 
-/* Copy buttons (copyButton in app.js): "Copy" and "Copied" share one cell and cross-fade with a touch of blur, as on
+/* Copy buttons (kit/copy.tsx): "Copy" and "Copied" share one cell and cross-fade with a touch of blur, as on
    the website; the check is green so the result reads at a glance. */
 .btn.swapper { display: inline-grid; place-items: center; }
 .btn.swapper > .swap { grid-area: 1 / 1; display: inline-flex; align-items: center; gap: 6px; filter: blur(0);
@@ -460,7 +460,7 @@ button:focus-visible, .dd-btn:focus-visible, [tabindex]:focus-visible, .action-t
 kbd { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 3px; border-radius: 4px;
   background: var(--panel-2); border: 1px solid var(--line); border-bottom-width: 2px; font: 11px/1 -apple-system, BlinkMacSystemFont, sans-serif; color: var(--text); }
 
-/* Tooltips (app.js): the website's dock label, solid instead of glass. Short name, shortcut as key caps, an arrow
+/* Tooltips (kit/tooltips.ts): the website's dock label, solid instead of glass. Short name, shortcut as key caps, an arrow
    that points at the control. */
 .tip { position: fixed; z-index: 200; left: 0; top: 0; display: none; align-items: center; gap: 8px; max-width: 280px;
   padding: 4px 10px 5px; border-radius: 8px; background: #242424; border: 1px solid rgba(255, 255, 255, 0.16);

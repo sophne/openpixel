@@ -1,6 +1,6 @@
 /* Small pure helpers more than one area uses. */
 
-/** "5 min ago" for a time in seconds since 1970 (app.js 1835). */
+/** "5 min ago" for a time in seconds since 1970. */
 export function timeAgo(t: number): string {
   const s = Math.max(0, Date.now() / 1000 - t);
   if (s < 60) return 'just now';

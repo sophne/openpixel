@@ -1,6 +1,6 @@
-/* The editor's startup, key handling and frame loop (app.js 3124–3284 minus what became handlers in JSX and what the
-   kit took, and 4345–4356), and what the editor owes the other areas and the old test scripts: its `actions` slots and
-   its compat names (README.md). Editor.tsx imports this module, so both are registered before the page starts. */
+/* The editor's startup, key handling and frame loop, and what the editor owes the other areas and the test scripts:
+   its `actions` slots and its compat names (README.md). Editor.tsx imports this module, so both are registered before
+   the page starts. */
 import { actions, registerActions } from '../app/actions';
 import { $, $$ } from '../lib/dom';
 import { post, SCREENSHOT } from '../lib/host';
@@ -82,13 +82,13 @@ function loop(): void {
   requestAnimationFrame(loop);
 }
 
-/** Once, after the first render: what app.js ran at the end of the file for the editor, in the old order. */
+/** Once, after the first render. The order matters: the canvases and tools first, then what reads them. */
 function initEditor(): void {
   initGL();
   initMouse();
   buildTools();
   initResizers();
-  // wire(): what was not a handler on an element
+  // what is not a handler on an element
   setPixelGrid(S.pixelGrid);
   chipsView.pscale = S.previewScale; changed(chipsView);
   applyLeftSide();

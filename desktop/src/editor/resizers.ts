@@ -1,4 +1,4 @@
-/* Panels resize by dragging their edges; sizes are remembered (app.js 3087–3122). The handles' own listeners are on
+/* Panels resize by dragging their edges; sizes are remembered. The handles' own listeners are on
    the .resizer elements in Editor.tsx (startResize, resetSize). */
 import { $ } from '../lib/dom';
 import { S } from '../state/ui';

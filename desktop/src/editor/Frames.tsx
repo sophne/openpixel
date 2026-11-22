@@ -1,5 +1,5 @@
-/* The Frames panel under the canvas (index.html 132–146; app.js 417–440 renderFrames, and the frames' lines of
-   wire()): the bar (fold, play, onion, duration, add, delete) and the strip of frame previews. */
+/* The Frames panel under the canvas: the bar (fold, play, onion, duration, add, delete) and the strip of frame
+   previews. */
 import type { ReactElement } from 'react';
 import { pressableProps, Stepper, useTitle } from '../kit';
 import { $ } from '../lib/dom';

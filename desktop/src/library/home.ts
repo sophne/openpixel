@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------- home screen: Recents, All folders, Archive, Agents
-   (app.js 1811–2168, 2186–2294, 2321–2371, 726–730)
+  
    The library (files you opened or saved, the built-in samples, your folders and the archive) is kept by the app.
    Folders and the archive only organise the list: files stay where they are on disk until deleted forever.
 

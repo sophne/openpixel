@@ -1,9 +1,8 @@
-/* Stores: the page's state lives in plain mutable objects with the old page's names and shapes (S, ui, home, sv, …).
+/* Stores: the page's state lives in plain mutable objects (S, ui, home, sv, …).
    Code changes a store and calls changed(store); components read it with useStore(store).
 
-   The old page redrew the DOM the moment a function like renderTabs() or updatePanels() ran, and code (and the UI
-   test) reads the DOM straight after. changed() keeps that promise: it renders the components that use the store
-   before it returns. */
+   Code (and the UI test) reads the DOM straight after changing state: a click, then a look at what it drew.
+   changed() makes that work: it renders the components that use the store before it returns. */
 import { useSyncExternalStore } from 'react';
 import { flushSync } from 'react-dom';
 

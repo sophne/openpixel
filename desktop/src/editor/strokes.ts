@@ -1,4 +1,4 @@
-/* Strokes: a local preview while the pointer is down, one engine call at the end (app.js 1237–1327). */
+/* Strokes: a local preview while the pointer is down, one engine call at the end. */
 import { errorText } from '../lib/dom';
 import { call } from '../lib/host';
 import { toast } from '../kit';

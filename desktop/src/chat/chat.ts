@@ -1,7 +1,7 @@
-/* ---------------------------------------------------------------- Agent Chat (app.js 3302–4216)
+/* ---------------------------------------------------------------- Agent Chat
    Talks to the agents the person already has (Claude Code, Codex, Cursor, Gemini CLI), on their own subscriptions.
    For each message the app runs the agent's command-line tool with OpenPixel's tools attached and streams back its
-   events (see Chat.swift): text and thinking deltas, tool calls and their results.
+   events (see desktop/host/node/chat/runner.ts): text and thinking deltas, tool calls and their results.
    Every file keeps its own chats (saved by the app, so they survive restarts): the title above the conversation lists
    them, and the pen starts another one on the same file. A chat continues the agent's own session while you stay
    with that agent; switching agents mid-chat hands the new one a short transcript instead.

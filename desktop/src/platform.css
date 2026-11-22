@@ -1,11 +1,12 @@
-/* What the desktop app adds to style.css (which is app/web/style.css, copied as it is and never edited here). */
+/* What differs between macOS, Windows and Linux: fonts and the room the window's own buttons take in the tab bar.
+   Everything else is in style.css. <html data-platform> is set at startup (app/startup.ts). */
 
 /* React renders into #root. It makes no box of its own, so the tab bar, the editor, the pages, the menus and the
-   dialogs are laid out as the children of <body> they were in the old page. */
+   dialogs are laid out as children of <body>, which is what style.css expects. */
 #root { display: contents; }
 
-/* Fonts: the old page names the Mac's (-apple-system, SF Mono, Menlo). Elsewhere the same roles go to the
-   platform's interface and monospace fonts. <html data-platform> is set at startup (app/startup.ts). */
+/* Fonts: style.css names the Mac's (-apple-system, SF Mono, Menlo). Elsewhere the same roles go to the
+   platform's interface and monospace fonts. */
 html[data-platform="win32"] { font-family: "Segoe UI Variable Text", "Segoe UI", "Inter", sans-serif; }
 html[data-platform="linux"] { font-family: system-ui, "Inter", "Cantarell", "Ubuntu", "Noto Sans", sans-serif; }
 html[data-platform="win32"] :is(.mono, pre.code, .cmd code, .md code, kbd) { font-family: "Cascadia Mono", Consolas, monospace; }

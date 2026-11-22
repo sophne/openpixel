@@ -1,6 +1,6 @@
 /* Renaming in place, the same everywhere (layers, the file in the panel, tabs, cards and rows, folders): the text
    becomes a field with the name selected; Return or clicking away keeps it, Escape goes back. `commit` answers true
-   or a message to show (app.js 689–716). */
+   or a message to show. */
 import { createElement, useCallback, useLayoutEffect, useRef, type HTMLAttributes, type ReactElement, type Ref } from 'react';
 import { toast } from './toast';
 

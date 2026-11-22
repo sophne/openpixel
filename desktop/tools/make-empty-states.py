@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Draws the app's empty-state pictures with OpenPixel itself, over MCP, in the accent orange and grays only.
 
-    python3 app/tools/make-empty-states.py            # uses app/OpenPixel.app (the newest local build)
-    OPENPIXEL=/path/to/OpenPixel python3 app/tools/make-empty-states.py
+    python3 desktop/tools/make-empty-states.py        # uses core/target/release/openpixel (`npm run build:mcp`)
+    OPENPIXEL=/path/to/openpixel python3 desktop/tools/make-empty-states.py
 
-Five 32×32 animated sprites, each written as a 1× sprite sheet (frames side by side) to app/web/empty/<name>.png and
-as its .openpixel source to app/assets/empty/<name>.openpixel:
+Five 32×32 animated sprites, each written as a 1× sprite sheet (frames side by side) to desktop/src/empty/<name>.png
+(what the page shows) and as its .openpixel source to desktop/assets/empty/<name>.openpixel:
 
   search   nothing found: the website's search buddy (a slime sweeping a magnifying glass), in grays and orange
   archive  empty archive: the box's lid lifts, an orange spark drifts up out of the empty box
@@ -21,9 +21,10 @@ import subprocess
 import sys
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-APP = os.environ.get("OPENPIXEL") or os.path.join(ROOT, "app", "OpenPixel.app", "Contents", "MacOS", "OpenPixel")
-OUT = os.path.join(ROOT, "app", "web", "empty")
-SRC = os.path.join(ROOT, "app", "assets", "empty")
+# The MCP program agents start: the native build of the core.
+APP = os.environ.get("OPENPIXEL") or os.path.join(ROOT, "core", "target", "release", "openpixel.exe" if os.name == "nt" else "openpixel")
+OUT = os.path.join(ROOT, "desktop", "src", "empty")
+SRC = os.path.join(ROOT, "desktop", "assets", "empty")
 W = H = 32
 FRAME_MS = 280  # one step; the page uses the same length per frame
 

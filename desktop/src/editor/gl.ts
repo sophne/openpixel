@@ -1,4 +1,4 @@
-/* The 3D view (WebGL2): mesh building, the camera, drawing, the axes gizmo and picking (app.js 778–1136).
+/* The 3D view (WebGL2): mesh building, the camera, drawing, the axes gizmo and picking.
    Plain drawing code, as before; the Stage component hands over its canvases with attachGL() and attachAxes(). */
 import { $ } from '../lib/dom';
 import { toast } from '../kit';

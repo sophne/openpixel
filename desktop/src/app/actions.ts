@@ -1,22 +1,22 @@
 /* Calls between the three areas.
-   app.js was one file: the editor called the library's functions and the other way round. Here each area is its own
+   The page has three areas (editor, library, chat) that need each other's functions. Each area is its own
    set of modules, and no area imports another's files (the one exception: the editor's left panel mounts
    chat/ChatPane). Whatever one area needs from another goes through `actions`: a slot per function, typed here, filled
    by the area that owns it with registerActions() when its module loads, and called as actions.name(...).
 
-   The list is every function or variable that app.js defines in one area and uses in another (worked out from the
-   source, see README.md). Until an area registers a slot it does nothing and returns the value below. */
+   The list is every function one area defines and another uses (see README.md). Until an area registers a slot it
+   does nothing and returns the value below. */
 import type { LibraryTarget, Tab } from '../state/ui';
 
 export interface Actions {
   /* ------------------------------------------------------------------ editor */
-  /** Once at startup, after the first render: what app.js ran at the end of the file for the editor: initGL(),
-   *  buildTools(), initResizers(), the editor's part of wire() (window key and resize handlers, applyLeftSide(),
+  /** Once at startup, after the first render: initGL(),
+   *  buildTools(), initResizers(), the editor's window-level handlers (keys and resize, applyLeftSide(),
    *  setFramesOpen(...), the ResizeObserver on #strip), setAxis('z'), setMode('slice'), and requestAnimationFrame(loop). */
   initEditor(): void;
-  /** After the first refresh and the first page: sizeThumbs(); stateReady = true; frameCount = 0 (app.js 4353–4354). */
+  /** After the first refresh and the first page: sizeThumbs(); stateReady = true; frameCount = 0. */
   editorReady(): void;
-  /** Reads the open tabs and the active document's state. Resolves once the newest state is on screen (app.js 248). */
+  /** Reads the open tabs and the active document's state. Resolves once the newest state is on screen. */
   refresh(): Promise<void>;
   setMode(mode: 'slice' | '3d'): void;
   fitSlice(): void;
@@ -34,7 +34,7 @@ export interface Actions {
   setPixelGrid(on: boolean): void;
   setLeftOpen(open: boolean): void;
   /** Renames a file on disk (by its path, or the one open in tab `tab`), then shows the new name everywhere.
-   *  Answers true, or the message to show (app.js 718). */
+   *  Answers true, or the message to show. */
   renameFile(where: { tab?: Tab['id'] | null; path?: string }, name: string): Promise<unknown>;
   /** A row of #doc-menu (rendered by library/LibraryMenus) was chosen: 'rename' | 'reveal' | 'move' | 'saveAs' | 'close'. */
   docMenuAction(act: string): Promise<void> | void;
@@ -43,11 +43,11 @@ export interface Actions {
   /** Once at startup, after initEditor(): what wireHome(), wireNewPage() and wireNewFileDialog() did that is not a
    *  handler in JSX (the first githubStars and version requests, …). */
   initLibrary(): void;
-  /** Takes the app's `tabs` answer ({tabs, active}) into `ui` and redraws the tab bar (app.js 1671). */
+  /** Takes the app's `tabs` answer ({tabs, active}) into `ui` and redraws the tab bar. */
   applyTabs(r: { tabs?: Tab[]; active?: Tab['id'] | null } | null | undefined): void;
   /** Draws the tab bar again; `force` is the old `tabsDrawn = ''` before it (after a rename). */
   renderTabs(force?: boolean): void;
-  /** Tells the app where the tab bar's controls are, and whether a dialog covers the bar (app.js 1751). */
+  /** Tells the app where the tab bar's controls are, and whether a dialog covers the bar. */
   reportTitlebar(): void;
   closeTab(id: Tab['id']): Promise<void>;
   showHome(view?: string): Promise<void>;
@@ -59,7 +59,7 @@ export interface Actions {
   openNewPage(): Promise<void>;
   closeNewPage(): void;
   showAgentHelp(): Promise<void> | void;
-  /** The round update button in the tab bar (app.js 3290; it sits in the editor's line range but belongs to #tabbar). */
+  /** The round update button in the tab bar. */
   showUpdate(version: string | null): void;
   /** clearInterval(agentsState.timer): the Agents page stops asking for status when another page shows. */
   stopAgentsPolling(): void;
@@ -71,15 +71,15 @@ export interface Actions {
   chatOpened(): boolean;
   /** chatState.busy: an agent is replying. */
   chatBusy(): boolean;
-  /** Shows the chat for the file that is open now, when the file changed (app.js 3632). */
+  /** Shows the chat for the file that is open now, when the file changed. */
   syncChatFile(): Promise<void> | void;
-  /** A file was deleted for good: its chats go too (app.js 3613). `key` is the library file's id. */
+  /** A file was deleted for good: its chats go too. `key` is the library file's id. */
   chatForget(key: string): void;
-  /** A renamed file: the app moved its chats on disk; the page follows (app.js 3621). */
+  /** A renamed file: the app moved its chats on disk; the page follows. */
   chatMoved(from: string, to: string): void;
-  /** An event of a running reply, from the app (app.js 3979). */
+  /** An event of a running reply, from the app. */
   chatEvent(e: Record<string, any>): void;
-  /** The chat panel came into view (applyLeftSide, app.js 671). */
+  /** The chat panel came into view (applyLeftSide). */
   openChat(): Promise<void> | void;
 }
 
