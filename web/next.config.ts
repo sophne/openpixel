@@ -1,21 +1,19 @@
 import type { NextConfig } from "next";
 
 // The site has no user input and no embeds, so the policy can be strict. Next.js inlines small bootstrap scripts,
-// hence 'unsafe-inline' for scripts. The only outside code is Google Tag Manager with Google Analytics, which the
-// cookie banner loads only after the visitor allows it (src/lib/consent.ts); these are the hosts Google lists for it.
-const google = {
-  script: "https://*.googletagmanager.com",
-  img: "https://*.google-analytics.com https://*.googletagmanager.com",
-  connect: "https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com",
-};
+// hence 'unsafe-inline' for scripts. The only outside service is PostHog (src/lib/consent.ts): it sends events to
+// its ingestion host and loads the session replay recorder from its assets host (*.i.posthog.com), and the recorder
+// compresses recordings in a web worker (blob:), as PostHog's docs list.
+const posthog = "https://*.posthog.com";
 const dev = process.env.NODE_ENV === "development";
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' ${google.script}` + (dev ? " 'unsafe-eval'" : ""),
+  `script-src 'self' 'unsafe-inline' ${posthog}` + (dev ? " 'unsafe-eval'" : ""),
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: ${google.img}`,
+  "img-src 'self' data:",
   "font-src 'self'",
-  `connect-src 'self' ${google.connect}`,
+  `connect-src 'self' ${posthog}`,
+  "worker-src 'self' blob: data:",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

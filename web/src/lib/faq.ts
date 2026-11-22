@@ -58,6 +58,11 @@ export const FAQ: FaqGroup[] = [
         a: "OpenPixel includes classic pixel-art palettes such as DawnBringer, PICO-8 and Endesga, and you can make your own with up to 256 colours. Colour ramps build shades that shift in hue, and when you swap a palette every pixel follows.",
       },
       {
+        q: "Where can I find free pixel art icons?",
+        a: "OpenPixel's Pixel Icons are 2,098 free pixel art icons: every Lucide icon redrawn on a 32×32 grid. Search them by name or category, change the colour, border, shadow and size, and copy or download SVG, PNG, JSX or .openpixel. They are free for personal and commercial projects.",
+        link: { href: "/icons", label: "Browse the pixel icons" },
+      },
+      {
         q: "Can I import PNGs from Aseprite or other editors?",
         a: "Yes. Export PNGs or sprite sheets from Aseprite, Piskel, Pixelorama or any other editor and import them into OpenPixel, where they're snapped to your palette. Then keep drawing by hand or hand the sprite to an agent.",
       },

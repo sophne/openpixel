@@ -1242,7 +1242,6 @@ html[data-scrolled="true"] .site-header {
 }
 
 .faq-group {
-  max-width: 760px;
   margin-top: 56px;
   scroll-margin-top: 96px;
 }
@@ -1315,7 +1314,6 @@ html[data-scrolled="true"] .site-header {
 .faq-answer {
   padding: 0 36px 20px 0;
   color: var(--text-2);
-  max-width: 68ch;
 }
 
 .faq-answer p + p {
@@ -3376,3 +3374,1103 @@ html[data-os="linux"] [data-os-card="linux"] .dl-main:hover {
   margin-top: 32px;
 }
 
+
+/* ---------- pixel icons (/icons and /icons/library)
+
+   An icon is inline SVG with three paths. Their colours come from --pi-stroke, --pi-outline and --pi-shadow on any
+   container, and data-pi-border="off" / data-pi-drop="off" hide the outline and shadow, so the customizer
+   recolours every icon at once with one style change. */
+
+.pi {
+  display: block;
+  flex-shrink: 0;
+}
+
+.pi-stroke {
+  fill: var(--pi-stroke, #fff);
+}
+
+.pi-outline {
+  fill: var(--pi-outline, #000);
+}
+
+.pi-shadow {
+  fill: var(--pi-shadow, #4b4b55);
+}
+
+[data-pi-border="off"] .pi-outline,
+[data-pi-drop="off"] .pi-shadow {
+  display: none;
+}
+
+/* A checkerboard of 8px squares, like an empty canvas in the app. */
+.pi-canvas {
+  background: repeating-conic-gradient(#262626 0 25%, #2b2b2b 0 50%) 0 0 / 16px 16px;
+}
+
+/* ---------- /icons landing */
+
+.icons-hero .lead-text {
+  max-width: 54ch;
+}
+
+.icons-hero .row-buttons {
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.icons-hero .row-buttons .button.primary {
+  margin-top: 0;
+}
+
+.icons-hero .hero-note {
+  margin-top: 16px;
+}
+
+.iw {
+  margin-top: 64px;
+  padding: 24px;
+  border-radius: var(--r-card);
+  background: var(--deep);
+  border: 1px solid var(--line-soft);
+}
+
+.iw-themes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.iw-themes button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 14px 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 160ms var(--ease-out);
+}
+
+.iw-themes button:active {
+  transform: scale(0.97);
+}
+
+.iw-themes button[aria-pressed="true"] {
+  background: var(--hover);
+  border-color: #555;
+  color: var(--text);
+}
+
+/* A square swatch with the theme's border colour as its edge: a pixel, not a dot. */
+.iw-dot {
+  width: 10px;
+  height: 10px;
+  background: var(--sw);
+  box-shadow: 0 0 0 1px var(--sw-edge), 0 0 0 2px rgba(255, 255, 255, 0.16);
+}
+
+.iw-grid {
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.iw-grid a {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  transition: background-color 150ms ease, transform 160ms var(--ease-out);
+}
+
+.iw-grid a:active {
+  transform: scale(0.95);
+}
+
+.iw-grid .pi {
+  width: 64px;
+  height: 64px;
+}
+
+/* Switching themes is a rare, deliberate click: the colours ease across rather than jump. */
+.iw .pi path {
+  transition: fill 260ms ease;
+}
+
+.ic-looks {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.ic-look {
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--deep);
+}
+
+.ic-sizes {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 24px;
+}
+
+.ic-sizes figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.ic-sizes figcaption {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.ic-formats {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 0;
+  place-items: stretch;
+  align-content: center;
+  gap: 8px;
+}
+
+.ic-formats li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+.ic-formats code,
+.ic-made code {
+  padding: 2px 8px;
+  border-radius: var(--r);
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-size: 12.5px;
+}
+
+.ic-formats code {
+  flex-shrink: 0;
+  min-width: 92px;
+  text-align: center;
+}
+
+.ic-use {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  place-items: center;
+}
+
+.ic-use a {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  transition: background-color 150ms ease, transform 160ms var(--ease-out);
+}
+
+.ic-use a:active {
+  transform: scale(0.95);
+}
+
+.ic-faq-list {
+  margin-top: 32px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.ic-cats {
+  list-style: none;
+  margin: 40px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ic-cats a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 150ms ease, border-color 150ms ease, transform 160ms var(--ease-out);
+}
+
+.ic-cats a:active {
+  transform: scale(0.97);
+}
+
+.ic-cats span {
+  color: var(--text-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ic-made {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 56px;
+  align-items: center;
+}
+
+.ic-made .lead-text {
+  max-width: 48ch;
+}
+
+.ic-made .row-buttons {
+  margin-top: 32px;
+}
+
+.ic-zoom {
+  display: grid;
+  place-items: center;
+  justify-self: end;
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: 1;
+  border-radius: var(--r-card);
+  border: 1px solid var(--line-soft);
+  background: repeating-conic-gradient(#262626 0 25%, #2b2b2b 0 50%) 0 0 / 16px 16px;
+}
+
+.ic-zoom .pi {
+  width: 256px;
+  height: 256px;
+}
+
+.closing .lead-text a {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+}
+
+/* ---------- /icons/library */
+
+.icons-library {
+  padding-bottom: 40px;
+}
+
+.icons-library .page-head + .il {
+  margin-top: 40px;
+}
+
+.il {
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+  margin-top: 20px;
+  padding-bottom: 56px;
+}
+
+.il-side {
+  position: sticky;
+  top: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.il-card {
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--panel-2);
+  border: 1px solid var(--line-soft);
+}
+
+.il-card h2 {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.il-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* The fold button only exists on phones; elsewhere the heading is plain text. */
+.il-fold {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.il-fold svg {
+  color: var(--text-3);
+  transition: transform 200ms var(--ease-out);
+}
+
+.il-fold[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+.il-reset {
+  border: 0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: color 150ms ease, opacity 150ms ease;
+}
+
+.il-reset:hover {
+  color: var(--text);
+}
+
+.il-reset:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.il-field {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.il-label {
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.il-color {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  transition: opacity 150ms ease;
+}
+
+.il-color.off {
+  opacity: 0.4;
+}
+
+.il-chip {
+  position: relative;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  cursor: pointer;
+}
+
+.il-chip input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.il-chip:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.il-hex {
+  width: 100%;
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--canvas);
+  color: var(--text);
+  font-family: var(--font-mono), monospace;
+  font-size: 12.5px;
+  transition: border-color 150ms ease;
+}
+
+.il-hex:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.il-swatches {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  padding-left: 64px;
+}
+
+.il-swatch {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  transition: transform 160ms var(--ease-out);
+}
+
+.il-swatch:active {
+  transform: scale(0.9);
+}
+
+.il-swatch[aria-pressed="true"] {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.il-switch {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--line);
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+
+.il-switch span {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  transition: transform 180ms var(--ease-out);
+}
+
+.il-switch[aria-checked="true"] {
+  background: var(--accent);
+}
+
+.il-switch[aria-checked="true"] span {
+  transform: translateX(14px);
+}
+
+.il-size {
+  grid-template-columns: 54px minmax(0, 1fr);
+  row-gap: 6px;
+}
+
+.il-size output {
+  justify-self: end;
+  color: var(--text);
+  font-family: var(--font-mono), monospace;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.il-size output span {
+  color: var(--text-3);
+}
+
+.il-size input {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.il-categories ul {
+  list-style: none;
+  margin: 10px -6px 0;
+  padding: 0;
+}
+
+.il-categories button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--r);
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.il-categories button span {
+  color: var(--text-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.il-categories button[aria-current="true"] {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.il-main {
+  min-width: 0;
+}
+
+/* The search box and the bulk download, pinned under the header while scrolling. */
+.il-bar {
+  position: sticky;
+  top: 64px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-block: 12px;
+  background: color-mix(in srgb, var(--canvas) 88%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.il-search {
+  flex: 1;
+  width: auto;
+  margin-left: 0;
+}
+
+.il-search input {
+  height: 38px;
+  padding-right: 36px;
+}
+
+.il-search kbd {
+  position: absolute;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--text-3);
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  pointer-events: none;
+}
+
+.il-search input:focus + kbd {
+  opacity: 0;
+}
+
+/* No keyboard shortcut to show on touch screens. */
+@media (hover: none), (pointer: coarse) {
+  .il-search kbd {
+    display: none;
+  }
+  .il-search input {
+    padding-right: 12px;
+  }
+}
+
+.il-bulk {
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+
+.il-bulk:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.dl-list button {
+  display: block;
+  width: 100%;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.dl-list button:hover,
+.dl-list button:focus-visible {
+  outline: none;
+  background: var(--accent);
+  color: #fff;
+}
+
+.il-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 22px;
+  margin: 2px 0 12px;
+  color: var(--text-3);
+  font-size: 13px;
+}
+
+.il-clear {
+  margin-left: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.il-clear:hover {
+  color: var(--text);
+}
+
+.il-none {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding-block: 64px;
+  color: var(--text-2);
+  font-size: 15px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* Tiles grow with the chosen size, so 256px icons get a few big tiles per row instead of overflowing. */
+.il-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--pi-size) + 32px), 1fr));
+  gap: 6px;
+}
+
+.il-tile {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--panel-2);
+  cursor: pointer;
+  content-visibility: auto;
+  contain-intrinsic-size: auto calc(var(--pi-size) + 32px);
+  scroll-margin-block: 140px 300px;
+  transition: border-color 150ms ease, background-color 150ms ease, transform 160ms var(--ease-out);
+}
+
+.il-tile .pi {
+  width: var(--pi-size);
+  height: var(--pi-size);
+}
+
+.il-tile:active {
+  transform: scale(0.96);
+}
+
+.il-tile[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--panel);
+}
+
+.il-tile:focus-visible {
+  outline-offset: 1px;
+  border-radius: 10px;
+}
+
+.il-name {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  overflow: hidden;
+  color: var(--text-2);
+  font-size: 10.5px;
+  line-height: 1.3;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.il-tile[aria-pressed="true"] .il-name,
+.il-tile:focus-visible .il-name {
+  opacity: 1;
+}
+
+.il-ghost {
+  cursor: default;
+}
+
+/* Room for the drawer, so the last rows can scroll above it. */
+.il[data-drawer] .il-main {
+  padding-bottom: 240px;
+}
+
+.il-drawer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 16px;
+  z-index: 30;
+  width: min(100% - 32px, 1040px);
+  margin-inline: auto;
+  border-radius: 16px;
+  background: rgba(37, 37, 37, 0.96);
+  border: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 24px 64px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transform: translateY(calc(100% + 24px));
+  /* Leaving is quicker than arriving. */
+  transition: transform 200ms var(--ease-out), visibility 0s linear 200ms;
+  visibility: hidden;
+}
+
+.il-drawer[data-open] {
+  transform: translateY(0);
+  visibility: visible;
+  transition: transform 380ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s;
+}
+
+.il-drawer-inner {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: center;
+  padding: 16px 52px 16px 16px;
+}
+
+.il-preview {
+  display: grid;
+  place-items: center;
+  width: calc(var(--preview) + 32px);
+  height: calc(var(--preview) + 32px);
+  min-width: 96px;
+  min-height: 96px;
+  border-radius: 12px;
+  background: repeating-conic-gradient(#262626 0 25%, #2b2b2b 0 50%) 0 0 / 16px 16px;
+}
+
+.il-preview .pi {
+  width: var(--preview);
+  height: var(--preview);
+}
+
+.il-info {
+  min-width: 0;
+}
+
+.il-info h2 {
+  color: var(--text);
+  font-family: var(--font-mono), monospace;
+  font-size: 17px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.il-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.il-tag {
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease, transform 160ms var(--ease-out);
+}
+
+.il-tag:active {
+  transform: scale(0.96);
+}
+
+.il-tags {
+  margin-top: 10px;
+  color: var(--text-3);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.il-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.il-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.il-group > span {
+  width: 68px;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.il-action {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--hover);
+  color: var(--text);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 150ms ease, transform 160ms var(--ease-out);
+}
+
+.il-action:active {
+  transform: scale(0.97);
+}
+
+.il-swap {
+  display: inline-grid;
+}
+
+.il-swap .swap {
+  grid-area: 1 / 1;
+  text-align: center;
+  transition: opacity 180ms ease, filter 180ms ease, transform 180ms var(--ease-out);
+}
+
+.il-swap .swap.out {
+  opacity: 0;
+  filter: blur(2px);
+  transform: scale(0.95);
+}
+
+.il-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease, transform 160ms var(--ease-out);
+}
+
+.il-close:active {
+  transform: scale(0.94);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .iw-themes button:hover {
+    color: var(--text);
+    border-color: #4a4a4a;
+  }
+  .iw-grid a:hover,
+  .ic-use a:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .ic-cats a:hover {
+    background: var(--hover);
+    border-color: var(--hover);
+    color: var(--text);
+  }
+  .il-categories button:hover {
+    background: var(--hover);
+    color: var(--text);
+  }
+  .il-tile:hover {
+    border-color: var(--line);
+    background: var(--panel);
+  }
+  .il-tile:hover .il-name {
+    opacity: 1;
+  }
+  .il-tag:hover {
+    background: var(--hover);
+    color: var(--text);
+  }
+  .il-action:hover {
+    background: #474747;
+  }
+  .il-close:hover {
+    background: var(--hover);
+    color: var(--text);
+  }
+}
+
+@media (max-width: 1000px) {
+  .iw-grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+  .ic-made {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ic-zoom {
+    justify-self: start;
+    max-width: 360px;
+  }
+  .ic-zoom .pi {
+    width: 192px;
+    height: 192px;
+  }
+  .il-drawer-inner {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .il-actions {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 900px) {
+  .il {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .il-fold {
+    display: inline-flex;
+  }
+  .il-fold-label {
+    display: none;
+  }
+  .il-custom[data-folded] .il-custom-body,
+  .il-custom[data-folded] .il-reset {
+    display: none;
+  }
+  .il-side {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+  .il-categories ul {
+    display: flex;
+    gap: 4px;
+    margin: 10px 0 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .il-categories button {
+    gap: 6px;
+    white-space: nowrap;
+    background: var(--panel);
+  }
+}
+
+@media (max-width: 760px) {
+  .iw {
+    padding: 16px 12px;
+  }
+  .iw-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .iw-grid .pi {
+    width: 32px;
+    height: 32px;
+  }
+  .ic-looks .pi {
+    width: 48px;
+    height: 48px;
+  }
+  .il-drawer {
+    bottom: 8px;
+    width: calc(100% - 16px);
+  }
+  .il-drawer-inner {
+    gap: 14px;
+    padding: 12px 44px 12px 12px;
+  }
+  .il-preview {
+    --preview: 64px !important;
+  }
+  .il-tags {
+    display: none;
+  }
+  .il-group > span {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .il-drawer,
+  .il-drawer[data-open] {
+    transform: none;
+    opacity: 0;
+    transition: opacity 150ms ease, visibility 0s linear 150ms;
+  }
+  .il-drawer[data-open] {
+    opacity: 1;
+    transition: opacity 150ms ease, visibility 0s;
+  }
+  .il-tile,
+  .iw-grid a,
+  .il-switch span {
+    transition: none;
+  }
+}

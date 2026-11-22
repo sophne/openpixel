@@ -1,0 +1,250 @@
+<!doctype html>
+<!--
+  The social preview cards for the pixel icons (/icons and /icons/library). Rendered to PNG by scripts/og/make-og.sh;
+  not part of the site. ?page=library draws the library card (the default is the landing page's), and ?h=600 the
+  X (Twitter) size (the default is 630 for Open Graph).
+  The icons are the real ones: the page reads public/icons/pixel-icons.json and draws them as the site does (the
+  stroke from the file, the outline grown around it, the shadow one pixel down and to the right).
+  The typeface is the Inter file next to this page (SIL Open Font License: inter-LICENSE.txt).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face {
+    font-family: "Inter Card";
+    font-style: normal;
+    font-weight: 400 600;
+    font-display: block;
+    src: url(inter-latin.woff2) format("woff2");
+  }
+  :root {
+    --bg: #1e1e1e;
+    --panel: #252525;
+    --panel-2: #2c2c2c;
+    --line: rgba(255, 255, 255, 0.08);
+    --text: #e8e8e8;
+    --text-2: #a8a8a8;
+    --text-3: #7a7a7a;
+    --accent: #ff4a1c;
+    --cell: 8px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: var(--h, 630px); overflow: hidden; background: var(--bg); }
+  body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 520px;
+    font-family: "Inter Card", Inter, system-ui, sans-serif;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .copy {
+    display: flex;
+    flex-direction: column;
+    padding: 60px 48px 58px 72px;
+  }
+  .brand { display: flex; align-items: center; gap: 14px; font-size: 26px; font-weight: 550; letter-spacing: -0.015em; }
+  .brand img { width: 44px; height: 44px; }
+  .brand span { color: var(--text-3); font-weight: 450; }
+
+  h1 {
+    margin-top: auto;
+    font-size: 52px;
+    line-height: 1.1;
+    white-space: nowrap;
+    font-weight: 450;
+    letter-spacing: -0.028em;
+    font-variation-settings: "opsz" 32;
+  }
+  h1 span { color: var(--text-3); }
+  h1 .n { color: inherit; }
+
+  .formats { display: flex; gap: 10px; margin-top: 34px; }
+  .formats b {
+    padding: 0 16px;
+    line-height: 40px;
+    border-radius: 999px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-size: 17px;
+    font-weight: 500;
+  }
+
+  .actions { display: flex; align-items: center; gap: 22px; margin-top: 22px; }
+  .cta {
+    padding: 0 26px;
+    line-height: 54px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 19px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .note { font-size: 16px; color: var(--text-3); white-space: nowrap; }
+
+  /* The canvas: the editor's grey with a faint pixel grid, as on the site's main card. */
+  .canvas {
+    position: relative;
+    display: grid;
+    place-items: center;
+    background-color: var(--panel);
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: var(--cell) var(--cell);
+    border-left: 1px solid var(--line);
+    overflow: hidden;
+  }
+
+  /* Landing card: a wall of icons at 2×, a few of them in the accent colour. */
+  .wall {
+    display: grid;
+    grid-template-columns: repeat(6, 64px);
+    gap: 16px;
+  }
+  .wall svg { width: 64px; height: 64px; display: block; }
+
+  /* Library card: icons at 4× in the customizer's colours, the customizer itself beside the copy. */
+  .big { display: grid; grid-template-columns: repeat(3, 128px); gap: 28px; }
+  .big svg { width: 128px; height: 128px; display: block; }
+  .custom {
+    display: grid;
+    grid-template-columns: 82px auto;
+    align-items: center;
+    gap: 14px 16px;
+    width: fit-content;
+    margin-top: 34px;
+    padding: 20px 24px;
+    border-radius: 16px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    font-size: 17px;
+    color: var(--text-2);
+  }
+  .swatches { display: flex; gap: 8px; }
+  .swatches i { width: 26px; height: 26px; border-radius: 5px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3); }
+  .swatches i.on { outline: 2px solid var(--text); outline-offset: 2px; }
+  .toggle { display: flex; align-items: center; gap: 10px; }
+  .toggle i { width: 26px; height: 26px; border-radius: 5px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16); }
+  .toggle b { position: relative; width: 42px; height: 24px; border-radius: 999px; background: var(--accent); }
+  .toggle b::after { content: ""; position: absolute; top: 4px; right: 4px; width: 16px; height: 16px; border-radius: 999px; background: #fff; }
+  .size { display: flex; align-items: center; gap: 12px; color: var(--text); font-size: 16px; }
+  .size em { position: relative; width: 150px; height: 6px; border-radius: 999px; background: #444; font-style: normal; }
+  .size em::before { content: ""; position: absolute; inset: 0 63% 0 0; border-radius: 999px; background: var(--accent); }
+  .size em::after { content: ""; position: absolute; left: 37%; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 999px; background: var(--accent); }
+
+  body[data-page="landing"] .lib, body[data-page="library"] .land { display: none; }
+</style>
+</head>
+<body data-page="landing">
+  <section class="copy">
+    <div class="brand"><img src="../../public/app-icon.svg" alt="">OpenPixel <span>/ Pixel Icons</span></div>
+
+    <h1 class="land"><span class="n">2,098</span> free pixel icons<br><span>for games, apps and the web.</span></h1>
+    <div class="formats land"><b>SVG</b><b>PNG</b><b>JSX</b><b>.openpixel</b></div>
+    <div class="actions land">
+      <span class="cta">Browse the icons</span>
+      <p class="note">Every Lucide icon, redrawn at 32×32</p>
+    </div>
+
+    <h1 class="lib">Pixel icon library<br><span>Recolour, resize, copy.</span></h1>
+    <div class="custom lib">
+      <span>Color</span>
+      <div class="swatches"><i style="background:#fff"></i><i class="on" style="background:#ff4a1c"></i><i style="background:#ffc425"></i><i style="background:#3ddc84"></i><i style="background:#4cc9f0"></i><i style="background:#b388ff"></i></div>
+      <span>Border</span>
+      <div class="toggle"><i style="background:#1a0702"></i><b></b></div>
+      <span>Shadow</span>
+      <div class="toggle"><i style="background:#6b1f0c"></i><b></b></div>
+      <span>Size</span>
+      <div class="size"><em></em>128px · 4×</div>
+    </div>
+  </section>
+  <section class="canvas">
+    <div class="wall land"></div>
+    <div class="big lib"></div>
+  </section>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const h = params.get("h");
+    if (h) document.documentElement.style.setProperty("--h", h + "px");
+    const page = params.get("page") === "library" ? "library" : "landing";
+    document.body.dataset.page = page;
+
+    const N = 32;
+    function layers(b64) {
+      const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      const s = new Uint8Array(N * N);
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) s[y * N + x] = (bytes[y * 4 + (x >> 3)] >> (7 - (x & 7))) & 1;
+      const at = (m, x, y) => (x >= 0 && y >= 0 && x < N && y < N ? m[y * N + x] : 0);
+      const o = new Uint8Array(N * N), d = new Uint8Array(N * N);
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+        const i = y * N + x;
+        if (!s[i] && (at(s, x - 1, y) || at(s, x + 1, y) || at(s, x, y - 1) || at(s, x, y + 1))) o[i] = 1;
+      }
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+        const i = y * N + x;
+        if (!s[i] && !o[i] && (at(s, x - 1, y - 1) || at(o, x - 1, y - 1))) d[i] = 1;
+      }
+      return [d, o, s];
+    }
+    function runs(m) {
+      let p = "";
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; ) {
+        if (m[y * N + x]) { const s = x; while (x < N && m[y * N + x]) x++; p += `M${s} ${y}h${x - s}v1h${s - x}z`; } else x++;
+      }
+      return p;
+    }
+    function svg(b64, colors) {
+      const paths = layers(b64).map((m, i) => `<path fill="${colors[i]}" d="${runs(m)}"/>`).join("");
+      return `<svg viewBox="0 0 32 32" shape-rendering="crispEdges">${paths}</svg>`;
+    }
+    const CLASSIC = ["#4b4b55", "#000000", "#ffffff"];
+    const EMBER = ["#6b1f0c", "#1a0702", "#ff4a1c"];
+
+    const WALL = [
+      "house", "search", "heart", "star", "settings", "user",
+      "mail", "camera", "gamepad-2", "rocket", "sun", "zap",
+      "bell", "lock", "map-pin", "folder", "image", "pencil",
+      "sword", "shield", "crown", "skull", "ghost", "trophy",
+      "cat", "coffee", "pizza", "car", "plane", "globe",
+      "code", "terminal", "cpu", "palette", "brush", "puzzle",
+      "music", "cloud", "leaf", "gift", "flag", "key",
+      "anchor", "dice-5", "bomb",
+    ];
+    const ORANGE = new Set(["heart", "rocket", "crown", "palette", "gamepad-2"]);
+
+    fetch("../../public/icons/pixel-icons.json")
+      .then((r) => r.json())
+      .then((data) => {
+        const byName = new Map(data.icons.map((i) => [i[0], i[3]]));
+        document.querySelector(".n").textContent = data.icons.length.toLocaleString("en-US");
+        const rows = Math.floor((parseInt(h || "630") - 32) / 80);
+        const wall = WALL.filter((n) => byName.has(n)).slice(0, rows * 6);
+        document.querySelector(".wall").innerHTML = wall.map((n) => svg(byName.get(n), ORANGE.has(n) ? EMBER : CLASSIC)).join("");
+        const LOOKS = [
+          ["gamepad-2", "#ff4a1c", "#1a0702", "#6b1f0c"],
+          ["heart", "#ffffff", "#000000", "#4b4b55"],
+          ["star", "#ffc425", "#1f1400", "#6e4f00"],
+          ["sword", "#4cc9f0", "#021a24", "#17546a"],
+          ["crown", "#ffc425", "#1f1400", "#6e4f00"],
+          ["ghost", "#b388ff", "#160a2b", "#4b2f7a"],
+          ["house", "#3ddc84", "#03200f", "#145c34"],
+          ["palette", "#ffffff", "#000000", "#4b4b55"],
+          ["rocket", "#ff4a1c", "#1a0702", "#6b1f0c"],
+        ];
+        document.querySelector(".big").innerHTML = LOOKS.map(([n, s, o, d]) => svg(byName.get(n), [d, o, s])).join("");
+        return document.fonts.ready;
+      })
+      .then(() => {
+        const h1 = document.querySelector(page === "library" ? "h1.lib" : "h1.land");
+        const room = h1.parentElement.clientWidth - 72 - 48;
+        let size = 52;
+        while (h1.scrollWidth > room && size > 30) h1.style.fontSize = --size + "px";
+        document.body.dataset.ready = "1";
+      });
+  </script>
+</body>
+</html>

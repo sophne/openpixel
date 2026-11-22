@@ -1,90 +1,64 @@
 /**
- * Google Analytics through Google Tag Manager, loaded only after the visitor allows it in the cookie banner.
- * Until then no Google script runs and no cookie is set. The choice itself is kept in localStorage on this site
- * (strictly necessary: it's how we remember not to ask again) and can be changed from "Cookie settings" in the footer.
+ * Web analytics and session replay with PostHog (EU cloud), started in src/instrumentation-client.ts.
  *
- * Set NEXT_PUBLIC_GTM_ID to use another container, or to "off" to remove analytics and the banner entirely.
+ * - Before a choice, and after "Decline": cookieless. Page views and the site's events are counted anonymously,
+ *   with no cookies and nothing stored in the browser; PostHog tells visits apart with a hash its servers make and
+ *   rotate daily. No session replay.
+ * - After "Allow": PostHog's first-party cookie and storage, and session replay with every input masked.
+ *
+ * PostHog keeps the choice itself in localStorage (strictly necessary: it's how we remember not to ask again); it
+ * can be changed from "Cookie settings" in the footer.
+ *
+ * Settings, read at build time: NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN (empty or "off" removes analytics and the banner)
+ * and NEXT_PUBLIC_POSTHOG_HOST (the ingestion host, https://eu.i.posthog.com for this project).
  */
+import posthog from "posthog-js";
 
-const ID = process.env.NEXT_PUBLIC_GTM_ID || "GTM-MXC8C47C";
-export const GTM_ID = ID === "off" ? "" : ID;
+const token = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN ?? "";
+export const ANALYTICS_TOKEN = token === "off" ? "" : token;
+export const ANALYTICS_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "";
+/** The PostHog app for links (eu.i.posthog.com → eu.posthog.com). */
+export const ANALYTICS_UI_HOST = ANALYTICS_HOST.replace(".i.posthog.com", ".posthog.com");
+export const ANALYTICS = Boolean(ANALYTICS_TOKEN);
 
 export type Choice = "granted" | "denied";
 
-const KEY = "openpixel-consent";
 /** Sent by the footer's "Cookie settings" link to open the banner again. */
 export const OPEN_EVENT = "openpixel:cookie-settings";
 
-type Gtag = (...args: unknown[]) => void;
-type W = Window & { dataLayer?: unknown[]; gtag?: Gtag };
-
+/** The visitor's answer to the banner, or null while they haven't chosen. */
 export function storedChoice(): Choice | null {
-  try {
-    const v = localStorage.getItem(KEY);
-    return v === "granted" || v === "denied" ? v : null;
-  } catch {
-    return null; // storage blocked: ask every visit, never assume consent
-  }
+  if (!ANALYTICS) return null;
+  const status = posthog.get_explicit_consent_status();
+  return status === "pending" ? null : status;
 }
 
-export function storeChoice(choice: Choice) {
-  try {
-    localStorage.setItem(KEY, choice);
-  } catch {
-    // Storage blocked: the choice still applies to this page view.
-  }
-}
-
-function gtag(): Gtag {
-  const w = window as W;
-  w.dataLayer = w.dataLayer || [];
-  // gtag must push the arguments object itself, not an array: that's what Google's tag reads.
-  w.gtag ||= function () {
-    // eslint-disable-next-line prefer-rest-params
-    w.dataLayer!.push(arguments);
-  };
-  return w.gtag;
-}
-
-/** Starts Tag Manager with analytics allowed. Advertising signals stay denied: the banner never asks for them. */
-export function loadAnalytics() {
-  if (!GTM_ID) return;
-  const tag = gtag();
-  if (document.getElementById("gtm-script")) {
-    tag("consent", "update", { analytics_storage: "granted" });
-    return;
-  }
-  tag("consent", "default", {
-    analytics_storage: "granted",
-    ad_storage: "denied",
-    ad_user_data: "denied",
-    ad_personalization: "denied",
-    functionality_storage: "denied",
-    personalization_storage: "denied",
-    security_storage: "granted",
-  });
-  tag("set", "ads_data_redaction", true);
-  (window as W).dataLayer!.push({ "gtm.start": Date.now(), event: "gtm.js" });
-  const s = document.createElement("script");
-  s.id = "gtm-script";
-  s.async = true;
-  s.src = `https://www.googletagmanager.com/gtm.js?id=${encodeURIComponent(GTM_ID)}`;
-  document.head.appendChild(s);
+/** Applies the banner's answer: cookies and session replay, or cookieless counting only. */
+export function applyChoice(choice: Choice) {
+  if (!ANALYTICS) return;
+  if (choice === "granted") posthog.opt_in_capturing();
+  else posthog.opt_out_capturing();
 }
 
 /**
- * Sends an event to Tag Manager, only when the visitor has allowed analytics and Tag Manager is loaded.
- * Without consent nothing is queued or sent.
+ * Sends one of the site's events (an app download, a copied icon…) with its details. It is counted in either mode:
+ * cookieless before consent or after "Decline", with PostHog's cookie after "Allow".
  */
 export function trackEvent(event: string, params: Record<string, string> = {}) {
-  if (!GTM_ID || storedChoice() !== "granted" || !document.getElementById("gtm-script")) return;
-  const w = window as W;
-  (w.dataLayer ||= []).push({ event, ...params });
+  if (!ANALYTICS) return;
+  posthog.capture(event, params);
 }
 
-/** Withdraws consent: tells Google's tag to stop and deletes the Analytics cookies it set. */
-export function stopAnalytics() {
-  if (document.getElementById("gtm-script")) gtag()("consent", "update", { analytics_storage: "denied" });
+/**
+ * The site used Google Analytics before PostHog. Its cookies (_ga, _ga_<id>) and the old consent answer are removed
+ * on the next visit; that answer covered Google Analytics only, so the banner asks again.
+ */
+export function forgetGoogleAnalytics() {
+  try {
+    localStorage.removeItem("openpixel-consent");
+  } catch {
+    // Storage blocked: nothing was stored either.
+  }
   const host = location.hostname.split(".");
   const domains = host.map((_, i) => host.slice(i).join(".")).filter((d) => d.includes(".") || d === "localhost");
   for (const c of document.cookie.split(";")) {

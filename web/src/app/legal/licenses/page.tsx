@@ -25,7 +25,12 @@ const PARTS = [
     licence: "MIT",
     url: "https://github.com/electron-userland/electron-builder",
   },
-  { name: "Lucide", what: "Interface icons in the app", licence: "ISC", url: "https://lucide.dev/license" },
+  {
+    name: "Lucide",
+    what: "Interface icons in the app, and the shapes the Pixel Icons on this site are redrawn from",
+    licence: "ISC",
+    url: "https://lucide.dev/license",
+  },
   {
     name: "LobeHub Icons",
     what: "Agent logos in the app and on this site",

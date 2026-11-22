@@ -7,7 +7,8 @@ import { REPO_URL } from "@/lib/github";
 export const metadata: Metadata = pageMeta({
   path: "/legal/privacy",
   title: "Privacy",
-  description: "What the OpenPixel app and this website collect, and how we use Google Analytics only if you allow it.",
+  description:
+    "What the OpenPixel app and this website collect: anonymous visit counts with PostHog, and cookies and session recordings only if you allow them.",
 });
 
 export default function Privacy() {
@@ -67,8 +68,8 @@ export default function Privacy() {
           <h2>This website</h2>
           <ul>
             <li>
-              Fonts and images are served from this site. The only outside service is Google Analytics, and only if you
-              allow it (see below).
+              Fonts and images are served from this site. The only outside service is PostHog, for visit statistics
+              (see below).
             </li>
             <li>
               To offer the download for your system (Mac, Windows or Linux), the page reads which system your browser
@@ -92,51 +93,63 @@ export default function Privacy() {
             </li>
           </ul>
 
-          <h2 id="analytics">Google Analytics and cookies</h2>
+          <h2 id="analytics">Visit statistics, session recordings and cookies</h2>
           <p>
-            We&apos;d like to know which pages people find useful, so this website can use Google Analytics through
-            Google Tag Manager. Both are provided by Google Ireland Limited, Gordon House, Barrow Street, Dublin 4,
-            Ireland. The app never uses them.
+            We&apos;d like to know which pages and tools people find useful, so this website uses PostHog, provided by
+            PostHog Inc. Its data is stored in PostHog&apos;s EU cloud. The app never uses it.
           </p>
           <ul>
             <li>
-              <strong>Only with your consent.</strong> Until you press Allow in the cookie banner, no Google script is
-              loaded and no cookie is set. Declining is as easy as allowing, and the site works the same either way.
+              <strong>Without your consent: anonymous counting only.</strong> Before you answer the cookie banner, and
+              after you press Decline, the site counts visits without cookies and without storing anything in your
+              browser. PostHog tells visits apart only by a hash its servers make from the date, your IP address, your
+              browser and this site, then strips the IP address, so the same visitor can&apos;t be recognised from one
+              day to the next. There are no session recordings and no location in this mode.
+            </li>
+            <li>
+              <strong>With your consent: cookies and session recordings.</strong> If you press Allow, PostHog sets a
+              cookie so it can recognise your visits over time, and records anonymised replays of your sessions: how
+              you scroll, click and move through the pages, and errors the page reports. Everything typed into forms
+              and search boxes is masked in recordings. Declining is as easy as allowing, and the site works the same
+              either way.
             </li>
             <li>
               <strong>What is collected.</strong> The pages you visit, the page you came from, how long you stay, which
-              download you click and for which system (if any), and
-              your browser, device type, screen size, language and approximate location (country and city, worked out
-              from your IP address). Google Analytics doesn&apos;t store IP addresses. We don&apos;t use advertising
-              features, Google Signals or remarketing, and we don&apos;t combine this with anything else.
+              links and buttons you click, how fast pages load, which download you click and for which system (if any), on the pixel icon pages what you search for and which
+              icons, categories, colours and sizes you choose, copy or download, and your browser, device type, screen
+              size and language. Only if you allow cookies, also your approximate location (worked out from your IP
+              address). We have set PostHog to discard IP addresses rather than store them. We don&apos;t use advertising, don&apos;t sell data and
+              don&apos;t combine it with anything else.
             </li>
             <li>
-              <strong>Cookies.</strong> Google Analytics sets <code>_ga</code> and <code>_ga_&lt;id&gt;</code> to tell
-              visits apart; they last up to 2 years. To remember your choice, this site stores{" "}
-              <code>openpixel-consent</code> in your browser&apos;s local storage; it never leaves your browser.
+              <strong>Cookies and storage.</strong> Only after you allow it: PostHog&apos;s cookies, whose names start
+              with <code>ph_&lt;project&gt;_posthog</code>, and matching local storage, which last up to a year. To
+              remember your answer, PostHog stores <code>__ph_opt_in_out_&lt;project&gt;</code> in your browser&apos;s
+              local storage, whichever way you choose.
             </li>
             <li>
-              <strong>Legal basis.</strong> Your consent (Article 6(1)(a) GDPR, and for cookies Section 25(1) of the
-              German TDDDG and similar laws elsewhere). The cookie banner&apos;s choice and the server logs above rely
-              on our legitimate interest in running a working, secure site (Article 6(1)(f) GDPR).
+              <strong>Legal basis.</strong> Anonymous counting without cookies relies on our legitimate interest in
+              understanding how the site is used (Article 6(1)(f) GDPR); it reads and stores nothing on your device.
+              Cookies and session recordings rely on your consent (Article 6(1)(a) GDPR, and for cookies Section 25(1)
+              of the German TDDDG and similar laws elsewhere). Remembering your answer and the server logs above rely on
+              our legitimate interest in running a working, secure site (Article 6(1)(f) GDPR).
             </li>
             <li>
-              <strong>Where the data goes.</strong> Google may process it in the United States. Google is certified
-              under the EU-US Data Privacy Framework, and its{" "}
-              <a href="https://business.safety.google/adsprocessorterms/" target="_blank" rel="noopener noreferrer">
-                data processing terms
-              </a>{" "}
-              include the EU Standard Contractual Clauses. Analytics data is kept for at most 14 months, then deleted.
-              See also{" "}
-              <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">
-                Google&apos;s privacy policy
+              <strong>Where the data goes.</strong> PostHog stores it in its EU cloud and processes it for us under its{" "}
+              <a href="https://posthog.com/dpa" target="_blank" rel="noopener noreferrer">
+                data processing agreement
+              </a>
+              , which includes the EU Standard Contractual Clauses for any transfer outside the EU. Session recordings
+              are deleted after 30 days. See also{" "}
+              <a href="https://posthog.com/privacy" target="_blank" rel="noopener noreferrer">
+                PostHog&apos;s privacy policy
               </a>
               .
             </li>
             <li>
               <strong>Changing your mind.</strong> Choose <em>Cookie settings</em> at the bottom of any page to allow or
-              decline again. Declining after allowing stops Google Analytics and deletes its cookies from this site. You
-              can also clear cookies in your browser or block Google Analytics with an extension.
+              decline again. Declining after allowing stops the recordings, removes PostHog&apos;s cookie and goes back
+              to anonymous counting. You can also clear cookies in your browser or block PostHog with an extension.
             </li>
           </ul>
 
@@ -144,9 +157,9 @@ export default function Privacy() {
           <p>
             Depending on where you live (for example under the GDPR), you can ask what personal data we hold about you,
             and have it corrected, deleted or restricted, object to its use, or withdraw your consent at any time
-            without affecting what happened before. We hold only short-lived server logs ourselves; Google Analytics
-            data is pseudonymous and tied to the cookie in your browser, so deleting that cookie cuts the link. You can
-            also complain to your data protection authority.
+            without affecting what happened before. We hold only short-lived server logs ourselves. Anonymous counts
+            can&apos;t be linked to you; data collected with your consent is pseudonymous and tied to the cookie in your
+            browser, so deleting that cookie cuts the link. You can also complain to your data protection authority.
           </p>
 
           <h2>Contact</h2>

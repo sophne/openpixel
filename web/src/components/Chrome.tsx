@@ -88,9 +88,12 @@ export function Footer() {
           </nav>
           <nav aria-label="Product">
             <Link href="/downloads">Downloads</Link>
-            <Link href="/explore">Explore Pixelart</Link>
             <Link href="/compare">Compare</Link>
             <Link href="/faq">FAQ</Link>
+          </nav>
+          <nav aria-label="Pixel art">
+            <Link href="/explore">Explore Pixelart</Link>
+            <Link href="/icons">Pixel Icons</Link>
           </nav>
           <nav aria-label="Project">
             <Link href="/changelog">Changelog</Link>

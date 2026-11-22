@@ -428,8 +428,10 @@ bridge's `appcast.xml` with it, and old copies accept only updates signed with i
     | `GITHUB_REPO` | `sophne/openpixel` | no |
     | `GITHUB_TOKEN` | optional: fine-grained token, public repositories read-only, no permissions | no |
 
-    `NEXT_PUBLIC_GTM_ID` is only needed to use another Tag Manager container, or `off` to remove analytics and the
-    cookie banner.
+    For analytics, also set `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` (the PostHog project's public token) and
+    `NEXT_PUBLIC_POSTHOG_HOST` (`https://eu.i.posthog.com`), both as build arguments. Without the token the site has
+    no analytics and no cookie banner. In PostHog, keep **Settings → Project → Web analytics → Cookieless tracking**
+    on: the site counts visitors who haven't allowed cookies without them, and PostHog ignores those events otherwise.
 
 15. **Health check.** Health Checks → enable, path `/`, port `3000`. (The image also has its own `HEALTHCHECK`.)
 
@@ -459,8 +461,9 @@ bridge's `appcast.xml` with it, and old copies accept only updates signed with i
 ### Part 6: After launch
 
 19. **Search engines.** Add the domain to Google Search Console and submit `https://your-domain/sitemap.xml`.
-20. **Google Analytics.** Keep Google Signals and ad features off and data retention at 14 months or less, as the
-    privacy policy says.
+20. **PostHog.** As the privacy policy says, keep these project settings: **Cookieless tracking** on, **Discard
+    client IP data** on, and session recording retention at 30 days. Session recordings mask every input on the
+    site's side (`maskAllInputs` in `web/src/instrumentation-client.ts`).
 21. **Every release from now on:** merge pull requests whenever they're ready, then
     `cd desktop && npm run release:tag -- x.y.z`. Installed apps show the update the next time they start; the
     site picks up the new version within 10 minutes.

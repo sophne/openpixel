@@ -4,6 +4,7 @@ import { OS_SCRIPT } from "@/lib/platforms";
 import { DESCRIPTION, OG_IMAGE, SITE_NAME, SITE_URL, TAGLINE, TWITTER_IMAGE, X_HANDLE } from "@/lib/seo";
 import CookieBanner from "@/components/CookieBanner";
 import DownloadTracking from "@/components/DownloadTracking";
+import EventTracking from "@/components/EventTracking";
 import "./globals.css";
 
 // Fonts are downloaded at build time and served from this site: visitors make no requests to Google.
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <CookieBanner />
         <DownloadTracking />
+        <EventTracking />
       </body>
     </html>
   );

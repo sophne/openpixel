@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { REPO_URL, X_URL, assetUrl, hasFile, type Release } from "@/lib/github";
 import { FILES } from "@/lib/platforms";
+import type { Faq } from "@/lib/faq";
+import { ICON_CATEGORIES, ICON_COUNT, LUCIDE_VERSION } from "@/lib/pixel-icons";
 
 /**
  * Search and social metadata shared by every page. The preview cards in public/og are made by
@@ -22,32 +24,66 @@ const CARD_ALT =
 export const OG_IMAGE = { url: `/og/opengraph.png?v=${CARD_VERSION}`, width: 1200, height: 630, alt: CARD_ALT, type: "image/png" };
 export const TWITTER_IMAGE = { url: `/og/twitter.png?v=${CARD_VERSION}`, width: 1200, height: 600, alt: CARD_ALT };
 
+type CardImage = { url: string; width: number; height: number; alt: string; type?: string };
+export type Card = { og: CardImage; twitter: CardImage };
+
+/** A page's own preview cards, made by scripts/og/make-og.sh as public/og/<name>-opengraph.png and -twitter.png. */
+function card(name: string, alt: string): Card {
+  return {
+    og: { url: `/og/${name}-opengraph.png?v=${CARD_VERSION}`, width: 1200, height: 630, alt, type: "image/png" },
+    twitter: { url: `/og/${name}-twitter.png?v=${CARD_VERSION}`, width: 1200, height: 600, alt },
+  };
+}
+
+export const ICONS_CARD = card(
+  "icons",
+  `OpenPixel Pixel Icons: ${ICON_COUNT.toLocaleString("en-US")} free pixel icons for games, apps and the web, in SVG, PNG, JSX and .openpixel, next to a grid of the white 32×32 pixel-art icons with a few in orange.`,
+);
+export const ICONS_LIBRARY_CARD = card(
+  "icons-library",
+  "The OpenPixel pixel icon library: recolour, resize, copy. The customizer's colour, border, shadow and size controls next to nine pixel-art icons in different colours.",
+);
+
 /** Title, description, canonical address and matching Open Graph and X fields for one page. */
 export function pageMeta({
   path,
   title,
   description,
   absoluteTitle = false,
+  image,
+  keywords,
 }: {
   path: string;
   title: string;
   description: string;
   /** Use the title as written, without " · OpenPixel" after it. */
   absoluteTitle?: boolean;
+  /** The page's own preview cards; the site's card otherwise. */
+  image?: Card;
+  keywords?: string[];
 }): Metadata {
   const full = absoluteTitle ? title : `${title} · ${SITE_NAME}`;
   return {
     title: absoluteTitle ? { absolute: title } : title,
     description,
+    ...(keywords ? { keywords } : {}),
     alternates: { canonical: path },
-    openGraph: { title: full, description, url: path, siteName: SITE_NAME, type: "website", locale: "en_US", images: [OG_IMAGE] },
+    openGraph: {
+      title: full,
+      description,
+      url: path,
+      siteName: SITE_NAME,
+      type: "website",
+      locale: "en_US",
+      images: [image?.og ?? OG_IMAGE],
+    },
     twitter: {
       card: "summary_large_image",
       title: full,
       description,
       site: X_HANDLE,
       creator: X_HANDLE,
-      images: [TWITTER_IMAGE],
+      images: [image?.twitter ?? TWITTER_IMAGE],
     },
   };
 }
@@ -119,5 +155,89 @@ export function breadcrumbJsonLd(trail: [string, string][]) {
       name,
       item: abs(path),
     })),
+  };
+}
+
+const ICON_SET_ID = abs("/icons#set");
+
+/** The icon set as a creative work, shared by both icon pages. */
+function iconSet() {
+  return {
+    "@type": "CreativeWork",
+    "@id": ICON_SET_ID,
+    name: "OpenPixel Pixel Icons",
+    alternateName: ["Pixel Icons", "Pixel art icons"],
+    description: `${ICON_COUNT.toLocaleString("en-US")} free pixel art icons: every Lucide ${LUCIDE_VERSION} icon redrawn as 32×32 pixel art with a 2px stroke, a 1px border and a drop shadow. Download as SVG, PNG, JSX or .openpixel.`,
+    url: abs("/icons"),
+    image: abs(ICONS_CARD.og.url),
+    genre: "Icon set",
+    keywords: [
+      "pixel icons",
+      "pixel art icons",
+      "free pixel icons",
+      "8-bit icons",
+      "retro icons",
+      "game UI icons",
+      "SVG icons",
+      ...ICON_CATEGORIES.map((c) => `${c.title.toLowerCase()} icons`),
+    ].join(", "),
+    encodingFormat: ["image/svg+xml", "image/png"],
+    isAccessibleForFree: true,
+    isBasedOn: "https://lucide.dev",
+    license: abs("/icons/LICENSE.txt"),
+    creator: { "@id": ORG_ID },
+    publisher: { "@id": ORG_ID },
+  };
+}
+
+/** Structured data for /icons: the page, the icon set it presents, and its questions. */
+export function iconsJsonLd(faq: Faq[]) {
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      organization,
+      {
+        "@type": "CollectionPage",
+        "@id": abs("/icons#page"),
+        url: abs("/icons"),
+        name: "Free pixel icons",
+        isPartOf: { "@id": abs("/#website") },
+        about: { "@id": ICON_SET_ID },
+        mainEntity: { "@id": ICON_SET_ID },
+        primaryImageOfPage: { "@type": "ImageObject", url: abs(ICONS_CARD.og.url), width: 1200, height: 630 },
+      },
+      iconSet(),
+      {
+        "@type": "FAQPage",
+        "@id": abs("/icons#faq"),
+        mainEntity: faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+      },
+    ],
+  };
+}
+
+/** Structured data for /icons/library: a free web app for browsing and exporting the set. */
+export function iconLibraryJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      organization,
+      iconSet(),
+      {
+        "@type": "WebApplication",
+        "@id": abs("/icons/library#app"),
+        name: "Pixel icon library",
+        url: abs("/icons/library"),
+        description: `Search ${ICON_COUNT.toLocaleString("en-US")} free pixel art icons, recolour their stroke, border and shadow, resize them and copy or download SVG, PNG, JSX and .openpixel.`,
+        applicationCategory: "DesignApplication",
+        operatingSystem: "Any (web browser)",
+        browserRequirements: "Requires JavaScript",
+        isAccessibleForFree: true,
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        image: abs(ICONS_LIBRARY_CARD.og.url),
+        about: { "@id": ICON_SET_ID },
+        publisher: { "@id": ORG_ID },
+      },
+    ],
   };
 }

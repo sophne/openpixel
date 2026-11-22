@@ -5,8 +5,8 @@ import { trackEvent } from "@/lib/consent";
 import { fileById } from "@/lib/platforms";
 
 /**
- * Counts clicks on the app's download links as an `app_download` event (through Tag Manager, and only with
- * consent). GA's own download tracking misses these: the links are /downloads/mac, /downloads/windows,
+ * Counts clicks on the app's download links as an `app_download` event (sent to PostHog; see trackEvent).
+ * Automatic download tracking misses these: the links are /downloads/mac, /downloads/windows,
  * /downloads/linux and /downloads/linux-deb (routes that redirect to the newest file on GitHub), not URLs ending
  * in .dmg or .exe. The event says which file and system was chosen (`file_name`, `download_os`), and each link
  * says where it sits with `data-download="<place>"`, sent as `download_location`.

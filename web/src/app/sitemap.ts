@@ -12,6 +12,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     page("/", 1, "weekly"),
     page("/downloads", 0.9, "weekly"),
     page("/explore", 0.8, "monthly"),
+    page("/icons", 0.8, "monthly"),
+    page("/icons/library", 0.7, "monthly"),
     page("/changelog", 0.7, "weekly"),
     page("/compare", 0.7, "monthly"),
     page("/faq", 0.6, "monthly"),
