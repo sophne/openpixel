@@ -287,6 +287,10 @@ async function fromPage(msg: Record<string, unknown>): Promise<unknown> {
     case 'snap': {
       // UI test: save a picture of the window under a name, then answer.
       const name = String(msg.name ?? 'snap').replace(/[/\\]/g, '-');
+      // Previews and thumbnails arrive a moment after the change that asked for them (debounced, then drawn by the
+      // core). A comparison of two pages wants both at rest, so a run can ask for a pause before each picture.
+      const settle = Number(process.env.OPENPIXEL_SNAP_SETTLE_MS) || 0;
+      if (args.uitest && settle > 0) await new Promise((r) => setTimeout(r, Math.min(settle, 2000)));
       if (args.uitest) await writeFile(path.join(args.uitest, `${name}.png`), await capture()).catch((e) => trace(`snap ${name} failed: ${e.message}`));
       return true;
     }
@@ -337,14 +341,28 @@ const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms
 /** The window's page as a PNG, as the person sees it. */
 async function capture(): Promise<Buffer> {
   if (!win || win.isDestroyed()) throw new Error('window closed');
-  // What the page has just changed is only in the picture once it has been painted: wait two frames first (or a
-  // moment, should the page be too busy to answer), or a checkpoint can show the state before it.
-  await Promise.race([
-    win.webContents.executeJavaScript('new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(true))))').catch(() => false),
-    new Promise((r) => setTimeout(r, 500)),
-  ]);
-  if (!win || win.isDestroyed()) throw new Error('window closed');
-  return (await win.webContents.capturePage()).toPNG();
+  const wc = win.webContents;
+  // capturePage() hands back the last frame the compositor kept, which can be older than what the page shows now
+  // (seen with software rendering: a checkpoint pictured the screen before it). Asking the page itself for a
+  // screenshot draws a fresh frame first, so that is tried first.
+  try {
+    const mine = !wc.debugger.isAttached();
+    if (mine) wc.debugger.attach('1.3');
+    try {
+      const shot = await wc.debugger.sendCommand('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false }) as { data: string };
+      return Buffer.from(shot.data, 'base64');
+    } finally {
+      if (mine) try { wc.debugger.detach(); } catch { /* already gone */ }
+    }
+  } catch {
+    // Something else holds the page's debugger (its developer tools): the compositor's frame, after two paints.
+    await Promise.race([
+      wc.executeJavaScript('new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(true))))').catch(() => false),
+      new Promise((r) => setTimeout(r, 500)),
+    ]);
+    if (!win || win.isDestroyed()) throw new Error('window closed');
+    return (await wc.capturePage()).toPNG();
+  }
 }
 
 // ---------------------------------------------------------------- the window's half of Platform

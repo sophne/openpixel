@@ -2,9 +2,9 @@
 // (--legacy-ui) and for the React page, records a video of each run and compares their pictures.
 //
 //   node tests/run-ui-test.mjs [--ui legacy|react|both] [--out <folder>] [--platform darwin|win32|linux]
-//                              [--no-video] [--no-build] [--verbose] [--max-diff <percent>]
+//                              [--no-video] [--no-build] [--verbose] [--max-diff <percent>] [--settle <ms>]
 //
-// Per UI, in <out>/<ui>/: the checkpoint pictures and report.json (written by the app: electron/main.ts);
+// Per UI, in <out>/<ui>/shots/: the checkpoint pictures and report.json (written by the app: electron/main.ts);
 // <out>/<ui>.mp4 is the video; with both, <out>/compare/ has the side-by-side pictures (tests/compare-shots.mjs).
 // The page is told it runs on a Mac unless --platform says otherwise, so both look like the Mac app they are
 // compared with. Exits 1 when a case failed or a run gave no report. With both pages the old one is the yardstick:
@@ -38,13 +38,15 @@ if (!argv.includes('--no-build')) {
 
 /** One run. Resolves with the report the app wrote (or what went wrong instead). */
 async function run(ui) {
-  const folder = path.join(out, ui), videos = path.join(out, `.video-${ui}`);
-  for (const p of [folder, videos, path.join(out, `${ui}.mp4`), path.join(out, `${ui}.webm`)]) rmSync(p, { recursive: true, force: true });
+  // Both runs work in a folder of the same name: the home screen's list shows where a file is ("shots/Files").
+  const folder = path.join(out, ui, 'shots'), videos = path.join(out, `.video-${ui}`);
+  for (const p of [path.join(out, ui), videos, path.join(out, `${ui}.mp4`), path.join(out, `${ui}.webm`)]) rmSync(p, { recursive: true, force: true });
   mkdirSync(folder, { recursive: true });
   const started = Date.now();
   const app = await launch({
     args: [...(ui === 'legacy' ? ['--legacy-ui'] : []), '--ui-test', folder],
-    env: { OPENPIXEL_PLATFORM: platform },
+    // A pause before each picture, so both pages are pictured at rest (see `snap` in electron/main.ts).
+    env: { OPENPIXEL_PLATFORM: platform, OPENPIXEL_SNAP_SETTLE_MS: value('--settle', '350') },
     recordVideo: video ? { dir: videos, size: { width: 1440, height: 900 } } : undefined,
   });
   const exited = new Promise((resolve) => app.process().once('exit', resolve));
