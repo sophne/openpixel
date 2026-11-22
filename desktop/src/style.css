@@ -545,7 +545,7 @@ body.fullscreen #tabbar { padding-left: 8px; }
 .side-search:focus-within { border-color: var(--accent); color: var(--text-2); }
 .side-search svg.i { width: 14px; height: 14px; }
 .side-search input { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; outline: none; padding: 0; color: var(--text); }
-.side-search input::placeholder { color: var(--text-3); }
+.side-search input::placeholder { color: var(--placeholder); }
 .side-search kbd { margin: 0; cursor: pointer; color: var(--text-2); }
 .home-nav .count { color: var(--text-3); font-size: 11px; }
 .home-nav.on .count { color: var(--text-3); }
@@ -604,7 +604,7 @@ body.dnd .card:not(.folder-card) .more { display: none; }
 .np-search:focus-within { border-color: var(--accent); }
 .np-search svg.i { width: 14px; height: 14px; }
 .np-search input { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; outline: none; padding: 0; color: var(--text); }
-.np-search input::placeholder { color: var(--text-3); }
+.np-search input::placeholder { color: var(--placeholder); }
 .np-h { font-size: 13px; font-weight: 600; margin: 24px 0 8px; }
 .np-list { display: flex; flex-direction: column; margin: 0 -8px; }
 /* name and time in two columns, like Figma: thumbnail, name (flexible), when (fixed) */
@@ -625,7 +625,10 @@ body.dnd .card:not(.folder-card) .more { display: none; }
   background: transparent; color: var(--text-2); font-weight: 500; cursor: pointer; transition: transform 120ms var(--ease-out); }
 .np-more:hover { color: var(--accent-hover); background: var(--accent-soft); }
 .np-more:active { transform: scale(0.97); }
-.np-more { color: var(--accent); line-height: 1; gap: 3px; }
+/* No line-height of its own (nor on the 2D/3D switch below): a line box shorter than the font's own height has its
+   text placed with whole-pixel rounding, which at this font size (11.5px) lifts the label about 0.7px above where
+   every other button's label sits. */
+.np-more { color: var(--accent); gap: 3px; }
 .np-more svg.i { width: 14px; height: 14px; margin-top: 1px; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -861,6 +864,11 @@ button.home-nav { width: 100%; border: 0; background: transparent; font: inherit
    sit on a deeper orange (the bright brand orange stays for icons, outlines and highlights); orange text on an
    orange tint is lighter. */
 :root { --text-2: #b3b3b3; --text-3: #949494; --accent-strong: #d6390c; --accent-strong-hover: #c4320a; --accent-text: #ff8a66; }
+/* Placeholders sit in fields, whose white tint over the window glass is the lightest backdrop faint text meets
+   (about #38383a): --text-3 reaches only 3.87:1 there. One step lighter gives 4.59:1 on that tint (4.65:1 where the
+   page paints the glass's colour itself, on Windows and Linux) and more on the sheets, and still reads as fainter
+   than --text-2. */
+:root { --placeholder: #a3a3a3; }
 .btn.primary, .btn.haptic.primary { background: var(--accent-strong); }
 .btn.primary:hover:not(:disabled), .btn.haptic.primary:hover:not(:disabled) { background: var(--accent-strong-hover); }
 .btn.primary.danger { background: #c9343a; }
@@ -1033,7 +1041,7 @@ input.rename { font: inherit; color: var(--text); width: 100%; min-width: 60px; 
 #top { position: relative; grid-template-columns: min-content 1fr; } /* the left part is empty now: no width */
 #mode-seg { position: absolute; top: 50%; left: calc((100% - var(--right-w)) / 2); transform: translate(-50%, -50%);
   align-items: center; z-index: 1; }
-#mode-seg button { margin: 0; display: grid; place-items: center; line-height: 1; }
+#mode-seg button { margin: 0; display: grid; place-items: center; }
 #mode-seg button.on { box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.08), 0 1px 3px rgba(0, 0, 0, 0.25); }
 #top .right { justify-self: end; } /* only as wide as its buttons, at the end */
 
@@ -1278,7 +1286,7 @@ html.screenshot, html.screenshot body { background: #2b2b2e; }
 .composer-box:focus-within { border-color: rgba(255, 74, 28, 0.55); box-shadow: var(--glass-shine), 0 0 0 3px rgba(255, 74, 28, 0.14); }
 #chat-input { flex: 1; min-width: 0; height: 26px; max-height: 240px; margin: 0; padding: 4px 0; border: 0; outline: none; resize: none; background: transparent;
   color: var(--text); font: inherit; font-size: 12px; line-height: 18px; overflow-y: hidden; -webkit-user-select: text; user-select: text; }
-#chat-input::placeholder { color: var(--text-3); }
+#chat-input::placeholder { color: var(--placeholder); }
 .chat-send { flex: none; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 8px; display: inline-grid; place-items: center;
   background: var(--accent-strong); color: #fff; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
   transition: transform 140ms var(--ease-out), background-color 150ms ease, color 150ms ease; }
