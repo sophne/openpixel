@@ -108,30 +108,24 @@ export async function closeTab(id: TabId): Promise<void> {
   else renderTabs();
 }
 
-/* The two buttons at the right end of the bar. */
-export const tabExtras = store({
-  /** #stars-count */
-  stars: 'Star',
-  /** The stars button's tooltip and name; null until the first count (or its absence) arrives. */
-  starsTip: null as string | null,
-  /** The update button shows. */
-  update: false,
-  updateSay: 'Update OpenPixel',
-});
-
 /* GitHub stars at the right end of the tab bar: the app keeps the last count and refreshes it from GitHub at most
-   hourly (PC.githubStars); clicking opens the repository. */
+   hourly (PC.githubStars); clicking opens the repository. The count and the button's tooltip are written by hand,
+   as before: the button's title becomes its tooltip the same way (kit/tooltips), and whatever was last written stays. */
 function starsText(n: unknown): string {
   if (typeof n !== 'number' || !isFinite(n) || n < 0) return 'Star';
   const short = (v: number, unit: string) => `${(Math.floor(v * 10) / 10).toFixed(1).replace(/\.0$/, '')}${unit}`;
   return n < 1000 ? String(n) : n < 1e6 ? short(n / 1000, 'K') : short(n / 1e6, 'M');
 }
 export function showStars(n: unknown): void {
-  tabExtras.stars = starsText(n);
-  tabExtras.starsTip = typeof n === 'number' ? `${n.toLocaleString()} ${n === 1 ? 'star' : 'stars'} on GitHub` : 'OpenPixel on GitHub';
-  changed(tabExtras);
+  $('#stars-count').textContent = starsText(n);
+  const b = $('#tab-stars');
+  b.dataset.tip = typeof n === 'number' ? `${n.toLocaleString()} ${n === 1 ? 'star' : 'stars'} on GitHub` : 'OpenPixel on GitHub';
+  b.setAttribute('aria-label', b.dataset.tip);
   requestAnimationFrame(reportTitlebar);
 }
+
+/** The update button: whether it shows, and what it says (its tooltip and name). */
+export const tabExtras = store({ update: false, updateSay: 'Update OpenPixel' });
 
 /* ---------------------------------------------------------------- updates
    The app asks on every open whether a newer version exists (in the background, nothing is downloaded).

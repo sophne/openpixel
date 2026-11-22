@@ -1,5 +1,5 @@
 /* The tab bar, #tabbar (index.html 11–19; what renderTabs() built, app.js 1678–1747). The logic is in ./tabs. */
-import { useLayoutEffect, useRef, type DragEvent, type ReactElement } from 'react';
+import { useLayoutEffect, type DragEvent, type ReactElement } from 'react';
 import { actions } from '../app/actions';
 import { hideTip, inlineRename, RenameText } from '../kit';
 import { $, $$, useEvent } from '../lib/dom';
@@ -78,9 +78,6 @@ export function TabBar(): ReactElement {
     reportTitlebar();
   }, [d.gen]);
   useEvent(window, 'resize', reportTitlebar);
-  // The count is written after every drawing (whatever else wrote to it since), not only when it changes.
-  const count = useRef<HTMLSpanElement>(null);
-  useLayoutEffect(() => { const el = count.current; if (el && el.textContent !== x.stars) el.textContent = x.stars; });
   const atHome = d.view === 'home';
   return (
     <nav id="tabbar" aria-label="Open files">
@@ -100,10 +97,11 @@ export function TabBar(): ReactElement {
         <Icon name="download" />
         <span className="tb-dot" aria-hidden="true"></span>
       </button>
-      <button type="button" className="tb-stars" id="tab-stars" title="OpenPixel on GitHub" data-tip={x.starsTip ?? undefined} aria-label={x.starsTip ?? undefined}
+      <button type="button" className="tb-stars" id="tab-stars" title="OpenPixel on GitHub"
         onClick={() => { nativeAction('openLink', { link: 'github' }); }}>
         <Icon name="github" />
-        <span id="stars-count" ref={count}>Star</span>
+        {/* showStars() writes the count and the tooltip */}
+        <span id="stars-count">Star</span>
       </button>
     </nav>
   );
