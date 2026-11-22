@@ -1,12 +1,12 @@
 /* The Agents page's list, #home-agents-wrap, and the two agent dialogs, #agent-dialog and #agent-info
-   (a row per agent with its status, and one agent's set-up guide). The logic is in ./agents. */
+   (a row per agent with its status, and one agent's set-up guide). The logic is in ./agentsPage. */
 import { Fragment, memo, useLayoutEffect, useRef, type ReactElement } from 'react';
 import { CopyButton, Modal } from '../kit';
 import { nativeAction } from '../lib/host';
 import { agentLogoSvg, Icon, icon, TrustedSvg } from '../lib/icons';
 import { useStore } from '../lib/store';
 import type { AgentInfo } from '../state/agents';
-import { AGENT_PROMPT_CAVEAT, agentInfo, agentRows, showAgentInfo, type AgentRowData, type AgentStatus } from './agents';
+import { AGENT_PROMPT_CAVEAT, agentInfo, agentRows, showAgentInfo, type AgentRowData, type AgentStatus } from './agentsPage';
 import { homeTop } from './homePage';
 
 // Logos: @lobehub/icons-static-svg (MIT), see lib/AGENT-LOGOS-ATTRIBUTION.txt. Single-colour ones follow the text colour.

@@ -20,7 +20,7 @@ export default function Privacy() {
           <Headline as="h1" lead="Privacy." rest="Short, because there is little to say." />
         </section>
         <article className="prose wrap">
-          <p className="updated">Last updated 19 November 2026</p>
+          <p className="updated">Last updated 22 November 2026</p>
           <p>
             OpenPixel is free, open-source software made by the OpenPixel maintainers (
             <a href="https://github.com/sophne" target="_blank" rel="noopener noreferrer">
@@ -33,25 +33,25 @@ export default function Privacy() {
           <h2>The OpenPixel app</h2>
           <ul>
             <li>No account, no sign-in, no analytics, no crash reporting, no tracking.</li>
-            <li>Your sprites and models stay on your Mac, in the files and folders you choose.</li>
+            <li>Your sprites and models stay on your computer, in the files and folders you choose.</li>
             <li>
-              <strong>Update checks.</strong> Once a day the app downloads a small file (appcast.xml) from GitHub to see
-              whether a new version exists, and downloads the update from GitHub if you install it. GitHub receives your
-              IP address and the app&apos;s version, as with any download. The app sends no other information about your
-              Mac. To turn automatic checks off, run{" "}
-              <code>defaults write com.sophne.openpixel SUEnableAutomaticChecks -bool false</code>.
+              <strong>Update checks.</strong> To see whether a new version exists, the app downloads a small file from
+              OpenPixel&apos;s releases on GitHub (<code>latest-mac.yml</code> on macOS, <code>latest.yml</code> on
+              Windows, <code>latest-linux.yml</code> on Linux), and downloads the update from GitHub if you install it.
+              GitHub receives your IP address, as with any download. The app sends no other information about you or
+              your computer.
             </li>
             <li>
-              <strong>AI agents.</strong> The MCP server runs on your Mac. What an agent sees and sends to its provider
+              <strong>AI agents.</strong> The MCP server runs on your computer. What an agent sees and sends to its provider
               (for example Anthropic, OpenAI or Cursor) is decided by that agent and covered by its provider&apos;s
               terms and privacy policy, not ours.
             </li>
             <li>
               <strong>Agents page.</strong> To show which agents are set up, the app reads their settings files on your
-              Mac. It never changes them and never sends them anywhere.
+              computer. It never changes them and never sends them anywhere.
             </li>
             <li>
-              <strong>HTTP mode.</strong> <code>--mcp-http</code> listens on your Mac only. It becomes reachable from
+              <strong>HTTP mode.</strong> <code>--mcp-http</code> listens on your own computer only. It becomes reachable from
               elsewhere only if you start a tunnel yourself; that tunnel provider&apos;s terms then apply.
             </li>
           </ul>
@@ -61,6 +61,10 @@ export default function Privacy() {
             <li>
               Fonts and images are served from this site. The only outside service is Google Analytics, and only if you
               allow it (see below).
+            </li>
+            <li>
+              To offer the download for your system (Mac, Windows or Linux), the page reads which system your browser
+              says it runs on. That happens in your browser; we don&apos;t store it.
             </li>
             <li>
               Like every web server, ours briefly keeps standard request logs (IP address, time, page, browser) to keep
@@ -93,7 +97,7 @@ export default function Privacy() {
             </li>
             <li>
               <strong>What is collected.</strong> The pages you visit, the page you came from, how long you stay, which
-              download button you click (if any), and
+              download you click and for which system (if any), and
               your browser, device type, screen size, language and approximate location (country and city, worked out
               from your IP address). Google Analytics doesn&apos;t store IP addresses. We don&apos;t use advertising
               features, Google Signals or remarketing, and we don&apos;t combine this with anything else.

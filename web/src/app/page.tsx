@@ -4,6 +4,7 @@ import AiIcon from "@/components/AiIcon";
 import AppWindow from "@/components/AppWindow";
 import PromptBar from "@/components/PromptBar";
 import Dock from "@/components/Dock";
+import DownloadButton, { DownloadNote } from "@/components/DownloadButton";
 import Showcase from "@/components/Showcase";
 import Sprite from "@/components/Sprite";
 import { Footer, Header, Headline } from "@/components/Chrome";
@@ -12,20 +13,19 @@ import { collections } from "@/lib/explore";
 import type { Metadata } from "next";
 import JsonLd from "@/components/JsonLd";
 import { NOTARIZED, REPO_URL, latestRelease } from "@/lib/github";
-import { homeJsonLd, pageMeta } from "@/lib/seo";
+import { DESCRIPTION, TAGLINE, homeJsonLd, pageMeta } from "@/lib/seo";
 import editorShot from "../../public/editor.png";
 import editor3dShot from "../../public/editor-3d.png";
 
 export const metadata: Metadata = pageMeta({
   path: "/",
-  title: "OpenPixel: the agentic pixel editor for Mac",
+  title: TAGLINE,
   absoluteTitle: true,
-  description:
-    "Free, open-source pixel art and voxel editor for the Mac with a built-in MCP server. Draw sprites, animations and 3D models with Claude, Codex, Cursor or any agent.",
+  description: DESCRIPTION,
 });
 
 /**
- * Agents as dark Dock icons (rendered from this Mac by web/scripts/dock-icons.swift). Agents without a Mac app
+ * Agents as dark Dock icons (rendered on a Mac by web/scripts/dock-icons.swift). Agents without a Mac app
  * get the plain dark tile with their mark drawn on top by the browser; "Any agent" gets the AI sparkle.
  */
 const AGENTS: { name: string; icon: string; mark?: string; markClass?: string; sparkle?: boolean }[] = [
@@ -75,14 +75,14 @@ const MORE = [
   "Recent files with previews",
   "Headless mode for scripts and CI",
   "MCP over HTTP for ChatGPT",
-  NOTARIZED ? "Updates itself, signed and notarized" : "Updates itself, every update verified",
-  "Apple silicon and Intel",
+  "Tells you when a new version is out",
+  "Apple silicon and Intel Macs",
 ];
 
 /** "The pixel tools you expect": each feature with its picture, drawn in the app's empty-state style
  *  (web/scripts/make-feature-art.py). */
 const FEATURES: { title: string; art: keyof typeof featureArt; label: string; text: string }[] = [
-  { title: "Native and fast", art: "native", label: "A window opening with a lightning bolt", text: "Built in Swift for the Mac. It opens in a blink and stays out of your way." },
+  { title: "Mac, Windows and Linux", art: "native", label: "A window opening with a lightning bolt", text: "One desktop app with the same tools, files and agents on all three." },
   { title: "Layers and frames", art: "layers", label: "Three stacked layers, the top one lifting", text: "Stack layers, add frames, set each frame's timing and press play." },
   { title: "Onion skin", art: "onion", label: "A bouncing ball with its two previous frames shown faintly", text: "See the frame before and after while you draw the in-betweens." },
   { title: "Mirror drawing", art: "mirror", label: "A heart drawn on one side of a mirror line, the other side following", text: "Draw one half and the other follows, across X, Y or Z." },
@@ -121,7 +121,7 @@ export default async function Home() {
   return (
     <>
       <Header />
-      <JsonLd data={homeJsonLd(release?.version)} />
+      <JsonLd data={homeJsonLd(release)} />
       <main>
         {/* Hero */}
         <section className="hero">
@@ -129,9 +129,8 @@ export default async function Home() {
             <Dock />
             <Headline as="h1" lead="OpenPixel is an agentic pixel editor" rest="for sprites and voxel worlds." />
             <PromptBar />
-            <a className="button primary large" href="/downloads/mac" data-download="home-hero">
-              Download for macOS
-            </a>
+            <DownloadButton place="home-hero" className="button primary large" />
+            <DownloadNote className="hero-note" />
             <p className="hero-note">
               Free and open source.{" "}
               <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
@@ -299,7 +298,7 @@ export default async function Home() {
                   </div>
                   <div className="term-body">
                     <p>
-                      <span className="term-prompt">$</span> OpenPixel --mcp --headless
+                      <span className="term-prompt">$</span> openpixel --mcp --headless
                     </p>
                     {TERM_LINES.map(([tool, detail, time]) => (
                       <p key={tool} className="term-step">
@@ -335,21 +334,21 @@ export default async function Home() {
               </div>
               <div>
                 <h3>Nothing phones home</h3>
-                <p>No sign-in, no analytics. The only request it makes is a daily check for updates.</p>
+                <p>No sign-in, no analytics. The only request it makes is a check for updates.</p>
               </div>
               <div>
                 {NOTARIZED ? (
                   <>
                     <h3>Signed and notarized</h3>
                     <p>
-                      Releases carry a Developer ID, are notarized by Apple, and every update is verified before it
-                      installs.
+                      The Mac app carries a Developer ID and is notarized by Apple. Updates come straight from the
+                      project&apos;s GitHub releases.
                     </p>
                   </>
                 ) : (
                   <>
-                    <h3>Verified updates</h3>
-                    <p>Every update is checked against OpenPixel&apos;s own signing key before it installs.</p>
+                    <h3>Updates from the source</h3>
+                    <p>New versions come straight from the project&apos;s GitHub releases, the same place as the code.</p>
                   </>
                 )}
               </div>
@@ -405,9 +404,7 @@ export default async function Home() {
             <Headline lead="Start drawing" rest="your ideas today." />
             <p className="lead-text">Draw with agents, refine every pixel, and ship it straight to your game.</p>
             <div className="row-buttons center">
-              <a className="button primary large" href="/downloads/mac" data-download="home-bottom">
-                Download for macOS
-              </a>
+              <DownloadButton place="home-bottom" className="button primary large" />
               <Link className="button large" href="/compare">
                 Compare editors
               </Link>

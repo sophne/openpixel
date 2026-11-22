@@ -9,7 +9,7 @@ import { tildePath } from '../lib/platform';
 import { useStore } from '../lib/store';
 import type { Tab } from '../state/ui';
 import { showHome } from './homePage';
-import { closeNewPage, openNewPage } from './newpage';
+import { closeNewPage, openNewPage } from './newFile';
 import './register';
 import { closeTab, drawnTabs, reportTitlebar, switchTab, tabDragEnd, tabDragOver, tabDragStart, tabDrop, tabExtras } from './tabs';
 

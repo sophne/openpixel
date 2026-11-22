@@ -1,4 +1,4 @@
-/* The New file page, #newpage, and the new-file dialog, #newfile-dialog. The logic is in ./newpage. */
+/* The New file page, #newpage, and the new-file dialog, #newfile-dialog. The logic is in ./newFile. */
 import { memo, useRef, type ReactElement, type RefObject } from 'react';
 import { Dropdown, Modal, Stepper } from '../kit';
 import { $, useEvent } from '../lib/dom';
@@ -11,7 +11,7 @@ import { EmptyState } from './EmptyState';
 import { openItem, type LibFile } from './homePage';
 import {
   browseRecents, closeNewPage, createFromDialog, NEW_PALETTES, newFile, newRecents, nfHint, openNewFileDialog, pickPreset, renderNewRecents, setNfPalette,
-} from './newpage';
+} from './newFile';
 
 /** One file of the list. */
 function RecentRow({ f }: { f: LibFile }): ReactElement {

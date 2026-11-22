@@ -18,10 +18,13 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-APP = os.path.join(ROOT, "app", "OpenPixel.app", "Contents", "MacOS", "OpenPixel")
-if not os.path.exists(APP):
-    APP = "/Applications/OpenPixel.app/Contents/MacOS/OpenPixel"
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import find_openpixel  # noqa: E402
+
+# Drawing goes through the native `openpixel` program ($OPENPIXEL, else core/target/release/openpixel, else the
+# installed app's); the screenshot needs the desktop app itself ($OPENPIXEL_APP, else the installed app).
+ROOT = find_openpixel.ROOT
+APP = find_openpixel.program()
 SOURCE = os.path.join(ROOT, "web", "scripts", "temple-of-athena.openpixel")
 SHOT = os.path.join(ROOT, "web", "public", "editor.png")
 
@@ -887,8 +890,8 @@ class Agent:
     """A minimal MCP client over stdio, like make-art.py."""
 
     def __init__(self):
-        self.p = subprocess.Popen([APP, "--mcp", "--headless"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                  stderr=subprocess.DEVNULL, text=True, bufsize=1)
+        self.p = subprocess.Popen([find_openpixel.require(APP), "--mcp", "--headless"], stdin=subprocess.PIPE,
+                                  stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, bufsize=1)
         self.n = 0
         self.rpc("initialize", {"protocolVersion": "2025-06-18", "clientInfo": {"name": "openpixel-website", "version": "1"}})
         self.p.stdin.write(json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}) + "\n")
@@ -942,11 +945,16 @@ def draw_in_openpixel(layers):
 def screenshot(source, out, name):
     """The editor showing `source`, as `out` (a 2880×1710 PNG of a 1440×855 window). The app shows the file's own
     name in its tab and sidebar, so it opens a copy called `name`. --screenshot starts from the app's defaults and
-    leaves the person's Recents alone."""
+    leaves the person's Recents alone. This is the desktop app's job, not the MCP program's: the site's pictures
+    are taken on a Mac, where the window has the frame the page draws its buttons on (AppWindow.tsx)."""
+    app = find_openpixel.desktop_app()
+    if not app:
+        raise SystemExit("The screenshot needs the OpenPixel desktop app: install it, or set OPENPIXEL_APP to the "
+                         "command that starts it.")
     with tempfile.TemporaryDirectory() as d:
         copy = os.path.join(d, name + ".openpixel")
         shutil.copyfile(source, copy)
-        r = subprocess.run([APP, "--screenshot", out, copy], capture_output=True, text=True, timeout=120)
+        r = subprocess.run([*app, "--screenshot", out, copy], capture_output=True, text=True, timeout=120)
     print(r.stderr.strip()[-400:])
     try:  # an opaque picture needs no alpha channel: a smaller file for the website
         from PIL import Image

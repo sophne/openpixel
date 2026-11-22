@@ -79,7 +79,7 @@ before". The rules below are what that design needs to stay sound.
    checks that the page and the menu agree). "Show in Finder" is `REVEAL_LABEL`, "this Mac" `THIS_COMPUTER`, a path
    shown with `~` is `tildePath(path)`, and a key handler's "is the menu modifier down" is `menuModifier(e)`. The
    library's words (`your Mac`, `the Trash`, `Terminal`) are in `library/wording.ts`. The Agents page's guides name
-   an agent's settings file only as the app found it on this computer (`library/agents.ts`: `settingsFile`), and
+   an agent's settings file only as the app found it on this computer (`library/agentsPage.ts`: `settingsFile`), and
    always show the command the app reports (`mcpCommand`). The UI test checks the wording for the system it runs as.
 10. **Nothing from a file or an agent becomes markup.** Render it as text (`{name}`); never
     `dangerouslySetInnerHTML` with it. Icons are `<Icon name size className id/>`; an agent logo from the bundled table

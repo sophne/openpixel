@@ -3,12 +3,12 @@
 import { registerActions } from '../app/actions';
 import { nativeAction } from '../lib/host';
 import { registerCompat } from '../testing/compat';
-import { agentsState, loadAgents, showAgentHelp, showAgentInfo, stopAgentsPolling } from './agents';
+import { agentsState, loadAgents, showAgentHelp, showAgentInfo, stopAgentsPolling } from './agentsPage';
 import {
   draggingNow, fileById, folderById, hideHome, homePrefs, latestInFolder, loadHome, menus, openCardMenu, openFolder, openMoveMenu, renderHome,
   setHomeLayout, setHomeSort, showHome,
 } from './homePage';
-import { closeNewPage, openNewFileDialog, openNewPage, renderNewRecents } from './newpage';
+import { closeNewPage, openNewFileDialog, openNewPage, renderNewRecents } from './newFile';
 import { applyTabs, closeTab, renderTabs, reportTitlebar, showStars, showUpdate, switchTab, titlebarSentNow } from './tabs';
 
 /** Once at startup: is there an update, and how many stars has the repository? */

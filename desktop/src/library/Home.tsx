@@ -15,7 +15,7 @@ import {
   locationText, menus, newFolder, openCardMenu, openFolder, openHomePage, openItem, renamers, renameFolderTo, renderHome, setHomeFilter, setHomeLayout,
   setHomeSort, sizeText, SORTS, startDrag, startPrefs, whenText, type LibFile, type RenameSpec,
 } from './homePage';
-import { openNewPage } from './newpage';
+import { openNewPage } from './newFile';
 
 /** A class that is put on and taken off with classList after every drawing, for an element whose other classes are
  *  put on by hand (`drop-over` while something is dragged over it). */
