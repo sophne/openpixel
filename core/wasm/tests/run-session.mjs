@@ -114,7 +114,7 @@ steps.forEach((step, i) => {
   lines.push(oneLine(text));
 });
 // The run's own folder out of the transcript, as it is, escaped once (JSON) and twice (oneLine); see native_vs_wasm.rs.
-const once = outDir.replaceAll("\\", "\\\\"), twice = once.replaceAll("\\", "\\\\");
+const once = outDir.replaceAll("\\", "\\\\"), twice = outDir.replaceAll("\\", "\\\\\\\\");
 fs.writeFileSync(path.join(outDir, "transcript.txt"), lines.join("\n").replaceAll(twice, "$OUT").replaceAll(once, "$OUT").replaceAll(outDir, "$OUT") + "\n");
 for (const e of engines.values()) e.free();
 console.log(`${steps.length} steps`);
