@@ -1,0 +1,30 @@
+# TEMPORARY (remove before merging): runs .github/probe/stdout-probe.mjs on Windows on every push to this branch.
+name: windows-stdout-probe
+on:
+  push:
+    branches: [claude/windows-mcp-handover]
+    paths: [".github/probe/**", ".github/workflows/windows-stdout-probe.yml"]
+permissions:
+  contents: read
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        shell: [bash, pwsh]
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Electron 45.4.1
+        run: npm install --prefix probe-root --no-save --no-fund electron@45.4.1
+      - name: Probe
+        run: node .github/probe/stdout-probe.mjs probe-root
