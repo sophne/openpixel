@@ -140,8 +140,13 @@ test('deleting for good: files go to the Trash, samples just leave the library',
   assert.ok(s.p.fs.exists(thumb));
   assert.equal(await r.deleteForever('/not/here.openpixel'), 'That file is no longer in the library.');
 
-  s.p.ui.trash = async () => { throw new Error('the Trash is full'); };
-  assert.equal(await r.deleteForever(path), 'Could not move “Fox” to the Trash: the Trash is full');
+  // The message names the system's own place for deleted files.
+  s.p.ui.trash = async () => { throw new Error('it is full'); };
+  for (const [os, words] of [['linux', 'the trash'], ['darwin', 'the Trash'], ['win32', 'the Recycle Bin']] as const) {
+    s.p.os = os;
+    assert.equal(await r.deleteForever(path), `Could not move “Fox” to ${words}: it is full`);
+  }
+  s.p.os = 'linux';
   assert.deepEqual(r.entries.map((e) => e.name), ['Fox']);
 
   const trashed: string[] = [];

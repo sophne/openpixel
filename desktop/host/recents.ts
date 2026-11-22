@@ -311,7 +311,7 @@ export class Recents {
     return true;
   }
 
-  /** Deletes an item for good: a sample disappears from the library, a file goes to the Trash.
+  /** Deletes an item for good: a sample disappears from the library, a file goes to the system's Trash (Recycle Bin).
       Answers null when done, or why it couldn't be. */
   async deleteForever(id: string): Promise<string | null> {
     if (SAMPLE_IDS.includes(id)) {
@@ -327,7 +327,9 @@ export class Recents {
         if (ui.trash) await ui.trash(e.path);
         else fs.remove(e.path);
       } catch (err) {
-        return `Could not move “${e.name}” to the Trash: ${errorText(err)}`;
+        // The words the page uses for it on each system (desktop/src/library/wording.ts).
+        const trash = this.platform.os === 'darwin' ? 'the Trash' : this.platform.os === 'win32' ? 'the Recycle Bin' : 'the trash';
+        return `Could not move “${e.name}” to ${trash}: ${errorText(err)}`;
       }
     }
     if (e.thumb !== undefined) {

@@ -1,14 +1,14 @@
-/* Tooltips (app.js 56–128).
+/* Tooltips.
    The app draws its own tooltips, like the dock labels on the website (solid, not glass): a short name and the
    shortcut as key caps, above the control (below it when there is no room), the arrow pointing at the control.
    The first one waits a moment so moving across the toolbar doesn't flash labels; while one is showing, the next
    control's label appears at once and without animation. Leaving hides it at once. Titles in the markup feed it:
-   write title="Undo (⌘Z)" in JSX as the old page did; the title becomes data-tip (no system tooltip) at startup or
-   on first hover. Off the Mac the caps read Ctrl, Shift, Alt (lib/platform.ts). */
+   write title="Undo (⌘Z)" in JSX, the Mac's way; the title becomes data-tip (no system tooltip) at startup or on
+   first hover. Off the Mac the caps read Ctrl, Alt, Shift (lib/platform.ts). */
 import { useLayoutEffect, useRef, type RefObject } from 'react';
 import { $ } from '../lib/dom';
 import { EASE_OUT, reducedMotion } from '../lib/motion';
-import { shortcutKeys } from '../lib/platform';
+import { isMac, shortcutKeys } from '../lib/platform';
 
 const tipEl = document.createElement('div');
 tipEl.className = 'tip'; tipEl.setAttribute('role', 'tooltip');
@@ -16,9 +16,13 @@ let tipFor: HTMLElement | null = null, tipTimer: ReturnType<typeof setTimeout> |
 /** When the tooltip last appeared (ms). */
 export let tipShownAt = 0;
 
+const SHORTCUT = /^[⌘⇧⌥⌃]*(\w|[[\]'+=,./↩⌫−←→↑↓-]|PgUp|PgDn|Tab|Space)$/;
+const SHORTCUT_OR_BACKSLASH = /^[⌘⇧⌥⌃]*(\w|[[\]'+=,./\\↩⌫−←→↑↓-]|PgUp|PgDn|Tab|Space)$/;
 export function tipParts(text: string): { label: string; keys: string[] } {
   const m = text.match(/^([\s\S]*?)\s*\(([^()]{1,14})\)$/);
-  const shortcut = m && /^[⌘⇧⌥⌃]*(\w|[[\]'+=,./↩⌫−←→↑↓-]|PgUp|PgDn|Tab|Space)$/.test(m[2]);
+  // A backslash counts as a key off the Mac only: there "Hide sidebar (⌘\)" would otherwise show the Mac's glyph as
+  // text. On the Mac that one tooltip has always read as text, and stays so.
+  const shortcut = m && (isMac ? SHORTCUT : SHORTCUT_OR_BACKSLASH).test(m[2]);
   if (!m || !shortcut) return { label: text, keys: [] };
   return { label: m[1], keys: shortcutKeys(m[2]) };
 }

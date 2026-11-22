@@ -52,7 +52,7 @@ export class Runner implements ChatRunner, ChatContext {
     this.emit = options.emit;
     try { this.fs.createDirAll(this.workDir); } catch { /* shows when a chat is saved or started */ }
     if (background) {
-      // Apps opened from the Finder or a launcher don't get the shell's PATH, where these tools usually live. Ask a
+      // Apps opened from the Finder, the Start menu or a launcher don't get the shell's PATH, where these tools usually live. Ask a
       // login shell once, ahead of the first question.
       void this.tools.path();
       try { pruneHistory(this); } catch { /* next launch */ }
@@ -206,7 +206,7 @@ export class Runner implements ChatRunner, ChatContext {
     const p = provider(str(get(body, 'provider')) ?? '');
     if (!p) return 'Unknown agent';
     const exe = await this.find(p);
-    if (exe === null) return `${p.name} isn't installed on this Mac.`;
+    if (exe === null) return `${p.name} isn't installed on this ${process.platform === 'darwin' ? 'Mac' : 'computer'}.`;
     const typed = str(get(body, 'prompt')) ?? '';
     const model = str(get(body, 'model')) ?? '';
     const effort = str(get(body, 'effort')) ?? '';

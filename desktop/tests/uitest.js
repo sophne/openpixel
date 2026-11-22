@@ -11,6 +11,18 @@
      machine's). Wording that differs between them (key names, "Show in Finder") is checked against this. */
   const PLATFORM = window.openpixel.platform;
   const MAC = PLATFORM === 'darwin';
+  /** A shortcut written the Mac's way ('⇧⌘S') as the key caps this system shows: the menu bar binds ⌘ shortcuts to
+      Ctrl on Windows and Linux, where keys are named and modifiers come in the order Ctrl, Alt, Shift. */
+  function capsOf(shortcut) {
+    const mods = [...shortcut].filter((c) => '⌘⇧⌥'.includes(c)), key = [...shortcut].filter((c) => !'⌘⇧⌥'.includes(c)).join('');
+    if (MAC) return [...mods, key];
+    const names = { '⌘': 'Ctrl', '⌥': 'Alt', '⇧': 'Shift', '⌫': 'Backspace', '↩': 'Enter' };
+    return [...['⌘', '⌥', '⇧'].filter((m) => mods.includes(m)).map((m) => names[m]), names[key] || key];
+  }
+  /** Words and key names that belong to another system than the one the page is shown for. (A guide may still say
+      "Ctrl+C" on a Mac: that is the key that stops a program in its Terminal.) */
+  const FOREIGN = MAC ? /Explorer|Recycle Bin|file manager|(your|this) computer|in a terminal/ : /[⌘⇧⌥⌃⌫]|\bMac\b|Finder|in Terminal\b|Application Support|\.app\//;
+  const FOREIGN_KEYS = MAC ? /\b(Ctrl|Alt|Shift|Backspace|Enter)\b/ : /[⌘⇧⌥⌃⌫↩]/;
   // Snapshots capture the page alone, without the window's glass behind it; a dark stand-in keeps them readable.
   document.documentElement.style.background = '#2b2b2e';
   const results = [];
@@ -497,7 +509,20 @@
       // Near the top edge it flips below.
       over($('#undo')); await sleep(30);
       assert(t.classList.contains('on') && t.dataset.side === 'bottom', 'top bar tooltip should sit below');
-      out($('#undo'), document.body);
+      // Shortcuts are shown with this system's keys: ⌘Z on macOS, Ctrl Z on Windows and Linux.
+      const capsShown = async (el) => { over(el); await sleep(30); return [...t.querySelectorAll('kbd')].map((k) => k.textContent).join(' '); };
+      let caps = await capsShown($('#undo'));
+      assert(caps === capsOf('⌘Z').join(' '), `Undo's tooltip shows ${caps}`);
+      await sleep(150);
+      await snap('18c-tooltip-shortcut');
+      out($('#undo'), $('#redo'));
+      caps = await capsShown($('#redo'));
+      assert(caps === capsOf('⇧⌘Z').join(' '), `Redo's tooltip shows ${caps}`);
+      out($('#redo'), $('#layer-del'));
+      caps = await capsShown($('#layer-del'));
+      assert(caps === capsOf('⌘⌫').join(' '), `Delete layer's tooltip shows ${caps}`);
+      assert(!FOREIGN_KEYS.test(t.textContent), `the tooltip names another system's keys: ${t.textContent}`);
+      out($('#layer-del'), document.body);
     });
     await test('Help ▸ Keyboard Shortcuts (⌘/ or ?) lists every group with key caps', async () => {
       PC.command('shortcuts');
@@ -506,6 +531,16 @@
       for (const g of ['Tools', 'Drawing', 'Layers', 'Frames', 'View', 'File']) assert(groups.includes(g), `${g} missing`);
       assert($$('#shortcuts-body kbd').length > 60, 'too few keys listed');
       assert($('#shortcuts-body').textContent.includes('Delete layer'), 'delete layer missing');
+      // The keys are this system's: ⌘ ⇧ ⌥ on macOS; Ctrl, Alt, Shift (in that order) on Windows and Linux.
+      const rowCaps = (name) => {
+        const r = $$('#shortcuts-body kbd').map((k) => k.parentElement.parentElement).find((x) => x.firstElementChild.textContent === name);
+        return r ? [...r.querySelectorAll('kbd')].map((k) => k.textContent).join(' ') : null;
+      };
+      for (const [name, keys] of [['Undo', '⌘Z'], ['Redo', '⇧⌘Z'], ['New layer', '⇧⌘N'], ['Delete layer', '⌘⌫'], ['New frame', '⌥⌘N'], ['Save as', '⇧⌘S']]) {
+        assert(rowCaps(name) === capsOf(keys).join(' '), `${name} is listed as ${rowCaps(name)}, not ${capsOf(keys).join(' ')}`);
+      }
+      const foreignKeys = $$('#shortcuts-body kbd').map((k) => k.textContent).filter((k) => FOREIGN_KEYS.test(k));
+      assert(!foreignKeys.length, `the shortcuts name another system's keys: ${foreignKeys.join(' ')}`);
       noSpill($('#shortcuts-dialog .modal'), 'shortcuts dialog');
       await sleep(220);
       await snap('17-shortcuts');
@@ -815,6 +850,13 @@
         if (id === 'chatgpt') assert(!pr, 'ChatGPT cannot set itself up; no prompt');
         else assert(pr && pr.textContent.includes('--mcp') && pr.textContent.includes('openpixel') && $('#ai-body .setup-prompt .copy'), `${id}: no setup prompt with the command and a Copy button`);
         if (id === 'cursor') assert($('#ai-extra').textContent.includes('Add to Cursor'), 'no Add to Cursor button');
+        // The guide is written for this system: its own words for the computer and the terminal, and the command
+        // the app really has here (the one the host answers, never a path made up for another system).
+        const guide = $('#agent-info .modal').textContent;
+        assert(!FOREIGN.test(guide), `${id}: the guide speaks of another system: “${(guide.match(FOREIGN) || [])[0]}”`);
+        assert($$('#ai-body pre').some((p) => p.textContent.includes(JSON.stringify(agentsState.data.command).slice(1, -1)) || p.textContent.includes(agentsState.data.command)),
+          `${id}: the guide does not give the app's own command (${agentsState.data.command})`);
+        if (id === 'chatgpt') assert(guide.includes(MAC ? 'on your Mac' : 'on your computer') && guide.includes(MAC ? 'in Terminal' : 'in a terminal'), 'ChatGPT: the words for this computer');
         if (id === 'claude-code') {
           // Copy answers in the button: "Copy" swaps to "Copied" without changing the button's width, then back.
           const c = $('#ai-body .codebox .copy');
@@ -1044,6 +1086,10 @@
         $('#doc-title').click(); await sleep(200);
         const dm = $('#doc-menu');
         assert(dm.classList.contains('open') && ['saveAs', 'close'].every((k) => shown(dm.querySelector(`[data-doc="${k}"]`))), 'the file name opens its menu');
+        const reveal = { darwin: 'Show in Finder', win32: 'Show in Explorer', linux: 'Show in file manager' }[PLATFORM];
+        assert(dm.querySelector('[data-doc="reveal"]').textContent.trim() === reveal, `the file menu says “${dm.querySelector('[data-doc="reveal"]').textContent.trim()}”, not “${reveal}”`);
+        const menuKeys = $$('#file-menu .menu-list .k').map((k) => k.textContent).join(' ');
+        assert(menuKeys === ['⌘N', '⌘O', '⌘S', '⇧⌘S'].map((k) => capsOf(k).join(MAC ? '' : '+')).join(' '), `the main menu's shortcuts read ${menuKeys}`);
         await snap('09c-doc-menu');
         closeMenus();
       } finally {

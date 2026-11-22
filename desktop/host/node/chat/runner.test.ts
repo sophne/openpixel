@@ -123,7 +123,7 @@ test('the model menu: every agent, what is installed, signed in and offered', { 
       id: 'kiro', name: 'Kiro', plan: 'Kiro subscription', installed: false, ready: false, needs_setup: false, needs_login: false,
       models: [DEFAULT], default_model: '', efforts: [], default_effort: '',
     });
-    assert.equal(await chat.start({ chat: 'none', provider: 'kiro', prompt: 'Hi' }), "Kiro isn't installed on this Mac.");
+    assert.equal(await chat.start({ chat: 'none', provider: 'kiro', prompt: 'Hi' }), `Kiro isn't installed on this ${process.platform === 'darwin' ? 'Mac' : 'computer'}.`);
   }
   // Tools are asked with the search path first and colours off.
   const about = fake.lastCall('cursor-agent', 'about');

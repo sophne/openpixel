@@ -31,7 +31,7 @@ export const UITEST_NAMES: Record<string, Area> = {
   setLeftOpen: 'editor', applyLeftSide: 'editor', closePicker: 'editor',
   // library
   homePrefs: 'library', filterMenu: 'library', titlebarSent: 'library', setHomeLayout: 'library', setHomeSort: 'library',
-  loadHome: 'library', loadAgents: 'library', closeNewPage: 'library', fileById: 'library', folderById: 'library', latestInFolder: 'library',
+  loadHome: 'library', loadAgents: 'library', agentsState: 'library', closeNewPage: 'library', fileById: 'library', folderById: 'library', latestInFolder: 'library',
 };
 /** uitest.js assigns to these two (`nativeAction = async () => true`, `render3dDirty = true`): they need a setter. */
 export const UITEST_WRITES = ['nativeAction', 'render3dDirty'];

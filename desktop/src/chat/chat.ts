@@ -18,6 +18,7 @@ import { $, $$, errorText } from '../lib/dom';
 import { timeAgo } from '../lib/format';
 import { chatNative, setChatMock } from '../lib/host';
 import { lastInput, popIn, reducedMotion } from '../lib/motion';
+import { platform, THIS_COMPUTER } from '../lib/platform';
 import { batch, changed, store } from '../lib/store';
 import { AGENTS, type AgentInfo } from '../state/agents';
 import { activeTabName, leftSide, S, ui } from '../state/ui';
@@ -418,10 +419,12 @@ export function renderChatFoot(msg: AssistantMessage): void {
 export function toggleThink(v: ThinkView): void { v.open = !v.open; changed(v); }
 
 /* --- sending and the event stream */
+/** What the agent is told it runs on: the system decides where files are and how paths are written. */
+const PERSONS_COMPUTER = { darwin: "the person's Mac", win32: "the person's Windows PC", linux: "the person's Linux computer" }[platform];
 export function chatSystemPrompt(): string {
   const kind = S.isSprite ? `${S.sx}×${S.sy} 2D sprite` : `${S.sx}×${S.sy}×${S.sz} 3D voxel model`;
   return [
-    "You are the assistant in the Chat panel of OpenPixel, a pixel-art and voxel editor on the person's Mac.",
+    `You are the assistant in the Chat panel of OpenPixel, a pixel-art and voxel editor on ${PERSONS_COMPUTER}.`,
     `The file open in the editor is "${activeTabName()}", a ${kind} with ${S.layers.length} layer${S.layers.length === 1 ? '' : 's'} and ${S.frames.length} frame${S.frames.length === 1 ? '' : 's'}.`,
     'Work on it with the openpixel tools: your edits appear in the editor as you make them, and the person can undo each one.',
     "Use the person's skills when one fits (you may read a skill's own files); don't run shell commands or change any other files.",
@@ -624,7 +627,7 @@ export async function openChat(): Promise<void> {
   sizeChatInput();
   if (lastInput === 'pointer' && !$<HTMLTextAreaElement>('#chat-input').disabled) $('#chat-input').focus({ preventScroll: true });
 }
-/* --- skills: "/" in the message box lists the chosen agent's own skills (from its folders on this Mac). Picking one
+/* --- skills: "/" in the message box lists the chosen agent's own skills (from its folders on this computer). Picking one
    writes "/name " at the start; sending "/name what to do" runs it (Claude Code natively, the others with the skill's
    instructions in front). Typing filters the list; ↑↓ move, Return or Tab picks, Escape closes. */
 export async function loadChatSkills(p: ChatProvider | null = chatProvider()): Promise<ChatSkill[]> {
@@ -669,7 +672,7 @@ export async function updateSkillMenu(): Promise<void> {
   sm.items = rankSkills(list, skillQuery() as string);
   sm.index = Math.min(sm.index, Math.max(0, sm.items.length - 1));
   skillView.key = viewKey();
-  skillView.note = sm.items.length ? null : list.length ? 'No skill matches' : `${p.name} has no skills on this Mac`;
+  skillView.note = sm.items.length ? null : list.length ? 'No skill matches' : `${p.name} has no skills on ${THIS_COMPUTER}`;
   skillView.items = sm.items;
   skillView.index = sm.index;
   changed(skillView);
