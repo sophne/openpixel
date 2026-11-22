@@ -11,43 +11,8 @@ import { replay } from './runner.ts';
 import { cases } from './selftest.fixtures.ts';
 import { readSkillFile } from './skills.ts';
 import { tomlString } from './streams.ts';
-import { nodeFiles } from './test-support.ts';
-import type { Dict } from './values.ts';
-import { trimAll, trimSpaces } from './values.ts';
-
-/** A short, comparable account of the events: "session", "text:<all text of a block>", "think",
-    "tool <name>", "ok <name>" / "failed <name>", "error: <message>", "done" / "done failed". */
-export function timeline(events: Dict[]): string[] {
-  const out: string[] = [], names = new Map<string, string>();
-  const text = (v: unknown, or: string): string => (typeof v === 'string' ? v : or);
-  for (const e of events) {
-    const last = out[out.length - 1];
-    switch (text(e.t, '')) {
-      case 'session': if (last !== 'session') out.push('session'); break;
-      case 'text': {
-        const d = text(e.d, '');
-        if (last !== undefined && last.startsWith('text:')) out[out.length - 1] = last + d; else out.push('text:' + d);
-        break;
-      }
-      case 'think': if (last !== 'think') out.push('think'); break;
-      case 'tool': {
-        const id = text(e.id, ''), name = text(e.name, '?');
-        names.set(id, name);
-        out.push(`tool ${name}`);
-        break;
-      }
-      case 'tool_done': {
-        const name = names.get(text(e.id, '')) ?? '(unknown call)';
-        out.push(`${e.ok === true ? 'ok' : 'failed'} ${name}`);
-        break;
-      }
-      case 'error': out.push(`error: ${text(e.message, '')}`); break;
-      case 'done': out.push(e.ok === true ? 'done' : 'done failed'); break;
-      default: break;
-    }
-  }
-  return out.map((s) => (s.startsWith('text:') ? 'text:' + trimAll(s.slice(5)) : s));
-}
+import { nodeFiles, timeline } from './test-support.ts';
+import { trimSpaces } from './values.ts';
 
 assert.equal(cases.length, 24, 'every case of ChatSelfTest.swift is here');
 

@@ -4,6 +4,8 @@ import * as nodeFS from 'node:fs';
 import * as os from 'node:os';
 import * as nodePath from 'node:path';
 import type { PlatformFS } from '../../platform';
+import type { Dict } from './values.ts';
+import { trimAll } from './values.ts';
 
 export const nodeFiles: PlatformFS = {
   read: (path) => new Uint8Array(nodeFS.readFileSync(path)),
@@ -36,4 +38,38 @@ export function tempFolder(name: string): string {
 export function put(path: string, text: string, mode?: number): void {
   nodeFS.mkdirSync(nodePath.dirname(path), { recursive: true });
   nodeFS.writeFileSync(path, text, mode === undefined ? {} : { mode });
+}
+
+/** A short, comparable account of the events: "session", "text:<all text of a block>", "think",
+    "tool <name>", "ok <name>" / "failed <name>", "error: <message>", "done" / "done failed". */
+export function timeline(events: Dict[]): string[] {
+  const out: string[] = [], names = new Map<string, string>();
+  const text = (v: unknown, or: string): string => (typeof v === 'string' ? v : or);
+  for (const e of events) {
+    const last = out[out.length - 1];
+    switch (text(e.t, '')) {
+      case 'session': if (last !== 'session') out.push('session'); break;
+      case 'text': {
+        const d = text(e.d, '');
+        if (last !== undefined && last.startsWith('text:')) out[out.length - 1] = last + d; else out.push('text:' + d);
+        break;
+      }
+      case 'think': if (last !== 'think') out.push('think'); break;
+      case 'tool': {
+        const id = text(e.id, ''), name = text(e.name, '?');
+        names.set(id, name);
+        out.push(`tool ${name}`);
+        break;
+      }
+      case 'tool_done': {
+        const name = names.get(text(e.id, '')) ?? '(unknown call)';
+        out.push(`${e.ok === true ? 'ok' : 'failed'} ${name}`);
+        break;
+      }
+      case 'error': out.push(`error: ${text(e.message, '')}`); break;
+      case 'done': out.push(e.ok === true ? 'done' : 'done failed'); break;
+      default: break;
+    }
+  }
+  return out.map((s) => (s.startsWith('text:') ? 'text:' + trimAll(s.slice(5)) : s));
 }
