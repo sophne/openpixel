@@ -4086,11 +4086,24 @@ html[data-os="linux"] [data-os-card="linux"] .dl-main:hover {
   overflow-wrap: anywhere;
 }
 
-/* Tiles grow with the chosen size, so 256px icons get a few big tiles per row instead of overflowing. */
+/* Tiles grow with the chosen size, so 256px icons get a few big tiles per row instead of overflowing. Only the rows
+   on screen are in the page (useIconWindow in IconLibrary.tsx): .il-grid keeps the full height and the rows are
+   moved into place. Before the grid is measured, the first tiles flow normally with the same columns. */
 .il-grid {
+  position: relative;
+}
+
+.il-grid-rows {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(calc(var(--pi-size) + 32px), 1fr));
   gap: 6px;
+}
+
+.il-grid-rows.windowed {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
 }
 
 .il-tile {
@@ -4103,9 +4116,6 @@ html[data-os="linux"] [data-os-card="linux"] .dl-main:hover {
   border-radius: 10px;
   background: var(--panel-2);
   cursor: pointer;
-  content-visibility: auto;
-  contain-intrinsic-size: auto calc(var(--pi-size) + 32px);
-  scroll-margin-block: 140px 300px;
   transition: border-color 150ms ease, background-color 150ms ease, transform 160ms var(--ease-out);
 }
 

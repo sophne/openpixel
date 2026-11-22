@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useDeferredValue, useEffect, useId, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useDeferredValue, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import PixelIcon from "@/components/PixelIcon";
 import { trackEvent } from "@/lib/consent";
 import { copyText } from "@/lib/copy";
@@ -479,6 +479,102 @@ function Detail({
   );
 }
 
+/** One icon in the grid. Memoised: opening an icon re-renders the two tiles whose state changed, not all of them. */
+const Tile = memo(function Tile({ icon, pressed, onPick }: { icon: Icon; pressed: boolean; onPick: (name: string) => void }) {
+  return (
+    <button
+      type="button"
+      className="il-tile"
+      data-name={icon.name}
+      aria-pressed={pressed}
+      aria-label={icon.name}
+      onClick={() => onPick(icon.name)}
+    >
+      <PixelIcon paths={icon.paths} />
+      <span className="il-name" aria-hidden="true">
+        {icon.name}
+      </span>
+    </button>
+  );
+});
+
+const GAP = 6; // px between tiles, as in .il-grid-rows
+/** Tiles in normal flow before the grid's width is known: the icons the server sends with the page. */
+const PREVIEW_TILES = 120;
+const OVERSCAN = 3; // rows kept in the page above and below the screen
+/** Space the sticky header and search bar cover at the top, and the open drawer at the bottom. */
+const TOP_COVER = 140;
+const BOTTOM_COVER = 260;
+
+/**
+ * Keeps only the rows on screen (and a few around them) in the page. With every icon as a tile the grid held some
+ * 2,000 buttons and 13,000 elements, and switching between "All icons" and a category froze the page while the
+ * browser built or removed them. The grid keeps its full height, so the scroll bar and page length stay right.
+ *
+ * Until the grid's width is known (the server render and the first paint), it shows the first icons in normal flow.
+ */
+function useIconWindow(count: number, size: number) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+  const [range, setRange] = useState<[number, number]>([0, 0]);
+
+  const cols = width ? Math.max(1, Math.floor((width + GAP) / (size + 32 + GAP))) : 0;
+  const tile = cols ? (width - GAP * (cols - 1)) / cols : 0;
+  const pitch = tile + GAP;
+  const rows = cols ? Math.ceil(count / cols) : 0;
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // A layout effect, so the first windowed render already has its rows and nothing flashes empty.
+  useLayoutEffect(() => {
+    if (!cols) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const el = ref.current;
+      if (!el) return;
+      const top = el.getBoundingClientRect().top;
+      const first = Math.max(0, Math.floor(-top / pitch) - OVERSCAN);
+      const last = Math.max(first, Math.min(rows, Math.ceil((window.innerHeight - top) / pitch) + OVERSCAN));
+      setRange((r) => (r[0] === first && r[1] === last ? r : [first, last]));
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+    };
+  }, [cols, pitch, rows]);
+
+  /** Scrolls just enough to show the tile at `index` between the search bar and the drawer, without animating. */
+  const reveal = useCallback(
+    (index: number) => {
+      const el = ref.current;
+      if (!el || !cols) return;
+      const y = el.getBoundingClientRect().top + window.scrollY + Math.floor(index / cols) * pitch;
+      if (y < window.scrollY + TOP_COVER) window.scrollTo({ top: y - TOP_COVER, behavior: "instant" });
+      else if (y + tile > window.scrollY + window.innerHeight - BOTTOM_COVER)
+        window.scrollTo({ top: y + tile - window.innerHeight + BOTTOM_COVER, behavior: "instant" });
+    },
+    [cols, pitch, tile],
+  );
+
+  const first = Math.min(range[0], rows);
+  const last = Math.min(range[1], rows);
+  return { ref, cols, pitch, rows, first, last, reveal };
+}
+
 export default function IconLibrary({
   categories,
   total,
@@ -501,7 +597,7 @@ export default function IconLibrary({
   const [category, setCategory] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const search = useRef<HTMLInputElement>(null);
-  const grid = useRef<HTMLDivElement>(null);
+  const focusNext = useRef<string | null>(null);
   const deferredQuery = useDeferredValue(query);
   /** The last settings sent to analytics (or restored from storage), so only real changes count. */
   const styleSeen = useRef<string | null>(null);
@@ -577,6 +673,8 @@ export default function IconLibrary({
       .map((r) => r.icon);
   }, [icons, category, categories, deferredQuery]);
 
+  const { ref: gridRef, cols, pitch, rows, first, last, reveal } = useIconWindow(shown.length, style.size);
+
   // A search counts once the visitor stops typing for a second, with how many icons it found.
   useEffect(() => {
     const q = deferredQuery.trim().toLowerCase();
@@ -612,15 +710,24 @@ export default function IconLibrary({
       const at = shown.findIndex((i) => i.name === selected);
       if (at < 0) return;
       e.preventDefault();
-      const next = shown[(at + (e.key === "ArrowRight" ? 1 : -1) + shown.length) % shown.length];
-      setSelected(next.name);
-      const tile = grid.current?.querySelector<HTMLButtonElement>(`[data-name="${next.name}"]`);
-      tile?.focus({ preventScroll: true });
-      tile?.scrollIntoView({ block: "nearest" });
+      const index = (at + (e.key === "ArrowRight" ? 1 : -1) + shown.length) % shown.length;
+      setSelected(shown[index].name);
+      // The tile may not be in the page yet: scroll its row into view, then focus it once it has rendered.
+      reveal(index);
+      focusNext.current = shown[index].name;
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [selected, shown]);
+  }, [selected, shown, reveal]);
+
+  useEffect(() => {
+    if (!focusNext.current) return;
+    const tile = gridRef.current?.querySelector<HTMLButtonElement>(`[data-name="${focusNext.current}"]`);
+    if (tile) {
+      tile.focus({ preventScroll: true });
+      focusNext.current = null;
+    }
+  });
 
   // Keep the chosen category in view in the categories list (a sideways row on phones).
   const side = useRef<HTMLElement>(null);
@@ -633,8 +740,22 @@ export default function IconLibrary({
   const pickCategory = (id: string | null, from = "sidebar") => {
     if (id !== category) trackEvent("icon_category_select", { category: id ?? "all", location: from });
     setCategory(id);
-    window.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0, behavior: "instant" });
   };
+
+  // Opening an icon from a tile; the latest selection comes from a ref so the callback, and the tiles, stay the same.
+  const selectedNow = useRef(selected);
+  useEffect(() => {
+    selectedNow.current = selected;
+  }, [selected]);
+  const pick = useCallback((name: string) => {
+    const open = selectedNow.current !== name;
+    if (open) trackEvent("icon_open", { icon_name: name });
+    setSelected(open ? name : null);
+  }, []);
+
+  const windowed = cols > 0;
+  const visible = windowed ? shown.slice(first * cols, last * cols) : shown.slice(0, PREVIEW_TILES);
 
   const vars = {
     "--pi-stroke": style.stroke,
@@ -733,26 +854,27 @@ export default function IconLibrary({
           </div>
         ) : null}
 
-        <div className="il-grid" ref={grid} aria-busy={!loaded}>
-          {shown.map((icon) => (
-            <button
-              key={icon.name}
-              type="button"
-              className="il-tile"
-              data-name={icon.name}
-              aria-pressed={icon.name === selected}
-              aria-label={icon.name}
-              onClick={() => {
-                if (icon.name !== selected) trackEvent("icon_open", { icon_name: icon.name });
-                setSelected(icon.name === selected ? null : icon.name);
-              }}
-            >
-              <PixelIcon paths={icon.paths} />
-              <span className="il-name" aria-hidden="true">
-                {icon.name}
-              </span>
-            </button>
-          ))}
+        <div
+          className="il-grid"
+          ref={gridRef}
+          aria-busy={!loaded}
+          style={windowed ? { height: Math.max(0, rows * pitch - GAP) } : undefined}
+        >
+          <div
+            className={windowed ? "il-grid-rows windowed" : "il-grid-rows"}
+            style={
+              windowed
+                ? {
+                    gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+                    transform: `translateY(${first * pitch}px)`,
+                  }
+                : undefined
+            }
+          >
+            {visible.map((icon) => (
+              <Tile key={icon.name} icon={icon} pressed={icon.name === selected} onPick={pick} />
+            ))}
+          </div>
         </div>
       </section>
 

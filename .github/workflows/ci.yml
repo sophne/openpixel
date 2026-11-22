@@ -44,9 +44,11 @@ jobs:
           files="$(gh api --paginate "repos/$REPO/pulls/$PR/files" --jq '.[].filename')"
           printf '%s\n' "$files"
           touches() { printf '%s\n' "$files" | grep -qE "$1" && echo true || echo false; }
-          # The app is the core and the desktop app. The core's golden tests also read the artwork and the pictures
-          # exported from it, which live with the website (web/artwork, web/public).
-          echo "app=$(touches '^(core/|desktop/|web/artwork/|web/public/|\.github/workflows/ci\.yml$)')" >> "$GITHUB_OUTPUT"
+          # The app is the core and the desktop app. The core's golden tests (core/engine/tests/golden.rs) also read
+          # website files: the artwork (web/artwork), the pictures exported from it (web/public/art, web/public/explore)
+          # and the .openpixel models next to the art scripts (web/scripts/*.openpixel). Nothing else on the website
+          # affects the app, so other website changes (pages, icons, preview cards) run web-ci only.
+          echo "app=$(touches '^(core/|desktop/|web/artwork/|web/public/(art|explore)/|web/scripts/[^/]+\.openpixel$|\.github/workflows/ci\.yml$)')" >> "$GITHUB_OUTPUT"
           echo "web=$(touches '^(web/|\.github/workflows/ci\.yml$)')" >> "$GITHUB_OUTPUT"
 
   # If working out the changes fails, the jobs below run rather than silently skipping.
