@@ -1,16 +1,15 @@
-# OpenPixel desktop: Electron + React + a Rust core in WebAssembly
+# How OpenPixel fits together: Electron + React + a Rust core in WebAssembly
 
-The cross-platform app. The Mac app in `app/` (Swift + a web view) is the reference it was ported from; file
-references below point there.
+One app for macOS, Windows and Linux.
 
-| Part | Folder | What it is | Ported from |
-|---|---|---|---|
-| Core | `core/engine` (crate `openpixel-core`) | The document model, undo, every tool, rendering voxels to sprites, file formats, reviews. Pure Rust: all files, time and network go through one small `HostIo` trait, so it builds natively and for `wasm32-unknown-unknown` | `app/Sources/OpenPixelCore` (all but MCP, MCPHTTP, Bridge) |
-| Bindings | `core/wasm` (crate `openpixel-wasm`) | The core for JavaScript, built with wasm-bindgen (`--target web`). One package, used by the desktop app today and by a browser later | new |
-| MCP program | `core/app` (binary `openpixel`) | What agents start: `openpixel --mcp` (stdio) and `--mcp-http`. Forwards tool calls to the open window over a local socket, or works headless on the native build of the same core | `MCP.swift`, `MCPHTTP.swift`, `Bridge.swift` (client side), `MCPMode.swift`, `main.swift` |
-| App logic | `desktop/host` (TypeScript) | Tabs, autosave, the library (Recents, folders, archive), the Agents registry, the agents' socket, Agent Chat, updates. Runs the core through the wasm bindings. Talks to the outside only through `Platform` (`host/platform.ts`); the Node-only pieces (socket server, running the person's agent CLIs) sit in `host/node/` | `AppDelegate.swift` (logic), `Recents.swift`, `Agents.swift`, `Chat*.swift`, `Bridge.swift` (server side) |
-| Shell | `desktop/electron` | Window, menus, dialogs, clipboard, screenshots: the Electron `Platform` | `AppDelegate.swift` (AppKit) |
-| Page | `desktop/src` | The editor in React + Vite | `app/web` |
+| Part | Folder | What it is |
+|---|---|---|
+| Core | `core/engine` (crate `openpixel-core`) | The document model, undo, every tool, rendering voxels to sprites, file formats, reviews. Pure Rust: all files, time and network go through one small `HostIo` trait, so it builds natively and for `wasm32-unknown-unknown` |
+| Bindings | `core/wasm` (crate `openpixel-wasm`) | The core for JavaScript, built with wasm-bindgen (`--target web`). One package, used by the app and by a browser (`desktop/web`, a preview) |
+| MCP program | `core/app` (binary `openpixel`) | What agents start: `openpixel --mcp` (stdio) and `--mcp-http`. Forwards tool calls to the open window over a local socket, or works headless on the native build of the same core |
+| App logic | `desktop/host` (TypeScript) | Tabs, autosave, the library (Recents, folders, archive), the Agents registry, the agents' socket, Agent Chat, updates. Runs the core through the wasm bindings. Talks to the outside only through `Platform` (`host/platform.ts`); the Node-only pieces (socket server, running the person's agent CLIs) sit in `host/node/` |
+| Shell | `desktop/electron` | Window, menus, dialogs, clipboard, screenshots: the Electron `Platform` |
+| Page | `desktop/src` | The editor in React + Vite: everything the window shows. Its own guide is `desktop/src/README.md` |
 
 ```
  React page ──window.openpixel.post(msg)──▶ Electron main: host (TypeScript) ──wasm-bindgen──▶ core (Rust, WASM)
@@ -19,14 +18,14 @@ references below point there.
               agents:  openpixel --mcp (Rust, native core for headless) ──local socket, one JSON per line
 ```
 
-Why this shape: the core has one JavaScript face (the wasm-bindgen package). The desktop app loads it in Electron's
-main process; a web version loads the same package in the browser and swaps `Platform` for one backed by its own
-storage (a browser has no file system, so that needs accounts and a database; not built). Nothing else changes.
+Why this shape: the core has one JavaScript face (the wasm-bindgen package). The app loads it in Electron's main
+process; a web version loads the same package in the browser and swaps `Platform` for one backed by its own storage
+(`desktop/web` does this with files in memory, as a preview: a real one needs accounts and a database). Nothing else
+changes. And what agents start is the same core built natively, so a tool answers the same with or without a window.
 
-## 1. Page ⇄ host messages (unchanged from the Mac app)
+## 1. Page ⇄ host messages
 
-The page posts the same messages the old page posted to `window.webkit.messageHandlers.pc` (see
-`AppDelegate.userContentController` and `runNative`), and gets the same replies:
+The page posts messages through `window.openpixel.post(msg)` and gets the reply as the promise's value:
 
 - `{kind:'tool', name, args}` → the tool's JSON; pictures arrive as `images: ["data:image/png;base64,…"]`.
   A failed tool rejects with an `Error` whose message is the tool's error text.
@@ -42,19 +41,15 @@ The host calls the page through `window.PC`: `refresh(tool)`, `chatEvent(e)`, `c
 `githubStars(n)`, `updateAvailable(version|null)`, `fullScreen(on)`, `showNewDialog()`, `showAgentHelp()`,
 `command(cmd)`, `closeActiveTab()`, `showHome()`.
 
-In the page, `window.openpixel` (from the preload script) is:
+In the page, `window.openpixel` (from the preload script) is all there is of the app:
 
 ```ts
 interface OpenPixelHost {
   post(msg: Record<string, unknown>): Promise<any>;   // rejects with Error(text) on failure
-  platform: 'darwin' | 'win32' | 'linux';             // tests can force 'darwin'
+  platform: 'darwin' | 'win32' | 'linux';             // the system the page is shown for; a test can ask for another
   flags: { start: 'home' | 'editor'; uitest?: { folder: string }; screenshot?: boolean; demo?: unknown };
 }
 ```
-
-The preload also defines `window.webkit.messageHandlers.pc.postMessage` and the old `OPENPIXEL_START`,
-`OPENPIXEL_UITEST`, `OPENPIXEL_SCREENSHOT` globals, so the old page in `app/web` runs unchanged in the same shell
-(`--legacy-ui`). That is how old and new are compared side by side on one core.
 
 ## 2. The core's JavaScript face (`core/wasm`, wasm-bindgen)
 
@@ -91,44 +86,69 @@ Natively the same crate backs `openpixel --mcp` when no window is open, with `Ho
 ## 3. The app's logic (`desktop/host`)
 
 `createHost({ platform, core, uiTest?, screenshot?, open? })` → `Host` (`handle(msg)`, `start()`, `openFile(path)`,
-`quitting()`, `dispose()`); see `desktop/host/platform.ts` for `Platform`. The host owns one `Engine` per tab plus the
-spare, and behaves as `AppDelegate` did: autosave 1.5 s after a change, one coalesced `PC.refresh(tool)` per burst,
-window title updates, save questions on close.
+`quitting()`, `dispose()`); see `desktop/host/platform.ts` for `Platform`. The host owns one `Engine` per tab plus a
+spare: it autosaves 1.5 s after a change, sends one coalesced `PC.refresh(tool)` per burst of changes, keeps the
+window's title, and asks about unsaved work on close.
 
 ## 4. Agents ⇄ the window
 
-`openpixel --mcp` is the MCP server agents start. It forwards each tool call to the open window over a local socket
-(an owner-only Unix socket in the data folder; on Windows the named pipe `\\.\pipe\openpixel-<user>`), with the
-line protocol of `Bridge.swift`: one JSON request per line, `{"tool", "args"}` → `{"ok", "json", "images"}` (pictures
-as base64), and a `{"hello": info}` line first. The window's side of that socket is `desktop/host/node/bridge.ts`.
+`openpixel --mcp` is the MCP server agents start. It forwards each tool call to the open window over a local link
+(an owner-only Unix socket in the data folder; on Windows the named pipe `\\.\pipe\openpixel-<user>`): one JSON
+request per line, `{"tool", "args"}` → `{"ok", "json", "images"}` (pictures as base64), and a `{"hello": info}` line
+first. The window's side of it is `desktop/host/node/bridge.ts`, the program's `core/app/src/bridge.rs`.
 Without a window the program works headless on its own engine. `openpixel --mcp-http [port]` serves MCP over HTTP on
 this computer only, with file access confined to the files folder. `OPENPIXEL_SOCKET` overrides the socket path.
 
+The program ships inside the app, and the Agents page shows its path on that computer (the host's `mcpCommand`):
+
+| System | The command agents run |
+|---|---|
+| macOS | `/Applications/OpenPixel.app/Contents/Resources/core/openpixel --mcp` |
+| Windows | `%LOCALAPPDATA%\Programs\OpenPixel\resources\core\openpixel.exe --mcp` |
+| Linux | `~/.local/share/OpenPixel/bin/openpixel --mcp` (a copy the app refreshes at every start, because an AppImage's own files move on every launch) |
+
+The app's own executable hands `--mcp` and `--mcp-http` over to that program, so
+`/Applications/OpenPixel.app/Contents/MacOS/OpenPixel --mcp`, which earlier versions told agents to run, keeps
+working.
+
 ## 5. The page (React)
 
-- Same DOM as `app/web/index.html` and what `app.js` builds: same ids, classes and attributes, so `style.css` is
-  used as it is (copied to `desktop/src/style.css`; platform additions live in `desktop/src/platform.css`). Every
-  breakpoint and container rule comes with it.
-- State lives in small stores with the old names and shapes (`S`, `ui`, `home`, `sv`, `cam`, `pk`, `leftSide`,
-  `homePrefs`, `chatState`, …): plain mutable objects from `store()` in `src/lib/store.ts`. Code changes a store and
-  calls `changed(store)`; components read with `useStore(store)`.
+- Its DOM is a contract: `style.css` and the UI test address elements by id, class and attribute, and every
+  breakpoint and container rule depends on the structure. `platform.css` holds only what differs between systems
+  (fonts, the room the window's own buttons take in the tab bar).
+- State lives in small stores (`S`, `ui`, `home`, `sv`, `cam`, `pk`, `leftSide`, `homePrefs`, `chatState`, …): plain
+  mutable objects from `store()` in `src/lib/store.ts`. Code changes a store and calls `changed(store)`, which draws
+  before it returns; components read with `useStore(store)`.
 - The canvases (WebGL 3D view, 2D slice view, colour picker square) are drawn by plain TypeScript modules driven
-  from refs, as before.
+  from refs.
 - Menu-bar shortcuts arrive as `PC.command(cmd)` from Electron's menu (`CmdOrCtrl` accelerators); the page's own
-  key handling ignores the menu modifier, as the old page did.
-- `src/testing/compat.ts` publishes the names the old UI test (`app/web/uitest.js`) reaches for, so that same test
-  runs against the React page.
+  key handling ignores the menu modifier, and shows shortcuts with the keys of the system it runs on.
+- `src/testing/compat.ts` publishes the names the UI test (`desktop/tests/uitest.js`) reaches for; the shell runs
+  that script inside the page with those names in scope.
 
 ## 6. Checks
 
-- `cd core && cargo test`: the engine's self-test (port of `SelfTest.swift`), golden files (every `.openpixel` in
-  `web/artwork` rendered and compared with the pictures the Swift app exported), the MCP program's checks, and a
-  native-versus-WASM comparison of a scripted session.
-- `cd desktop && npm test`: the host's checks (library, tabs, autosave, agents registry, chat stream parsing: the
-  port of `ChatSelfTest.swift`).
-- `cd desktop && npm run test:ui`: the old 59-case UI test against the old page and the React page in Electron, a
-  picture of every checkpoint from both, a pixel comparison, and a video of the run. The old page is the yardstick:
-  the run fails when the React page fails something the old page passes. The record of the comparison made when the
-  port landed is in `docs/desktop-port`.
+- `cd core && cargo test`: the engine's self-test (every tool, file format and damaged-file case), golden files
+  (every `.openpixel` in `web/artwork` exported and compared with the pictures in `web/public`), the MCP program's
+  checks, and a native-versus-WASM comparison of a scripted session.
+- `cd desktop && npm test`: the host's checks (library, tabs, autosave, agents registry, the agents' socket, chat
+  stream parsing).
+- `cd desktop && npm run test:shell`: the Electron shell with the page on a stand-in for the app's logic: messages,
+  dialogs, menus, that the page shows the shortcuts the menu binds (as each of the three systems), the navigation
+  lock, quitting, screenshots and recordings.
+- `cd desktop && npm run test:ui`: the UI test. The page clicks through itself in the real app on the real core (62
+  results, a picture of every checkpoint, a video of the run), shown as the system it runs on or, with
+  `--platform`, as another. A run with failures is repeated once; what fails twice fails.
 - `cd desktop && npm run test:web`: the same core package in a plain browser (`desktop/web`, files in memory), with
   one session's answers compared with the Node side's.
+
+CI runs all of it on Linux for every pull request (`app-ci`), and builds, tests and packages the app on macOS and
+Windows as well.
+
+## History
+
+The app began as a Mac-only one written in Swift, with this editor as a plain-JavaScript page in a web view. The
+core, the app logic and the page here are ports of it, checked against it before it was removed: golden files and
+saved documents written by that app still pin the core's output and file formats (which is why some comments in
+`core/` say "as the Swift app wrote it"), and `docs/desktop-port` is the record of the old page compared with this
+one. The last commit that has the old app is `c8ebd04`.
