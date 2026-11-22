@@ -21,6 +21,7 @@ import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, statSync, wri
 import os from 'node:os';
 import path from 'node:path';
 import { SCREEN, appEnv, desktop, needDisplay } from './lib.mjs';
+import { SPARKLE_PUBLIC_KEY } from '../scripts/appcast.mjs';
 
 needDisplay();
 
@@ -195,6 +196,8 @@ if (mac) {
     // The old Mac app's updater only moves to a higher build number: it must be the commit count, as text.
     if (buildNumber !== undefined) assert.equal(plist('CFBundleVersion'), buildNumber);
     assert.match(readFileSync(path.join(bundle, 'Contents', 'Info.plist'), 'utf8'), /<key>CFBundleVersion<\/key>\s*<string>[0-9][0-9.]*<\/string>/);
+    // The old Mac app's updater (Sparkle) refuses an update without the public key it has itself.
+    assert.equal(plist('SUPublicEDKey'), SPARKLE_PUBLIC_KEY, 'Info.plist must name the old Mac app\'s Sparkle key');
   });
   await check('macOS: the signature verifies (Developer ID, or ad hoc)', () => {
     const r = spawnSync('codesign', ['--verify', '--deep', '--strict', '--verbose=2', bundle], { encoding: 'utf8' });

@@ -69,6 +69,12 @@ mac:
   gatekeeperAssess: false
   entitlements: assets/entitlements.mac.plist
   entitlementsInherit: assets/entitlements.mac.plist
+  # The old Mac app (Swift, up to 1.5.x) updates through Sparkle, which refuses an update whose app no longer names
+  # the EdDSA public key the old one has ("Sparkle only supports rotation, but not removal of (Ed)DSA keys"), however
+  # well it is signed. So the new app carries that key, as the old one did; Electron ignores it. It must equal
+  # SPARKLE_PUBLIC_KEY in scripts/appcast.mjs (tests/releasing/appcast.test.mjs and tests/packaged-app.mjs check).
+  extendInfo:
+    SUPublicEDKey: 0ZMX6aWYd1gU6FG/581KjJha7kM3taUsl2nZoyGym3U=
   # As the Mac app's Info.plist: .vox files open too (imported, never written back).
   fileAssociations:
     - ext: openpixel

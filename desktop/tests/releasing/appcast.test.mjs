@@ -72,6 +72,15 @@ test('the public key the old app trusts is a 32-byte Ed25519 key', () => {
   assert.doesNotThrow(() => createPublicKey({ key: Buffer.concat([SPKI_HEAD, raw]), format: 'der', type: 'spki' }));
 });
 
+test('the new Mac app names that key in its Info.plist, or the old app\'s Sparkle refuses the update', () => {
+  // Sparkle 2 rejects an update whose app drops the old app's public key ("only supports rotation, but not removal
+  // of (Ed)DSA keys"), however well it is signed: electron-builder.yml puts it there through mac.extendInfo.
+  const yml = readFileSync(path.join(desktop, 'electron-builder.yml'), 'utf8');
+  const mac = yml.slice(yml.search(/^mac:/m), yml.search(/^dmg:/m));
+  assert.match(mac, /^  extendInfo:\n    SUPublicEDKey: (\S+)$/m, 'mac.extendInfo.SUPublicEDKey in electron-builder.yml');
+  assert.equal(mac.match(/^    SUPublicEDKey: (\S+)$/m)[1], SPARKLE_PUBLIC_KEY);
+});
+
 test('the appcast is written as the old release script wrote it', () => {
   const text = appcastXml({ version: '1.2.0', build: 412, signature: 'c2ln', length: 123456, date: new Date(Date.UTC(2026, 10, 22, 11, 24, 0)) });
   assert.equal(text, `<?xml version="1.0" encoding="utf-8"?>
