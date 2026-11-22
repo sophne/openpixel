@@ -4,7 +4,7 @@
 // and title, the menu, the navigation lock, quitting, the --ui-test (with a video) and --screenshot runs, and
 // demo recording.
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { PNG } from 'pngjs';
@@ -349,7 +349,10 @@ console.log('\ndemo recording');
   });
   await check('demo record / mark / stop: frames, manifest.json and the final picture, then the app quits', async () => {
     assert.equal(await demo('record', { fps: 10 }), true);
-    await sleep(700);
+    // Frames keep coming while it records. How many a second depends on the machine (a CI Mac without a graphics
+    // card takes far longer per picture than a person's): wait for three rather than for a time.
+    const frameFiles = () => readdirSync(folder).filter((f) => /^f\d{6}\.png$/.test(f)).length;
+    await until(() => frameFiles() >= 3, 'three recorded frames', 15_000);
     assert.equal(await demo('mark', { name: 'sent' }), true);
     await sleep(300);
     demo('stop').catch(() => {});
