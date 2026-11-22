@@ -37,6 +37,8 @@ over HTTP on this Mac only, for ChatGPT through a tunnel; agents connected that 
 | Folder | What it is |
 |---|---|
 | [`app/`](app) | The Mac app: Swift package (`Sources/`), the editor UI it shows in a web view (`app/web/`), build and release scripts |
+| [`core/`](core) | The core in Rust: document model, undo, every tool, rendering voxels to sprites, file formats. Builds natively (the MCP program agents start) and to WebAssembly with wasm-bindgen (one package for the desktop app and, later, a browser) |
+| [`desktop/`](desktop) | The cross-platform app for macOS, Windows and Linux: Electron shell, the editor in React + Vite, the app's logic in TypeScript on top of the WebAssembly core. See [how it fits together](docs/desktop-architecture.md) |
 | [`web/`](web) | The website (Next.js), deployed with Docker |
 | [`.github/`](.github) | CI, CodeQL, release workflow, templates |
 
@@ -48,6 +50,21 @@ make            # OpenPixel.app
 make test       # engine, MCP and file-parsing checks
 make ui-test    # clicks through the editor and checks the layout
 ```
+
+Build the cross-platform app (needs Node 22, Rust with the `wasm32-unknown-unknown` target, and
+`cargo install wasm-bindgen-cli --version 0.2.100`):
+
+```sh
+cd desktop
+npm install
+npm run build:core && npm run build:mcp   # the core as WebAssembly, and the MCP program
+npm run dev                               # the app, rebuilding as you edit
+npm test                                  # the app logic's checks
+npm run test:ui                           # the Mac app's own UI test on the old page and the React page, with pictures compared
+```
+
+`cd core && cargo test` checks the core: the engine's self-test, golden files against what the Mac app exported, and
+one session run natively and through WebAssembly with every answer compared.
 
 Run the website: `cd web && npm install && npm run dev`.
 

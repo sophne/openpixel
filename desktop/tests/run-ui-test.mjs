@@ -2,12 +2,14 @@
 // (--legacy-ui) and for the React page, records a video of each run and compares their pictures.
 //
 //   node tests/run-ui-test.mjs [--ui legacy|react|both] [--out <folder>] [--platform darwin|win32|linux]
-//                              [--no-video] [--no-build] [--verbose]
+//                              [--no-video] [--no-build] [--verbose] [--max-diff <percent>]
 //
 // Per UI, in <out>/<ui>/: the checkpoint pictures and report.json (written by the app: electron/main.ts);
 // <out>/<ui>.mp4 is the video; with both, <out>/compare/ has the side-by-side pictures (tests/compare-shots.mjs).
 // The page is told it runs on a Mac unless --platform says otherwise, so both look like the Mac app they are
-// compared with. Exits 1 when a case failed or a run gave no report. On Linux without a display it runs itself
+// compared with. Exits 1 when a case failed or a run gave no report. With both pages the old one is the yardstick:
+// the run fails when the React page fails a case the old page passes, or (with --max-diff <percent>) when a picture
+// differs by more than that; cases the old page fails here too are listed as the same on both. On Linux without a display it runs itself
 // under xvfb-run; software WebGL is switched on there (OPENPIXEL_SOFTWARE_GL=1).
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync } from 'node:fs';
@@ -93,10 +95,28 @@ for (const ui of uis) {
   console.log(`  ${r.pictures} pictures and report.json in ${r.folder} (${r.seconds} s)${video ? `; video: ${r.mp4 ?? 'none (is ffmpeg installed?)'}` : ''}`);
 }
 
-if (runs.length === 2 && runs.every((r) => r.pictures)) {
-  const s = compareShots(runs[0].folder, runs[1].folder, path.join(out, 'compare'));
-  console.log(`\nPictures: ${s.compared} compared, ${s.identical} identical, worst ${s.worst.toFixed(3)} % different` +
-    `${s.onlyInOld.length ? `, ${s.onlyInOld.length} only in the old run` : ''}${s.onlyInNew.length ? `, ${s.onlyInNew.length} only in the new run` : ''}`);
-  console.log(`  ${path.join(out, 'compare', 'summary.md')}`);
+if (runs.length === 2) {
+  // The old page is the yardstick: what it cannot do on this machine (fonts, software rendering) is not held
+  // against the React page; anything the old page passes and the React page does not is.
+  const failed = (r) => new Set((Array.isArray(r.report.results) ? r.report.results : []).filter((x) => !x.ok).map((x) => x.name));
+  const names = (r) => new Set((Array.isArray(r.report.results) ? r.report.results : []).map((x) => x.name));
+  const [oldRun, newRun] = runs, oldFailed = failed(oldRun), newFailed = failed(newRun);
+  const regressions = [...newFailed].filter((n) => !oldFailed.has(n));
+  const missing = [...names(oldRun)].filter((n) => !names(newRun).has(n));
+  const same = [...newFailed].filter((n) => oldFailed.has(n));
+  const fixed = [...oldFailed].filter((n) => names(newRun).has(n) && !newFailed.has(n));
+  console.log(`\nOld against new: ${regressions.length} cases only the React page fails, ${missing.length} it never reached, ${same.length} fail on both, ${fixed.length} only the old page fails`);
+  for (const n of regressions) console.log(`    ✗ only the React page fails: ${n}`);
+  for (const n of missing) console.log(`    ✗ not reached by the React page: ${n}`);
+  for (const n of same) console.log(`    = fails on both: ${n}`);
+  bad = regressions.length > 0 || missing.length > 0 || runs.some((r) => r.report.error || r.report.crashed);
+  if (runs.every((r) => r.pictures)) {
+    const s = compareShots(runs[0].folder, runs[1].folder, path.join(out, 'compare'));
+    console.log(`\nPictures: ${s.compared} compared, ${s.identical} identical, worst ${s.worst.toFixed(3)} % different` +
+      `${s.onlyInOld.length ? `, ${s.onlyInOld.length} only in the old run` : ''}${s.onlyInNew.length ? `, ${s.onlyInNew.length} only in the new run` : ''}`);
+    console.log(`  ${path.join(out, 'compare', 'summary.md')}`);
+    const limit = Number(value('--max-diff', 'NaN'));
+    if (Number.isFinite(limit) && (s.worst > limit || s.onlyInOld.length)) { bad = true; console.log(`  ✗ pictures differ by more than ${limit} % (or are missing)`); }
+  }
 }
 process.exit(bad ? 1 : 0);

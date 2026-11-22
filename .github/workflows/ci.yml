@@ -1,5 +1,6 @@
 # Checks every pull request. Each job runs only when its part of the repository changed; a skipped job counts as
 # passed, so the required checks (app-ci, web-ci) never block a pull request that doesn't touch them.
+# core-ci and desktop-ci check the cross-platform app (Rust core, Electron + React): see docs/desktop-architecture.md.
 # Nothing runs on pushes to main: main only changes through pull requests that already passed here, Coolify builds
 # the website on its own, and the release workflow runs the app's self-test before it ships anything.
 name: ci
@@ -21,6 +22,8 @@ jobs:
     outputs:
       app: ${{ steps.diff.outputs.app }}
       web: ${{ steps.diff.outputs.web }}
+      core: ${{ steps.diff.outputs.core }}
+      desktop: ${{ steps.diff.outputs.desktop }}
     steps:
       - id: diff
         env:
@@ -29,13 +32,17 @@ jobs:
           PR: ${{ github.event.pull_request.number }}
         run: |
           if [ -z "$PR" ]; then  # started by hand: check everything
-            echo "app=true" >> "$GITHUB_OUTPUT"; echo "web=true" >> "$GITHUB_OUTPUT"; exit 0
+            for part in app web core desktop; do echo "$part=true" >> "$GITHUB_OUTPUT"; done; exit 0
           fi
           files="$(gh api --paginate "repos/$REPO/pulls/$PR/files" --jq '.[].filename')"
           printf '%s\n' "$files"
           touches() { printf '%s\n' "$files" | grep -qE "$1" && echo true || echo false; }
           echo "app=$(touches '^(app/|\.github/workflows/ci\.yml$)')" >> "$GITHUB_OUTPUT"
           echo "web=$(touches '^(web/|\.github/workflows/ci\.yml$)')" >> "$GITHUB_OUTPUT"
+          # The core's golden tests read the artwork and the pictures the Mac app exported from it (web/).
+          echo "core=$(touches '^(core/|web/artwork/|web/public/|\.github/workflows/ci\.yml$)')" >> "$GITHUB_OUTPUT"
+          # The desktop app builds the core, and its UI test runs the old page (app/web) next to the new one.
+          echo "desktop=$(touches '^(desktop/|core/|app/web/|\.github/workflows/ci\.yml$)')" >> "$GITHUB_OUTPUT"
 
   # If working out the changes fails, both jobs run rather than silently skipping.
   app:
@@ -80,3 +87,100 @@ jobs:
       - run: npm run build
       - name: Known vulnerabilities in dependencies
         run: npm audit --audit-level=high
+
+  # The Rust core on every system it ships for: self-test, golden files against the Mac app's exports, the MCP
+  # program. On Linux it also runs one scripted session natively and through the WebAssembly build and compares
+  # every answer and file.
+  core:
+    name: core-ci
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.core == 'true') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-15, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: core
+        shell: bash
+    steps:
+      # Golden files are compared as they are in the repository: no line-ending conversion on Windows.
+      - name: Keep line endings
+        working-directory: .
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: WebAssembly tools
+        if: runner.os == 'Linux'
+        run: |
+          rustup target add wasm32-unknown-unknown
+          cargo install wasm-bindgen-cli --version 0.2.100 --locked
+      - name: Build without warnings
+        env:
+          RUSTFLAGS: -D warnings
+        run: cargo build --release
+      - name: Test
+        env:
+          OPENPIXEL_SKIP_WASM_TEST: ${{ runner.os == 'Linux' && '0' || '1' }}
+        run: cargo test --release
+      - name: Self-test of the MCP program
+        run: cargo run --release --bin openpixel -- --selftest
+
+  # The desktop app: types, the app logic's checks, the bundle and the shell on every system; on Linux also the old
+  # app's own UI test on the old page and on the React page, which must not fail anything the old page passes.
+  desktop:
+    name: desktop-ci
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.desktop == 'true') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-15, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: desktop
+        shell: bash
+    steps:
+      - name: Keep line endings
+        working-directory: .
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - name: WebAssembly tools
+        run: |
+          rustup target add wasm32-unknown-unknown
+          cargo install wasm-bindgen-cli --version 0.2.100 --locked
+      - run: npm ci --no-fund
+      - name: Core as WebAssembly, and the MCP program
+        run: npm run build:core && npm run build:mcp
+      - run: npm run typecheck
+      - name: App logic (tabs, autosave, library, agents, Agent Chat)
+        run: npm test
+      - run: npm run build
+      - name: Display and video tools
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb ffmpeg
+      - name: Video recorder for the tests
+        run: npx playwright install ffmpeg
+      - name: Shell (window, menus, messages, screenshots)
+        run: npm run test:shell
+      - name: UI test, old page against React page
+        if: runner.os == 'Linux'
+        run: npm run test:ui -- --ui both --no-video --no-build
+      - name: Known vulnerabilities in dependencies
+        run: npm audit --audit-level=high
+
