@@ -3,8 +3,7 @@
    server attached, reads its JSON event stream, and passes the page one simple stream of events:
      session (the agent's conversation id, used to continue it), text and think (deltas), tool (a call started),
      tool_input (its arguments), tool_done (its result), error, done.
-   Nothing here holds API keys: each tool signs in the way it always does.
-   Ported from ChatRunner in Chat.swift; what it returns and emits has the shapes the page already reads. */
+   Nothing here holds API keys: each tool signs in the way it always does. */
 import { spawn } from 'node:child_process';
 import type { ChildProcess } from 'node:child_process';
 import * as nodeFS from 'node:fs';
@@ -147,7 +146,7 @@ export class Runner implements ChatRunner, ChatContext {
   }
 
   /** What the model menu offers: every known agent, whether its tool is on this computer, and whether it can reach
-      OpenPixel. The agents are asked side by side (the Swift asked one after another; the answers are the same). */
+      OpenPixel. The agents are asked side by side (the Swift app asked one after another; the answers are the same). */
   providersForPage(): Promise<unknown[]> {
     return Promise.all(providers.map((p) => this.providerForPage(p)));
   }
@@ -156,7 +155,7 @@ export class Runner implements ChatRunner, ChatContext {
     const exe = await this.find(p);
     const installed = exe !== null;
     const more = isMore(p.id);
-    // For Claude, Codex, Cursor and Gemini the Swift took "configured" from the Agents page's look at their own MCP
+    // For Claude, Codex, Cursor and Gemini the Swift app took "configured" from the Agents page's look at their own MCP
     // settings. All four get OpenPixel on the command line (injectsMCP), so it never changed an answer below; it is
     // not looked up here.
     const configured = more ? installed && moreProviderConfigured(p.id) : false;
@@ -262,7 +261,7 @@ export class Runner implements ChatRunner, ChatContext {
     if (failed) return `Couldn't start ${p.name}: ${failed.message}`;
 
     // The run closes when the tool has exited and its output has been read to the end. Should something it started
-    // keep the output open, two seconds after the exit is long enough to wait (the Swift read on after 0.15 s).
+    // keep the output open, two seconds after the exit is long enough to wait (the Swift app read on after 0.15 s).
     let status = 0, closed = false;
     let late: NodeJS.Timeout | undefined;
     const close = (): void => {
@@ -435,7 +434,7 @@ export class Runner implements ChatRunner, ChatContext {
   }
 }
 
-/** What the page would hear for these lines of an agent's output (for the checks ported from ChatSelfTest.swift). */
+/** What the page would hear for these lines of an agent's output (for the replays in selftest.test.ts). */
 export function replay(fs: PlatformFS, id: string, output: string[], status = 0, stderr = ''): Dict[] {
   const out: Dict[] = [];
   const workDir = nodePath.join(os.tmpdir(), `openpixel-chat-replay-${process.pid}`);

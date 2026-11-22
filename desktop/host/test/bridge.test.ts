@@ -1,4 +1,4 @@
-// The agents' socket on Node (the server side of Bridge.swift) and the Node half of the platform, on real files
+// The agents' socket on Node (host/node/bridge.ts) and the Node half of the platform, on real files
 // and a real socket in a temporary folder; then the whole way: the MCP program → the socket → the host.
 import assert from 'node:assert/strict';
 import * as fs from 'node:fs';

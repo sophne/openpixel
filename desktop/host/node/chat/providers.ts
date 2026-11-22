@@ -1,6 +1,5 @@
 /* The agents Agent Chat knows: one entry per command-line tool, with what the model menu offers before the tool itself
-   is asked. Ported from ChatRunner.providers (Chat.swift) and moreProviders (ChatAgents.swift); ids, names and plans
-   are read by the page and must not change. */
+   is asked. Ids, names and plans are read by the page and must not change. */
 
 export interface Model {
   id: string;

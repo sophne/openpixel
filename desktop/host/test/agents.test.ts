@@ -1,4 +1,4 @@
-// The Agents page's data (Agents.swift): who is connected, who was, and which agent apps are set up.
+// The Agents page's data (host/agents.ts): who is connected, who was, and which agent apps are set up.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { AgentRegistry, KNOWN, agentID, detectSetup, homePath } from '../agents';

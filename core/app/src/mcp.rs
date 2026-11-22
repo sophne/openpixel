@@ -1,4 +1,4 @@
-//! Model Context Protocol server (JSON-RPC 2.0, one message per line on stdin/stdout). Port of MCP.swift.
+//! Model Context Protocol server (JSON-RPC 2.0, one message per line on stdin/stdout).
 use crate::json::{self, COMPACT, PRETTY};
 use crate::mcp_text;
 use base64::Engine as _;
@@ -101,7 +101,7 @@ pub fn compare_versions(a: &str, b: &str) -> i32 {
     0
 }
 
-/// The version of OpenPixel installed on disk now, when it can differ from the one running. The Mac app read
+/// The version of OpenPixel installed on disk now, when it can differ from the one running. The Swift app read
 /// its bundle's Info.plist; this build has no such record, so there is nothing to compare with.
 pub fn installed_version() -> Option<String> {
     None

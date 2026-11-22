@@ -9,8 +9,7 @@
                 stream never says its id.
      Cline      `cline --json`, with CLINE_MCP_SETTINGS_PATH pointing at a file that holds only OpenPixel.
      Hermes     `hermes acp`: the Agent Client Protocol over stdin/stdout (its other headless mode prints only the final
-                answer). OpenPixel is passed in session/new; permission requests are declined (MCP calls need none).
-   Ported from ChatAgents.swift. */
+                answer). OpenPixel is passed in session/new; permission requests are declined (MCP calls need none). */
 import * as nodeFS from 'node:fs';
 import * as nodePath from 'node:path';
 import { envValue, inHome } from './launch.ts';
@@ -222,7 +221,7 @@ export function write(c: ChatContext, file: string, text: string): void {
   try {
     c.fs.createDirAll(nodePath.dirname(file));
     c.fs.write(file, text);
-  } catch { /* as the Swift's try? */ }
+  } catch { /* see above: the agent then does not find OpenPixel */ }
 }
 
 /** The chat folder as a Kiro workspace whose MCP settings hold OpenPixel. */

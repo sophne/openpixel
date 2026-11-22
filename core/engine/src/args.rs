@@ -1,4 +1,4 @@
-//! Lenient reader for tool arguments coming from JSON (port of Args.swift): agents send numbers as
+//! Lenient reader for tool arguments coming from JSON: agents send numbers as
 //! integers or decimals, points as [x, y, z] or {"x": ..}.
 use crate::{Json, JsonMap, PcError};
 

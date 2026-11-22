@@ -1,4 +1,4 @@
-//! JSON text as the Mac app wrote it (Foundation's JSONSerialization), and small readers for loosely typed
+//! JSON text as the Swift app wrote it (Foundation's JSONSerialization), and small readers for loosely typed
 //! JSON. Agents read the pretty text of every tool result, so its layout stays the same: keys in order,
 //! `"key" : value`, two spaces per level, whole numbers without a fraction.
 use openpixel_core::{Json, JsonMap};

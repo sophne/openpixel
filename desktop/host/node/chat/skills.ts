@@ -7,7 +7,7 @@
      Cursor        ~/.cursor/skills, ~/.cursor/skills-cursor, ~/.cursor/commands, ~/.agents/skills
      Gemini CLI    ~/.gemini/skills, ~/.gemini/commands (TOML), ~/.agents/skills
    For every agent but Claude, a picked skill's own instructions go in front of the message (with its folder, so
-   the files it mentions can be found). Ported from ChatSkills.swift. "~" is the home folder on every system. */
+   the files it mentions can be found). "~" is the home folder on every system. */
 import * as nodeFS from 'node:fs';
 import * as nodePath from 'node:path';
 import { inHome } from './launch.ts';
@@ -25,7 +25,7 @@ export interface Skill {
 
 const utf8 = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 
-/** A text file, or null when it is missing or not UTF-8 (the Swift's String(contentsOfFile:encoding:)). */
+/** A text file, or null when it is missing or not UTF-8 (the Swift app's String(contentsOfFile:encoding:)). */
 export function readText(path: string): string | null {
   try { return utf8.decode(nodeFS.readFileSync(path)); } catch { return null; }
 }
@@ -45,7 +45,7 @@ export function readSkillFile(path: string): { name: string | undefined; descrip
   if (!(size < 512_000)) return null;
   const raw = readText(path);
   if (raw === null) return null;
-  // Files saved on Windows end their lines with CR LF. The Swift split at LF only, which left a CR on every line
+  // Files saved on Windows end their lines with CR LF. The Swift app split at LF only, which left a CR on every line
   // and so found no front matter in such a file; here the CR goes with the line break.
   const text = raw.replace(/\r\n/g, '\n');
   let name: string | undefined, desc = '', body = text;

@@ -1,4 +1,4 @@
-//! The welcome models (port of Sample.swift), built with the same tools agents use (so they double as examples).
+//! The welcome models, built with the same tools agents use (so they double as examples).
 use serde_json::json;
 
 use crate::{Engine, Json, JsonMap};

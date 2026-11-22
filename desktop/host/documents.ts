@@ -1,6 +1,6 @@
 /* The app's logic: the open files (one engine per tab, plus a blank spare), autosave, the library, the agents'
-   socket, updates, and every message the page sends. Port of AppDelegate.swift without AppKit: wherever the Mac
-   app touched the window, a panel or the pasteboard, this asks `platform.ui`. */
+   socket, updates, and every message the page sends. It never touches a window itself: for the window, a panel or
+   the clipboard it asks `platform.ui`. */
 import { AgentRegistry } from './agents';
 import { helloOf, response } from './bridge-protocol';
 import type { ChatRunner } from './chat-api';

@@ -1,5 +1,5 @@
-//! The words agents read, copied from the Mac app's MCP.swift character for character. `\\(…)` marks where a
-//! value goes in (see mcp.rs).
+//! The words agents read. They are the Swift app's, character for character, so an agent is told the same on every
+//! system and version (the tests pin them). `\\(…)` marks where a value goes in (see mcp.rs).
 
 pub const INSTRUCTIONS: &str = r#"OpenPixel makes pixel art: flat 2D sprites and 3D voxel models that render to crisp sprites.
 \(ToolCatalog.conventions)

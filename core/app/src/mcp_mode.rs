@@ -1,5 +1,5 @@
 //! `openpixel --mcp`: forwards every tool call to the open window when there is one (so the person sees
-//! the agent's work live), and otherwise runs it on an in-process model. Port of MCPMode.swift.
+//! the agent's work live), and otherwise runs it on an in-process model.
 use crate::bridge::{self, RemoteBackend};
 use crate::mcp::{self, LocalBackend, McpServer, ToolBackend};
 use crate::mcp_http::{self, McpHttpServer};

@@ -1,5 +1,5 @@
-/* The recorded and documented output of each agent, with what the page should show for it: the cases of
-   ChatSelfTest.swift, copied by a script so every line is the Swift's own (see selftest.test.ts).
+/* The recorded and documented output of each agent, with what the page should show for it (see selftest.test.ts).
+   The cases were copied by a script from the Swift app's self-test, so every line is as it was recorded there.
    Streams marked "recorded" come from real runs of that agent; "documented" ones follow the agent's own source or
    docs (see the note on each), for agents not installed on the machine that made them. */
 
