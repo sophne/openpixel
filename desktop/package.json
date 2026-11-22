@@ -14,6 +14,7 @@
     "build": "npm run build:electron && npm run build:ui",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p electron/tsconfig.json",
     "start": "electron .",
+    "test": "node host/test/run.mjs",
     "test:ui": "node tests/run-ui-test.mjs",
     "dist": "npm run build:core && npm run build && electron-builder"
   },

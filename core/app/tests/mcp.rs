@@ -146,6 +146,10 @@ fn tool_results_are_pretty_text_plus_pictures() {
             out.json.insert("a".into(), json!(args.len()));
             out.images.push(vec![1, 2, 3]);
             Ok(out)
+        } else if tool == "check_for_updates" {
+            let mut out = ToolOutput::default();
+            out.json.insert("running_version".into(), json!("99.0.0"));
+            Ok(out)
         } else {
             Err(PcError::invalid("bad colour"))
         }
@@ -156,7 +160,8 @@ fn tool_results_are_pretty_text_plus_pictures() {
     assert_eq!(ok["result"]["isError"], false);
     let bad = s.handle(r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"set_pixels","arguments":{}}}"#).unwrap();
     assert_eq!(bad, r#"{"id":2,"jsonrpc":"2.0","result":{"content":[{"text":"Error: bad colour","type":"text"}],"isError":true}}"#);
-    // The window's version rides along on check_for_updates, with this connection's own.
+    // check_for_updates also says which version this connection runs, and to reconnect when the window is newer.
     let upd = parsed(s.handle(r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"check_for_updates","arguments":{}}}"#));
-    assert_eq!(upd["result"]["isError"], true);
+    let text = upd["result"]["content"][0]["text"].as_str().unwrap();
+    assert!(text.contains(&format!("\"agent_connection_version\" : \"{}\"", mcp::VERSION)) && text.contains("\"reconnect_needed\" : \"Your OpenPixel MCP connection runs"), "{text}");
 }
