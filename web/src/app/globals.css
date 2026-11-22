@@ -2878,6 +2878,18 @@ html[data-os="linux"] [data-os-card="linux"] .dl-main:hover {
   text-align: right;
 }
 
+@media (max-width: 760px) {
+  .dl-soon {
+    max-width: 8.5em;
+  }
+
+  /* The system choice drops under its title when the two don't fit side by side. */
+  .dl-card-title:has(.dl-seg) {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+}
+
 /* Mac, Windows or Linux: three radio buttons drawn as one control. They choose which system's commands the
    Agents and Headless sections show (data-agent-os); the visitor's own system is chosen to begin with. */
 .dl-seg {

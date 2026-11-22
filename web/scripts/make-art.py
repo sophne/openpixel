@@ -485,8 +485,7 @@ def write_manifest(art):
 
 
 def main():
-    if not os.path.exists(APP):
-        sys.exit("Build the app first: cd app && make")
+    find_openpixel.require(APP)
     os.makedirs(OUT, exist_ok=True)
     only = sys.argv[1:]
     if only:

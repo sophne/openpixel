@@ -72,8 +72,12 @@ function FileRow({ f, release, main }: { f: DownloadFile; release: Release | nul
   );
 }
 
-/** What each system needs, how it updates, and what to expect the first time the app is opened. */
-function Notes({ os }: { os: Os }) {
+/**
+ * What each system needs, how it updates, and what to expect the first time the app is opened. While a system's
+ * files are still to come (`soon`), only what it needs: the rest would describe something nobody can download yet.
+ */
+function Notes({ os, soon }: { os: Os; soon: boolean }) {
+  if (soon) return <p className="dl-foot">Requires {PLATFORMS.find((p) => p.os === os)!.requires}.</p>;
   if (os === "mac")
     return (
       <>
@@ -113,9 +117,9 @@ function Notes({ os }: { os: Os }) {
       </p>
       <div className="dl-foot dl-first-launch">
         <p>
-          <strong>First launch:</strong> make the AppImage executable and run it, or install the .deb with apt.
+          <strong>First launch:</strong> make the AppImage executable, then open it. Or install the .deb with apt.
         </p>
-        <Code text="chmod +x OpenPixel.AppImage && ./OpenPixel.AppImage" />
+        <Code text="chmod +x OpenPixel.AppImage" />
         <Code text="sudo apt install ./openpixel.deb" />
       </div>
     </>
@@ -126,6 +130,7 @@ function Notes({ os }: { os: Os }) {
 function PlatformCard({ p, release }: { p: Platform; release: Release | null }) {
   const files = FILES.filter((f) => f.os === p.os);
   const any = files.some((f) => hasFile(release, f));
+  const soon = files.every((f) => hasFile(release, f) === false);
   return (
     <div className="dl-card dl-os" id={p.os} data-os-card={p.os}>
       <div className="dl-card-title">
@@ -142,7 +147,7 @@ function PlatformCard({ p, release }: { p: Platform; release: Release | null }) 
       {files.map((f, i) => (
         <FileRow key={f.id} f={f} release={release} main={i === 0} />
       ))}
-      <Notes os={p.os} />
+      <Notes os={p.os} soon={soon} />
     </div>
   );
 }
@@ -224,11 +229,7 @@ export default async function Download() {
               <SectionHead
                 icon={<Sprite art={art.chest} scale={1.25} />}
                 title="Releases"
-                text={
-                  NOTARIZED
-                    ? "Every version, signed, notarized and on GitHub."
-                    : "Every version and its notes, on GitHub."
-                }
+                text="Every version and its notes, on GitHub."
               />
               <div className="dl-card">
                 <Row label="What's new" note="Release notes for every version.">

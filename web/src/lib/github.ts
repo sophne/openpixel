@@ -13,8 +13,6 @@ export const X_URL = process.env.NEXT_PUBLIC_X_URL || "https://x.com/eminvkc";
 export const NOTARIZED = process.env.NEXT_PUBLIC_NOTARIZED === "true";
 /** Always the newest stable release: GitHub redirects this to that release's file of the same name. */
 export const assetUrl = (file: string) => `${REPO_URL}/releases/latest/download/${file}`;
-/** The Mac disk image, the download structured data names. */
-export const DOWNLOAD_URL = assetUrl("OpenPixel.dmg");
 /** GitHub's API. Only tests point this elsewhere (a local file server with canned releases). */
 const API_URL = (process.env.GITHUB_API_URL || "https://api.github.com").replace(/\/$/, "");
 

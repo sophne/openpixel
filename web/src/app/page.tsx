@@ -76,7 +76,7 @@ const MORE = [
   "Headless mode for scripts and CI",
   "MCP over HTTP for ChatGPT",
   "Tells you when a new version is out",
-  "One download for Apple silicon and Intel Macs",
+  "Apple silicon and Intel Macs",
 ];
 
 /** "The pixel tools you expect": each feature with its picture, drawn in the app's empty-state style
