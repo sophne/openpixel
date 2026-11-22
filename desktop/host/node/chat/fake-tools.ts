@@ -32,6 +32,11 @@ const rule = rules.find((r) => (r.when || []).every((w) => args.includes(w))) ||
 const st = fs.fstatSync(0); // Node hands a child its stdin as a socket pair
 const stdin = process.stdin.isTTY ? 'tty' : st.isFIFO() || st.isSocket() ? 'pipe' : st.isCharacterDevice() ? 'null' : 'other';
 fs.appendFileSync(path.join(root, 'calls', name + '.jsonl'), JSON.stringify({ args, cwd: process.cwd(), env: process.env, stdin }) + '\n');
+// A tool that hangs answers the stop signal from its very first moment: the runner may send it as soon as it has
+// read the first line, which can arrive before the rest of this script has run.
+if (rule.hang) process.on('SIGINT', () => {
+  if (rule.deaf) fs.appendFileSync(path.join(root, 'calls', name + '.signals'), 'SIGINT\n'); else process.exit(130);
+});
 if (rule.stderr) process.stderr.write(rule.stderr);
 if (rule.stdout) process.stdout.write(rule.stdout);
 const say = (o) => process.stdout.write(JSON.stringify(o) + '\n');
@@ -63,9 +68,6 @@ if (rule.acp) {
   };
   next();
 } else if (rule.hang) {
-  process.on('SIGINT', () => {
-    if (rule.deaf) fs.appendFileSync(path.join(root, 'calls', name + '.signals'), 'SIGINT\n'); else process.exit(130);
-  });
   setInterval(() => {}, 1000);
 } else {
   process.exitCode = rule.exit || 0;

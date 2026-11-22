@@ -7,8 +7,8 @@ import { nativeAction } from '../lib/host';
 import { agentLogoSvg, Icon, icon, TrustedSvg } from '../lib/icons';
 import { useStore } from '../lib/store';
 import type { AgentInfo } from '../state/agents';
-import { AGENT_PROMPT_CAVEAT, agentInfo, agentRows, showAgentInfo, type AgentRowData, type AgentStatus } from './agents';
-import { homeTop } from './home';
+import { AGENT_PROMPT_CAVEAT, agentInfo, agentRows, showAgentInfo, type AgentRowData, type AgentStatus } from './agentsPage';
+import { homeTop } from './homePage';
 
 // Logos: @lobehub/icons-static-svg (MIT), see app/web/agents/ATTRIBUTION.txt. Single-colour ones are drawn as masks.
 function AgentLogo({ a, big = false, id }: { a: AgentInfo; big?: boolean; id?: string }): ReactElement {

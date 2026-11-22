@@ -10,10 +10,10 @@ import { Icon } from '../lib/icons';
 import { useStore } from '../lib/store';
 import { ui } from '../state/ui';
 import { EmptyState } from './EmptyState';
-import { openItem, type LibFile } from './home';
+import { openItem, type LibFile } from './homePage';
 import {
   browseRecents, closeNewPage, createFromDialog, NEW_PALETTES, newFile, newRecents, nfHint, openNewFileDialog, pickPreset, renderNewRecents, setNfPalette,
-} from './newpage';
+} from './newFile';
 
 /** One file of the list. */
 function RecentRow({ f }: { f: LibFile }): ReactElement {

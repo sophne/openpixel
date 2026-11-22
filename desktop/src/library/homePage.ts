@@ -15,7 +15,7 @@ import { nativeAction } from '../lib/host';
 import { timeAgo } from '../lib/format';
 import { changed, store } from '../lib/store';
 import { home, S, ui, type LibraryFile, type LibraryFolder, type LibraryTarget } from '../state/ui';
-import { agentsState, loadAgents } from './agents';
+import { agentsState, loadAgents } from './agentsPage';
 import { rememberTabView } from './tabs';
 import { COMPUTER, TRASH } from './wording';
 

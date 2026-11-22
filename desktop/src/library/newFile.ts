@@ -8,8 +8,8 @@ import { nativeAction } from '../lib/host';
 import { changed, store } from '../lib/store';
 import { PRESETS } from '../state/palettes';
 import { home, S, ui } from '../state/ui';
-import { agentsState } from './agents';
-import { byRecent, plural, showHome, type LibFile } from './home';
+import { agentsState } from './agentsPage';
+import { byRecent, plural, showHome, type LibFile } from './homePage';
 import { rememberTabView, renderTabs } from './tabs';
 
 const field = (id: string): HTMLInputElement => $<HTMLInputElement>(id);

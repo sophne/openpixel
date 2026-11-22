@@ -7,7 +7,7 @@ import { timeAgo } from '../lib/format';
 import { changed, store } from '../lib/store';
 import { AGENTS, type AgentInfo } from '../state/agents';
 import { agentSteps, shq, type Step } from './agentSteps';
-import { showHome } from './home';
+import { showHome } from './homePage';
 
 /** One connection of an agent to the app (AgentRegistry.snapshot). */
 interface AgentSession {

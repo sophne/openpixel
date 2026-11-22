@@ -5,7 +5,7 @@ import { actions } from '../app/actions';
 import { Icon } from '../lib/icons';
 import { REVEAL_LABEL } from '../lib/platform';
 import { useStore } from '../lib/store';
-import { cardMenu, cardMenuAction, moveMenu, moveMenuNewFolder, moveMenuPick, type CardAction } from './home';
+import { cardMenu, cardMenuAction, moveMenu, moveMenuNewFolder, moveMenuPick, type CardAction } from './homePage';
 
 const doc = (act: string) => (e: MouseEvent) => { e.stopPropagation(); actions.docMenuAction(act); }; // wire(), app.js 3209
 const card = (act: CardAction) => (e: MouseEvent) => { e.stopPropagation(); cardMenuAction(act); };

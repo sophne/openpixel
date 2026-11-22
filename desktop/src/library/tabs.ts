@@ -11,7 +11,7 @@ import { $, $$ } from '../lib/dom';
 import { nativeAction } from '../lib/host';
 import { changed, store, watch } from '../lib/store';
 import { S, ui, type DocState, type Tab, type UiState } from '../state/ui';
-import { showHome } from './home';
+import { showHome } from './homePage';
 
 type TabId = Tab['id'];
 const tabViews = new Map<TabId, { mode: DocState['mode']; axis: DocState['axis']; slice: number }>(); // per tab: 2D/3D mode, slice axis and position, restored when switching back

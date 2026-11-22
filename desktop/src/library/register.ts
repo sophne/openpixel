@@ -3,12 +3,12 @@
 import { registerActions } from '../app/actions';
 import { nativeAction } from '../lib/host';
 import { registerCompat } from '../testing/compat';
-import { agentsState, loadAgents, showAgentHelp, showAgentInfo, stopAgentsPolling } from './agents';
+import { agentsState, loadAgents, showAgentHelp, showAgentInfo, stopAgentsPolling } from './agentsPage';
 import {
   draggingNow, fileById, folderById, hideHome, homePrefs, latestInFolder, loadHome, menus, openCardMenu, openFolder, openMoveMenu, renderHome,
   setHomeLayout, setHomeSort, showHome,
-} from './home';
-import { closeNewPage, openNewFileDialog, openNewPage, renderNewRecents } from './newpage';
+} from './homePage';
+import { closeNewPage, openNewFileDialog, openNewPage, renderNewRecents } from './newFile';
 import { applyTabs, closeTab, renderTabs, reportTitlebar, showStars, showUpdate, switchTab, titlebarSentNow } from './tabs';
 
 /** Once at startup: what wireHome() asked the app for, and line 3300 (is there an update?). */
