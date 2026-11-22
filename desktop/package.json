@@ -8,14 +8,18 @@
   "main": "dist-electron/main.cjs",
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "build:core": "cargo build --release --manifest-path ../core/Cargo.toml",
+    "build:core": "node scripts/build-core.mjs",
+    "build:mcp": "cargo build --release --manifest-path ../core/Cargo.toml --bin openpixel",
     "build:electron": "node scripts/build-electron.mjs",
     "build:ui": "vite build",
     "build": "npm run build:electron && npm run build:ui",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p electron/tsconfig.json",
     "start": "electron .",
+    "test:shell": "node tests/shell-smoke.mjs",
     "test:ui": "node tests/run-ui-test.mjs",
-    "dist": "npm run build:core && npm run build && electron-builder"
+    "compare:shots": "node tests/compare-shots.mjs",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build:core && npm run build:mcp && npm run build && electron-builder"
   },
   "dependencies": {
     "react": "^19.3.1",
