@@ -649,8 +649,14 @@
     });
     await test('2D zoom buttons and fit', async () => {
       const z = sv.zoom;
-      $('#zoom-in').click(); await sleep(250); assert(sv.zoom > z && ZOOMS.includes(sv.zoom), `zoom in (${sv.zoom})`);
-      $('#zoom-out').click(); await sleep(250); $('#zoom-out').click(); await sleep(250); assert(sv.zoom < z && ZOOMS.includes(sv.zoom), `zoom out (${sv.zoom})`);
+      /* A button's zoom glides to the next step in 160 ms of drawn frames. Where frames are slow (no graphics card,
+         a busy machine) the glide is still on its way after a fixed pause, which then read a zoom between two
+         steps. So the test waits for the glide to arrive: the zoom has left where it was and is on a step again.
+         Which step it arrives on is what is checked. */
+      const arrived = async (from, what) => { await until(() => sv.zoom !== from && ZOOMS.includes(sv.zoom), `${what} to arrive on a step (zoom ${sv.zoom})`); return sv.zoom; };
+      $('#zoom-in').click(); const zin = await arrived(z, 'zoom in'); assert(zin > z, `zoom in (${zin})`);
+      $('#zoom-out').click(); const zback = await arrived(zin, 'zoom out'); assert(zback < zin, `zoom out, once (${zback})`);
+      $('#zoom-out').click(); const zout = await arrived(zback, 'zoom out'); assert(zout < z && zout < zback, `zoom out (${zout})`);
       $('#zoom-fit').click(); assert(sv.zoom === z, 'fit');
     });
     await test('trackpad: two fingers move the canvas, a pinch zooms smoothly around the fingers and settles on even pixels', async () => {
