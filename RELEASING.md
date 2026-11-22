@@ -62,22 +62,21 @@ commit since the last one. A beta and its final release may share a commit.)
   image itself is not signed; the app inside is.
 - **Windows**: not code-signed (there is no certificate). SmartScreen may show "Windows protected your PC" on the
   first run: **More info → Run anyway**. The release notes say so.
-- **Linux**: not signed (neither format usually is).
+- **Linux**: neither the AppImage nor the `.deb` is signed (no GPG signature, no signed apt repository).
+- **The update feeds** (`latest*.yml`) are not signed. They carry each installer's SHA-512, which the updater
+  checks (see [What the app sends](#what-the-app-sends-to-the-update-feed), point (d)); they come over HTTPS from
+  the same release.
+- **`appcast.xml`** (the old Mac app's feed) is not signed itself, but it carries an Ed25519 signature of
+  `OpenPixel.dmg` made with OpenPixel's Sparkle key, which the old app checks before installing.
+- The native `openpixel` program inside each app is signed with the app on macOS (ad hoc or Developer ID) and not
+  at all on Windows and Linux.
 - The release notes of every release say how it was signed, automatically.
 
 ## How updates reach people
 
-When the app starts (an installed copy, not a development build and not during checks) it asks GitHub once
-whether a newer release exists, by reading its system's feed:
-`https://github.com/sophne/openpixel/releases/latest/download/latest-mac.yml`, `…/latest.yml` (Windows) or
-`…/latest-linux.yml`. It sends nothing about the person: the request carries `User-Agent: OpenPixel/<version>` and
-nothing else of the app's. There is no repeated check while the app runs; it asks again when someone chooses
-**Check for Updates…**, clicks the Update button, or an agent calls `check_for_updates` (answers are reused for ten
-minutes). Setting the environment variable `OPENPIXEL_NO_UPDATE_CHECK=1` switches the check at launch off; the
-menu item still works.
-
-If a newer version is out, an **Update** button appears in the tab bar. Nothing is downloaded or installed until
-the person says so. What the button does depends on whether that copy can replace itself:
+When the app starts it reads its system's update feed once, in the background (exactly what it sends, and when,
+is in [What the app sends to the update feed](#what-the-app-sends-to-the-update-feed) below). If a newer version is
+out, an **Update** button appears in the tab bar. Nothing is downloaded or installed until the person says so. What the button does depends on whether that copy can replace itself:
 
 | Copy | Update button | How the download is checked before it is installed |
 | --- | --- | --- |
@@ -88,13 +87,12 @@ the person says so. What the button does depends on whether that copy can replac
 | Linux `.deb` | opens the download page | the person installs it with their package manager |
 
 The self-installing copies use [electron-updater](https://www.electron.build/auto-update)
-([`desktop/electron/updater.ts`](desktop/electron/updater.ts)). It asks GitHub which release is the newest
-(`/releases.atom`, `/releases/latest`), reads that release's feed and downloads the installer from it, with
-`User-Agent: electron-builder`. A download whose checksum differs from the feed's is thrown away and the dialog
-offers the download page instead. Nothing is installed when the app quits; only **Restart to Update** installs.
-Whether a copy installs by itself is decided when it is built (`openpixel.selfUpdate` in the packaged
-`package.json`, set by `release-build.mjs`: Windows and Linux yes, macOS only for Developer ID builds) and by how
-it runs (on Linux only when started from the AppImage).
+([`desktop/electron/updater.ts`](desktop/electron/updater.ts)) with automatic download and install-on-quit both
+switched off: it downloads only after **Download Update**, and installs only after **Restart to Update** (the app
+saves first, as when quitting). A download whose checksum differs from the feed's is thrown away and the dialog
+offers the download page instead. Whether a copy installs by itself is decided when it is built
+(`openpixel.selfUpdate` in the packaged `package.json`, set by `release-build.mjs`: Windows and Linux yes, macOS
+only for Developer ID builds) and by how it runs (on Linux only when started from the AppImage).
 
 Pre-releases: a stable copy is only ever told about, and only ever installs, stable releases. A copy of a
 pre-release (`1.3.0-beta.1`) is told once a newer stable release is out; its installer then takes the newest
@@ -104,6 +102,81 @@ names the version it will install.
 Agents use the native `openpixel` program inside the app. It does not update by itself: it is replaced with the
 app (on Linux the app refreshes the copy at `~/.local/share/OpenPixel/bin/openpixel` every time it starts), and
 `check_for_updates` tells an agent to reconnect when the app is newer than its connection.
+
+### What the app sends to the update feed
+
+Written for the website's privacy page; keep the two in step when this changes. "The feed" is the file of the
+person's system in the newest stable GitHub release: `latest-mac.yml` (macOS), `latest.yml` (Windows) or
+`latest-linux.yml` (Linux).
+
+**(a) When, and how often.**
+- **At every start of the installed app**, one request for the feed, in the background (no dialog, no download).
+  Development builds, `--screenshot` runs and the UI test do not ask. There is no timer: a copy that stays open
+  does not ask again by itself.
+- **When the person asks**: **Check for Updates…** (menu) and the **Update** button in the tab bar each read the
+  feed again. When that finds a newer version on a copy that installs updates itself, the update dialog then also
+  lets electron-updater look up the newest release (the requests under (b) below), and, only after **Download
+  Update**, download the installer. An agent's `check_for_updates` with `install=true` opens the same dialog.
+- **When an agent calls `check_for_updates`**: with the window open the app answers it, reading the feed unless it
+  did in the last ten minutes (or the agent asks for `refresh`); with no window open the `openpixel` program the
+  agent started reads the feed itself, at most once per ten minutes for that program unless asked to `refresh`.
+- Nothing else in the app contacts the update feed. (Separately, and not part of updates: the star count in the
+  tab bar comes from `https://api.github.com/repos/sophne/openpixel`, at most once an hour, with
+  `User-Agent: OpenPixel` and no other information of the app's.)
+
+**(b) Exactly which addresses, and what is sent.** Every request is an HTTPS `GET` without a body, without
+cookies and without any account or token. Each request reaches GitHub (and the GitHub file host
+`*.githubusercontent.com` it redirects release files to), which sees the computer's IP address, as any web server
+does. OpenPixel runs no server of its own for updates.
+- The app's own check (at start, **Check for Updates…**, the Update button, an agent through the window):
+  `https://github.com/sophne/openpixel/releases/latest/download/latest-mac.yml` (or `…/latest.yml`,
+  `…/latest-linux.yml`). Headers: `User-Agent: OpenPixel/<version>` (the running version, e.g. `OpenPixel/2.0.0`),
+  and the ones Node's HTTP client adds to every request: `Accept: */*`, `Accept-Language: *`,
+  `Accept-Encoding: gzip, deflate`, `Sec-Fetch-Mode: cors`, `Cache-Control: no-cache`, `Pragma: no-cache`. No
+  language, system name, ID or file information.
+- The `openpixel` program (an agent's `check_for_updates` with no window open): the same address, with
+  `User-Agent: OpenPixel/<version>`, `Cache-Control: no-cache` and `Accept: */*`.
+- electron-updater (only on copies that install updates themselves, only after the Update button):
+  `https://github.com/sophne/openpixel/releases.atom` (the list of releases),
+  `https://github.com/sophne/openpixel/releases/latest` (which release is the newest; a copy of a pre-release
+  picks from the list instead), `https://github.com/sophne/openpixel/releases/download/v<version>/<feed>`, and,
+  after **Download Update**, the installer next to it (`OpenPixel-Setup.exe`, `OpenPixel.AppImage` or
+  `OpenPixel-mac.zip`). Headers: `User-Agent: electron-builder`, `Cache-Control: no-cache`,
+  `x-user-staging-id: 00000000-0000-0000-0000-000000000000`, `Accept-Language: *`, on some an `Accept` header, and the ones
+  Electron's network stack adds: `Accept-Encoding: gzip, deflate, br, zstd`, `Sec-Fetch-Site: none`,
+  `Sec-Fetch-Mode: no-cors`, `Sec-Fetch-Dest: empty`. electron-updater would put a random ID of the installation
+  in `x-user-staging-id` (it keeps one in the app's data folder, `.updaterId`, for staged roll-outs), and Electron
+  would send the app's language (e.g. `en-US`); OpenPixel overrides both with the same values for everyone
+  ([`updater.ts`](desktop/electron/updater.ts); [`update-e2e.mjs`](desktop/tests/update-e2e.mjs) checks every
+  request it sees). The `.updaterId` file is still written on the computer; it is not sent.
+- No request carries an ID of the person or the installation, an account, the operating system's name or version
+  (beyond which feed file is asked for), the language, or anything about files or use. The version in
+  `User-Agent: OpenPixel/<version>` is the only fact about the app.
+
+**(c) Switching the automatic check off.** There is no setting for it in the app's window. The check at start is
+skipped when the app is started with the environment variable `OPENPIXEL_NO_UPDATE_CHECK=1` (any value but empty or
+`0`; [`updater.ts`](desktop/electron/updater.ts)), e.g. `OPENPIXEL_NO_UPDATE_CHECK=1 openpixel-desktop` (Linux
+`.deb`), the same in front of the AppImage's path, `OPENPIXEL_NO_UPDATE_CHECK=1
+/Applications/OpenPixel.app/Contents/MacOS/OpenPixel` on macOS, or a user environment variable on Windows. It
+switches off only the check at start: **Check for Updates…**, the Update button and agents' `check_for_updates`
+still read the feed when used. Blocking `github.com` stops all of it; the app works the same without it.
+
+**(d) How a downloaded update is checked before it is installed.** Only the self-installing copies download
+anything (Windows installer, Linux AppImage, macOS builds signed with a Developer ID). The download comes over
+HTTPS from the release, and electron-updater compares its SHA-512 with the one in the feed (which came over HTTPS
+from the same release); a file that does not match is deleted and never installed. Beyond that checksum:
+- **Windows**: no signature check, because the installer is not code-signed (electron-updater checks the
+  publisher's signature only when the app was built with one).
+- **macOS**: only Developer ID builds install updates themselves, and macOS (Squirrel.Mac) then also requires the
+  new app to be signed by the same Developer ID as the running one. Ad-hoc signed builds never download updates:
+  their Update button opens the download page.
+- **Linux AppImage**: no signature (neither the AppImage nor the feed is signed); the checksum is all.
+- **Linux `.deb`** and ad-hoc signed macOS copies download nothing themselves; the person installs the new version
+  from the download page.
+Nothing is installed without the person choosing **Restart to Update**. The feed and the installer come from the
+same GitHub release, so the checksum protects against a damaged or swapped download in transit or on a mirror, not
+against someone who can publish releases of this repository: that is what the release protections under
+[Who can release](#who-can-release) are for, and what code signing will add on macOS and Windows.
 
 ### The bridge for the old Mac app
 
@@ -130,6 +203,15 @@ against the disk image it is about to upload.
 > 3. It must offer the new version, install it without a signature error, and open the new app. In the new app the
 >    Agents page must show the new command, and your recent files must still be there.
 > 4. Remove the override: `defaults delete com.sophne.openpixel SUFeedURL`.
+>
+> What could go wrong, so look for it: Sparkle refusing the EdDSA signature (a key in another form than the one the
+> old app was built with); Sparkle refusing the new app's code signature (Sparkle 2 also compares the code signing
+> of the old and the new app when the old one has a Developer ID; SECURITY.md says releases so far were not signed
+> with one, which would make this not apply, but check what `codesign -dv` says of the installed 1.5.1); the disk
+> image's layout (the new one also holds an `Applications` link next to `OpenPixel.app`); 1.5.1 ignoring the
+> `SUFeedURL` setting of step 2 (then this check can only be done with the stable release itself, which reaches
+> everyone at once); macOS asking again to confirm the first launch
+> of the new, ad-hoc signed app.
 >
 > If Sparkle refuses the update, old copies stay as they are (nothing breaks for them); delete `appcast.xml` from
 > the release and tell people to download the new app from the website.
@@ -180,27 +262,40 @@ Developer ID signing and notarization, and says so in the run log. What that mea
 
 ## First release from this pipeline
 
-The newest public release is **v1.5.1**, the last of the old Mac app. The first release from here must be a higher
-version (for example `2.0.0`), or nobody is offered it. Once, in this order:
+The newest public release is **v1.5.1**, the last of the old Mac app (Swift). The first release from here must be
+a **higher version than 1.5.1** (for example `2.0.0`): the tag script and the workflow refuse anything else, and
+neither the old app (Sparkle) nor anything else would offer a lower one. Until it is out, `releases/latest` is
+1.5.1, which has none of the new files: the website's `/downloads/windows`, `/downloads/linux` and
+`/downloads/linux-deb` lead nowhere and new copies cannot read a feed. So the website (`web/`) and the release go
+out together. Once, in this order:
 
 1. **Dry run** (above). All three builds and the completeness check must be green: until then no macOS or Windows
    step of this pipeline has ever run. Download the three artifacts and open each app once on a real machine.
 2. **Check the Sparkle key** on the machine that has it, without printing it:
    `node desktop/scripts/appcast.mjs --check-key --key-file sparkle-private.txt` must say it matches. It must be
    the 32-byte key `generate_keys -x` exports (44 characters of base64). `gh secret list --env release` must show
-   `SPARKLE_PRIVATE_KEY`.
+   `SPARKLE_PRIVATE_KEY`. (Without it the release is still made, but people on the Swift app are not told.)
 3. **Tag a pre-release first**: `npm run release:tag -- 2.0.0-beta.1`. Nobody is offered a pre-release. Check the
-   release page: all eight files of [What a release contains](#what-a-release-contains), plus `appcast.xml`.
+   release page: all eight files of [What a release contains](#what-a-release-contains), plus `appcast.xml`, and
+   the run log's note on how the Mac app was signed.
 4. **Try that pre-release**: install it on macOS, Windows and Linux (AppImage and `.deb`). In each: the app opens,
-   **Check for Updates…** answers, and the Agents page's command works in your agent. On a Mac, do
-   [the bridge's manual check](#the-bridge-for-the-old-mac-app) from 1.5.1.
-5. **Check an update** on Windows and with the AppImage: tag `2.0.0-beta.2` after another merge, or point an
-   installed copy at a folder of your own with `OPENPIXEL_UPDATE_FEED` (see
-   [`update-e2e.mjs`](desktop/tests/update-e2e.mjs) for what such a folder holds). The Update button must appear,
-   download, ask, and reopen as the new version.
-6. **Tag `2.0.0`.** Then check the website: the Downloads page shows the version and all four download routes
-   answer (Part 5 below).
-7. Update the agents' instructions people may have copied: the command is now the one the Agents page shows; the
+   and the Agents page's command works in your agent (on macOS also the old
+   `/Applications/OpenPixel.app/Contents/MacOS/OpenPixel --mcp`). **Check for Updates…** cannot find a feed yet
+   (the newest stable release is still 1.5.1) and must say so without harm. On a Mac, do
+   [the bridge's manual check](#the-bridge-for-the-old-mac-app) from 1.5.1, against this pre-release's
+   `appcast.xml`.
+5. **Check an update** on Windows and with the AppImage. A second pre-release does not help here (installed copies
+   read the newest *stable* release's feed), so point an installed copy at a folder of your own: serve a folder
+   holding the beta's installer and a feed naming a higher version (what
+   [`update-e2e.mjs`](desktop/tests/update-e2e.mjs) builds), and start the app with
+   `OPENPIXEL_UPDATE_FEED=http://127.0.0.1:<port>/`. The Update button must appear, download, ask, and reopen as
+   the new version.
+6. **Tag `2.0.0`** and wait for the release to be published.
+7. **Deploy the website from `main` right away** (Coolify → the resource → **Redeploy**, unless Auto Deploy already
+   did it with the last push to `web/`; if the new site went out earlier, its new download routes were broken until
+   this release). Its privacy page must state what [What the app sends](#what-the-app-sends-to-the-update-feed)
+   says. Then check: the Downloads page shows 2.0.0 for every system, and all four routes answer (Part 5, step 18).
+8. Update the agents' instructions people may have copied: the command is now the one the Agents page shows; the
    old `/Applications/OpenPixel.app/Contents/MacOS/OpenPixel --mcp` keeps working.
 
 Still open, to decide before or after: the `.deb`'s maintainer line is a placeholder
@@ -424,12 +519,21 @@ npm run release:build -- --build-number "$(git rev-list --count HEAD)"
 Without signing variables the Mac build is ad-hoc signed and says so. To sign and notarize by hand, set
 `CSC_NAME="Developer ID Application: …"` (a certificate in your keychain) or `MACOS_CERT_P12` and
 `MACOS_CERT_PASSWORD`, and for notarization `NOTARY_KEY_P8`, `NOTARY_KEY_ID` and `NOTARY_ISSUER_ID`, as the
-workflow does. To write the old Mac app's feed: `SPARKLE_PRIVATE_KEY=… node scripts/appcast.mjs --dmg
-release/upload/OpenPixel.dmg --version 1.2.0 --build <commit count> --out release/upload/appcast.xml`.
+workflow does. To write the old Mac app's feed, from the key in a file (not on the command line, where your shell's
+history would keep it), and delete the file afterwards:
+`node scripts/appcast.mjs --key-file sparkle-private.txt --dmg release/upload/OpenPixel.dmg --version 1.2.0
+--build <commit count> --out release/upload/appcast.xml`. The build number must be the commit count of the tagged
+commit (`git rev-list --count v1.2.0`), as the Mac app's own `CFBundleVersion`.
 
-To publish by hand, collect all three systems' `release/upload/` folders into one, then:
+To publish by hand (for when the tag is pushed but the workflow could not publish): collect all three systems'
+`release/upload/` folders into one folder `upload` (if the workflow's builds succeeded, their files are the run's
+artifacts: `gh run download <run id> --repo sophne/openpixel --pattern 'release-*' --dir upload`, then move the
+files out of the per-system folders into `upload` itself), then:
 
 ```sh
 node desktop/scripts/check-release.mjs upload --version 1.2.0     # complete, and every checksum right
 gh release create v1.2.0 upload/* --repo sophne/openpixel --verify-tag --latest --generate-notes
 ```
+
+For a pre-release use `--prerelease` instead of `--latest`. Never upload a single system's files on their own:
+`releases/latest` would then point everyone at a release without their system's files.
