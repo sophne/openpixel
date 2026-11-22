@@ -1,10 +1,16 @@
 'use strict';
-/* OpenPixel UI test. Runs only when the app is started with `--ui-test <folder>`: it clicks through the
-   editor like a person would, resizes every panel and the window, checks that nothing spills out or gets
-   cut off, saves pictures of the checkpoints and writes report.json into that folder. */
+/* OpenPixel UI test. Runs only when the app is started with `--ui-test <folder>` (`npm run test:ui`): it clicks
+   through the editor like a person would, resizes every panel and the window, checks that nothing spills out or
+   gets cut off, saves pictures of the checkpoints and writes report.json into that folder.
+   The shell runs this file inside the page with the page's own names in scope (S, ui, $, call, setMode, …: see
+   desktop/src/testing/compat.ts), so it reads and calls them as if they were its globals. */
 (function () {
-  const CFG = window.OPENPIXEL_UITEST;
+  const CFG = window.openpixel && window.openpixel.flags.uitest;
   if (!CFG) return;
+  /* The system the page is shown for: 'darwin', 'win32' or 'linux' (the runner can ask for another one than the
+     machine's). Wording that differs between them (key names, "Show in Finder") is checked against this. */
+  const PLATFORM = window.openpixel.platform;
+  const MAC = PLATFORM === 'darwin';
   // Snapshots capture the page alone, without the window's glass behind it; a dark stand-in keeps them readable.
   document.documentElement.style.background = '#2b2b2e';
   const results = [];
@@ -191,16 +197,25 @@
         'the website, GitHub and X icons share one colour');
       assert(appIcon && appIcon.querySelector('.px') && getComputedStyle(appIcon.querySelector('.px')).fill !== 'none', 'the website link shows the app icon (the 2D file mark, its pixel in the accent)');
       assert(side.bottom - links[0].getBoundingClientRect().bottom < 20, 'GitHub and X should sit at the bottom of the sidebar');
-      // The tab bar is the title bar: room for the window buttons on the left, Home first.
+      // The tab bar is the title bar, Home first. On macOS the window's buttons (close, minimise, zoom) sit at its
+      // left end and Home comes after them; on Windows and Linux they sit at its right end (drawn by the window
+      // over the bar) and Home starts the bar.
       const bar = $('#tabbar').getBoundingClientRect(), homeBtn = $('#tab-home').getBoundingClientRect();
-      assert(bar.top === 0 && homeBtn.left >= 72, `Home should sit after the window buttons (at ${homeBtn.left})`);
+      assert(bar.top === 0, `the tab bar should be the top of the window (at ${bar.top})`);
+      if (MAC) assert(homeBtn.left >= 72, `Home should sit after the window buttons (at ${homeBtn.left})`);
+      else assert(homeBtn.left >= 8 && homeBtn.left < 24, `Home should start the bar (at ${homeBtn.left})`);
       assert($('#tab-home svg'), 'Home has no icon');
-      // GitHub stars at the right end of the bar, lined up with the page's right edge (Create new), the bar's height,
-      // on its centre line; counts are shortened.
+      // GitHub stars at the right end of the bar, the bar's height, on its centre line; counts are shortened.
+      // On macOS that end is the page's right edge (Create new). On Windows and Linux the bar stops 8px before the
+      // window's own buttons: the window says where they begin (the title-bar area).
       const stars = $('#tab-stars'), sr = stars.getBoundingClientRect(), hr = $('#tab-home').getBoundingClientRect();
       const pageRight = $('#home-create').getBoundingClientRect().right;
-      assert(stars.querySelector('svg') && Math.abs(sr.right - pageRight) < 1 && Math.abs(sr.height - hr.height) < 1 && Math.abs((sr.top + sr.bottom) - (hr.top + hr.bottom)) < 1,
-        `stars button: GitHub icon, right edge at the page's (${Math.round(sr.right)} vs ${Math.round(pageRight)}), same height and centre as Home`);
+      const overlay = navigator.windowControlsOverlay, area = overlay && overlay.visible ? overlay.getTitlebarAreaRect() : null;
+      const barEnd = MAC ? pageRight : area ? area.x + area.width - 8 : null;
+      assert(MAC || area, 'the window does not say where its own buttons are (no title-bar area)');
+      assert(MAC || (area.width < window.innerWidth && barEnd < pageRight), `the window's buttons should take the bar's right end (title-bar area ${area && area.x}+${area && area.width} of ${window.innerWidth})`);
+      assert(stars.querySelector('svg') && Math.abs(sr.right - barEnd) < 1 && Math.abs(sr.height - hr.height) < 1 && Math.abs((sr.top + sr.bottom) - (hr.top + hr.bottom)) < 1,
+        `stars button: GitHub icon, right edge at the bar's end (${Math.round(sr.right)} vs ${Math.round(barEnd)}), same height and centre as Home`);
       // Liquid Glass: the tab bar and the home sidebar share the window's glass (no fill, no line between them);
       // the page is a solid rounded sheet.
       const clear = (el) => getComputedStyle(el).backgroundColor === 'rgba(0, 0, 0, 0)';
@@ -692,18 +707,36 @@
       pick('pencil');
       await sleep(200);
       const g = glCanvas.getBoundingClientRect();
+      /* Where to click: the point nearest the middle of the canvas where a click lands on the model or on the
+         ground. The camera fits the model to the canvas, so what lies under the exact middle depends on the
+         canvas's size (in a 1440×900 window the ray through it passes the model and the ground): the test asks the
+         page (pick3d, the function the mouse handler itself uses) instead of assuming it. */
+      let at = null, place = null;
+      search: for (let ring = 0; ring * 6 < Math.max(g.width, g.height) / 2; ring++) {
+        for (let i = 0; i < Math.max(1, ring * 8); i++) {
+          const a = (i / Math.max(1, ring * 8)) * 2 * Math.PI;
+          const x = g.width / 2 + Math.cos(a) * ring * 6, y = g.height / 2 + Math.sin(a) * ring * 6;
+          if (x < 1 || y < 1 || x > g.width - 1 || y > g.height - 1) continue;
+          const p = pick3d(x, y);
+          if (p && p.place) { at = [g.left + x, g.top + y]; place = p.place; break search; }
+        }
+      }
+      assert(at, 'no point of the 3D canvas has the model or the ground under it');
+      assert(await vox(...place) === 0, `the cell a click should fill (${place}) is not empty`);
       const before = await count();
       let rev = S.revision;
-      ev(glCanvas, 'mousedown', g.left + g.width / 2, g.top + g.height / 2);
-      ev(window, 'mouseup', g.left + g.width / 2, g.top + g.height / 2);
+      ev(glCanvas, 'mousedown', at[0], at[1]);
+      ev(window, 'mouseup', at[0], at[1]);
       await edited(rev);
       assert(await count() === before + 1, 'no voxel added');
+      assert(await vox(...place) !== 0, `the voxel was not added where the click landed (${place})`);
       pick('eraser');
       rev = S.revision;
-      ev(glCanvas, 'mousedown', g.left + g.width / 2, g.top + g.height / 2);
-      ev(window, 'mouseup', g.left + g.width / 2, g.top + g.height / 2);
+      ev(glCanvas, 'mousedown', at[0], at[1]);
+      ev(window, 'mouseup', at[0], at[1]);
       await edited(rev);
       assert(await count() === before, 'voxel not erased');
+      assert(await vox(...place) === 0, `the voxel at ${place} is still there`);
     });
     await test('3D: orbit with right-drag, ortho camera, edges and bounds toggles', async () => {
       const g = glCanvas.getBoundingClientRect(), yaw = cam.yaw;
@@ -794,7 +827,14 @@
             const [idle, done] = c.children;
             assert(idle.classList.contains('out') && !done.classList.contains('out') && done.textContent.includes('Copied'), 'copy button did not show Copied');
             assert(Math.abs(c.getBoundingClientRect().width - w) < 1, 'copy button changed width');
-            await sleep(260);
+            /* The cross-fade lasts 180 ms, counted from the first frame drawn after the click. That frame can
+               itself take longer than that where the page is drawn without a graphics card (the dialog's blurred
+               backdrop), so a fixed pause measured a fade that had only just begun. The test waits for the fade
+               itself to end; it has to end well before "Copied" turns back (1500 ms after the click), and "Copied"
+               must then be fully there and sharp. */
+            const fades = [...idle.getAnimations(), ...done.getAnimations()];
+            await Promise.race([Promise.all(fades.map((f) => f.finished)).catch(() => {}), sleep(1000)]);
+            assert(idle.classList.contains('out') && !done.classList.contains('out'), '"Copied" turned back before its cross-fade ended');
             const cs = getComputedStyle(done);
             assert(cs.opacity === '1' && !/blur\((?!0)/.test(cs.filter), `"Copied" did not settle sharp (opacity ${cs.opacity}, filter ${cs.filter})`);
             await snap('14-agent-info');

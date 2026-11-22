@@ -1,14 +1,15 @@
 'use strict';
-/* Demo recordings for the website: `OpenPixel --record <folder> --demo <config.json>` sets window.OPENPIXEL_DEMO and
-   this script plays a person using Agent Chat: a drawn cursor (the window's own picture has no system pointer) opens
-   the agent menu, picks the agent, model and effort, types the request and sends it. From there it is a real run of
-   that agent on the person's subscription; the app records the window until the reply is done, then the finished
-   animation plays. Nothing here runs in normal use.
+/* Demo recordings for the website: `npm start -- --record <folder> --demo <config.json>` (in desktop/, after
+   `npm run build`) hands the config to the page as window.openpixel.flags.demo and runs this script in it, with the
+   page's own names in scope (desktop/src/testing/compat.ts). It plays a person using Agent Chat: a drawn cursor (the
+   window's own picture has no system pointer) opens the agent menu, picks the agent, model and effort, types the
+   request and sends it. From there it is a real run of that agent on the person's subscription; the app records the
+   window until the reply is done, then the finished animation plays. Nothing here runs in normal use.
    Config: { name, width, height, depth?, open?, mode?: "slice"|"3d", pane?: "chat"|"layers"|"activity", chat?: false (a still
              picture only), agent, model, effort, prompt, play?, fps?, workFps?,
              screenshot?: path for the final 2× picture } */
 (function () {
-  const D = window.OPENPIXEL_DEMO;
+  const D = window.openpixel && window.openpixel.flags.demo;
   if (!D || !bridge) return;
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const demo = (action, extra = {}) => bridge.postMessage({ kind: 'demo', action, ...extra });

@@ -1,51 +1,52 @@
-// Runs the UI test (app/web/uitest.js: the page clicks through itself) in the real app, for the old page
-// (--legacy-ui) and for the React page, records a video of each run and compares their pictures.
+// Runs the app's UI test (tests/uitest.js: the page clicks through itself) in the real app and records a video of
+// the run.
 //
-//   node tests/run-ui-test.mjs [--ui legacy|react|both] [--out <folder>] [--platform darwin|win32|linux]
-//                              [--no-video] [--no-build] [--verbose] [--max-diff <percent>] [--settle <ms>] [--no-retry]
+//   node tests/run-ui-test.mjs [--platform darwin|win32|linux] [--out <folder>] [--no-video] [--no-build]
+//                              [--settle <ms>] [--no-retry] [--verbose]
 //
-// Per UI, in <out>/<ui>/shots/: the checkpoint pictures and report.json (written by the app: electron/main.ts);
-// <out>/<ui>.mp4 is the video; with both, <out>/compare/ has the side-by-side pictures (tests/compare-shots.mjs).
-// The page is told it runs on a Mac unless --platform says otherwise, so both look like the Mac app they are
-// compared with. Exits 1 when a case failed or a run gave no report. With both pages the old one is the yardstick:
-// the run fails when the React page fails a case the old page passes, or (with --max-diff <percent>) when a picture
-// differs by more than that; cases the old page fails here too are listed as the same on both. On Linux without a display it runs itself
-// under xvfb-run; software WebGL is switched on there (OPENPIXEL_SOFTWARE_GL=1).
+// In <out>/shots/: the checkpoint pictures and report.json (written by the app: electron/main.ts); <out>/ui-test.mp4
+// is the video. <out> defaults to test-results/<platform>.
+//
+// The page is shown for the system this runs on. `--platform` shows another system's layout and wording instead
+// (the Mac's room for the window buttons and ⌘ glyphs, or Ctrl, "Show in Explorer", …) with this machine's fonts
+// and rendering; the test's expectations follow (uitest.js: PLATFORM).
+//
+// Exits 1 when a case failed or the run gave no report. A few cases wait a fixed time for an animation and miss it
+// now and then on a busy machine or with software rendering, so a run with failures is repeated once and only what
+// fails both times counts (the first attempt is kept in <out>/first-attempt). `--no-retry` turns that off.
+// On Linux without a display the script runs itself under xvfb-run; software WebGL is switched on there
+// (OPENPIXEL_SOFTWARE_GL=1).
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync } from 'node:fs';
 import path from 'node:path';
 import { buildShell, desktop, launch, needDisplay, toMp4 } from './lib.mjs';
-import { compareShots } from './compare-shots.mjs';
 
 needDisplay();
 
 const argv = process.argv.slice(2);
 const value = (name, fallback) => { const i = argv.indexOf(name); return i >= 0 && argv[i + 1] ? argv[i + 1] : fallback; };
-const which = value('--ui', 'both');
-if (!['legacy', 'react', 'both'].includes(which)) { console.error('--ui takes legacy, react or both'); process.exit(2); }
-const out = path.resolve(value('--out', path.join(desktop, 'test-results')));
-const platform = value('--platform', 'darwin');
+const real = process.platform === 'darwin' || process.platform === 'win32' ? process.platform : 'linux';
+const platform = value('--platform', real);
+if (!['darwin', 'win32', 'linux'].includes(platform)) { console.error('--platform takes darwin, win32 or linux'); process.exit(2); }
+const out = path.resolve(value('--out', path.join(desktop, 'test-results', platform)));
 const video = !argv.includes('--no-video'), verbose = argv.includes('--verbose');
-const uis = which === 'both' ? ['legacy', 'react'] : [which];
 
 if (!argv.includes('--no-build')) {
   await buildShell();
-  if (uis.includes('react')) {
-    const r = spawnSync(process.execPath, [path.join(desktop, 'node_modules', 'vite', 'bin', 'vite.js'), 'build'], { cwd: desktop, stdio: 'inherit' });
-    if (r.status !== 0) process.exit(r.status ?? 1);
-  }
+  const r = spawnSync(process.execPath, [path.join(desktop, 'node_modules', 'vite', 'bin', 'vite.js'), 'build'], { cwd: desktop, stdio: 'inherit' });
+  if (r.status !== 0) process.exit(r.status ?? 1);
 }
 
 /** One run. Resolves with the report the app wrote (or what went wrong instead). */
-async function run(ui) {
-  // Both runs work in a folder of the same name: the home screen's list shows where a file is ("shots/Files").
-  const folder = path.join(out, ui, 'shots'), videos = path.join(out, `.video-${ui}`);
-  for (const p of [path.join(out, ui), videos, path.join(out, `${ui}.mp4`), path.join(out, `${ui}.webm`)]) rmSync(p, { recursive: true, force: true });
+async function run() {
+  // Every run works in a folder called "shots": the home screen's list shows where a file is ("shots/Files").
+  const folder = path.join(out, 'shots'), videos = path.join(out, '.video');
+  for (const p of [folder, videos, path.join(out, 'ui-test.mp4'), path.join(out, 'ui-test.webm')]) rmSync(p, { recursive: true, force: true });
   mkdirSync(folder, { recursive: true });
   const started = Date.now();
   const app = await launch({
-    args: [...(ui === 'legacy' ? ['--legacy-ui'] : []), '--ui-test', folder],
-    // A pause before each picture, so both pages are pictured at rest (see `snap` in electron/main.ts).
+    args: ['--ui-test', folder],
+    // A pause before each picture, so previews and thumbnails are in it (see `snap` in electron/main.ts).
     env: { OPENPIXEL_PLATFORM: platform, OPENPIXEL_SNAP_SETTLE_MS: value('--settle', '350') },
     recordVideo: video ? { dir: videos, size: { width: 1440, height: 900 } } : undefined,
   });
@@ -67,72 +68,54 @@ async function run(ui) {
   let mp4 = null;
   if (recording) {
     const webm = await recording.path().catch(() => null);
-    if (webm) mp4 = await toMp4(webm, path.join(out, `${ui}.mp4`));
-    if (!mp4 && webm && existsSync(webm)) renameSync(webm, path.join(out, `${ui}.webm`)); // no ffmpeg: keep what there is
+    if (webm) mp4 = await toMp4(webm, path.join(out, 'ui-test.mp4'));
+    if (!mp4 && webm && existsSync(webm)) renameSync(webm, path.join(out, 'ui-test.webm')); // no ffmpeg: keep what there is
     rmSync(videos, { recursive: true, force: true });
   }
   const file = path.join(folder, 'report.json');
   let report = { error: 'the app ended without writing report.json' };
   if (existsSync(file)) { try { report = JSON.parse(readFileSync(file, 'utf8')); } catch (e) { report = { error: `report.json is not JSON: ${e.message}` }; } }
-  return { ui, folder, report, mp4, seconds: Math.round((Date.now() - started) / 1000), pictures: readdirSync(folder).filter((f) => f.endsWith('.png')).length };
+  const results = Array.isArray(report.results) ? report.results : [];
+  return { folder, report, results, failures: results.filter((x) => !x.ok), broken: report.error ?? (report.crashed ? `the test crashed: ${String(report.crashed).split('\n')[0]}` : null),
+    mp4, seconds: Math.round((Date.now() - started) / 1000), pictures: readdirSync(folder).filter((f) => f.endsWith('.png')).length };
 }
 
-let bad = false;
-const runs = [];
-for (const ui of uis) {
-  console.log(`\n${ui === 'legacy' ? 'Old page (app/web)' : 'React page'} — UI test as ${platform}`);
-  const r = await run(ui);
-  runs.push(r);
-  const { report } = r, results = Array.isArray(report.results) ? report.results : [];
-  const failures = results.filter((x) => !x.ok);
-  if (report.error || report.crashed) {
-    bad = true;
-    console.log(`  ${ui}: no result — ${report.error ?? `the test crashed: ${String(report.crashed).split('\n')[0]}`}`);
-    if (results.length) console.log(`  ${results.length - failures.length} passed, ${failures.length} failed before that`);
+function show(r) {
+  if (r.broken) {
+    console.log(`  no result — ${r.broken}`);
+    if (r.results.length) console.log(`  ${r.results.length - r.failures.length} passed, ${r.failures.length} failed before that`);
   } else {
-    if (report.failed || failures.length) bad = true;
-    console.log(`  ${ui}: ${report.passed ?? results.length - failures.length} passed, ${report.failed ?? failures.length} failed`);
+    console.log(`  ${r.results.length - r.failures.length} passed, ${r.failures.length} failed`);
   }
-  for (const f of failures) console.log(`    ✗ ${f.name}\n        ${String(f.error ?? '').split('\n').join('\n        ')}`);
+  for (const f of r.failures) console.log(`    ✗ ${f.name}\n        ${String(f.error ?? '').split('\n').join('\n        ')}`);
   console.log(`  ${r.pictures} pictures and report.json in ${r.folder} (${r.seconds} s)${video ? `; video: ${r.mp4 ?? 'none (is ffmpeg installed?)'}` : ''}`);
 }
 
-if (runs.length === 2) {
-  // The old page is the yardstick: what it cannot do on this machine (fonts, software rendering) is not held
-  // against the React page; anything the old page passes and the React page does not is.
-  const failed = (r) => new Set((Array.isArray(r.report.results) ? r.report.results : []).filter((x) => !x.ok).map((x) => x.name));
-  const names = (r) => new Set((Array.isArray(r.report.results) ? r.report.results : []).map((x) => x.name));
-  const [oldRun] = runs, oldFailed = failed(oldRun);
-  let newRun = runs[1], newFailed = failed(newRun);
-  let regressions = [...newFailed].filter((n) => !oldFailed.has(n));
-  if (regressions.length && !newRun.report.error && !newRun.report.crashed && !argv.includes('--no-retry')) {
-    // A few cases wait a fixed time for an animation and miss it now and then on a busy machine or with software
-    // rendering (on either page). Only what the React page fails twice in a row counts against it.
-    console.log(`\n${regressions.length} case(s) failed only on the React page: running it once more to tell a slow moment from a fault`);
-    const first = newRun;
-    const again = await run('react');
-    const failedAgain = failed(again);
-    regressions = regressions.filter((n) => failedAgain.has(n) || !names(again).has(n));
-    // The run that agrees better with the old page is the one compared and kept.
-    const score = (r) => [...failed(r)].filter((n) => !oldFailed.has(n)).length;
-    if (score(again) <= score(first) && !again.report.error && !again.report.crashed) { newRun = again; runs[1] = again; newFailed = failedAgain; }
-    console.log(`  second run: ${again.report.passed ?? '?'} passed, ${again.report.failed ?? '?'} failed; failing both times: ${regressions.length ? regressions.join('; ') : 'nothing'}`);
-  }
-  const missing = [...names(oldRun)].filter((n) => !names(newRun).has(n));
-  const same = [...newFailed].filter((n) => oldFailed.has(n));
-  const fixed = [...oldFailed].filter((n) => names(newRun).has(n) && !newFailed.has(n));
-  console.log(`\nOld against new: ${regressions.length} cases only the React page fails, ${missing.length} it never reached, ${same.length} fail on both, ${fixed.length} only the old page fails`);
-  for (const n of regressions) console.log(`    ✗ only the React page fails: ${n}`);
-  for (const n of missing) console.log(`    ✗ not reached by the React page: ${n}`);
-  for (const n of same) console.log(`    = fails on both: ${n}`);
-  bad = regressions.length > 0 || missing.length > 0 || runs.some((r) => r.report.error || r.report.crashed);
-  if (runs.every((r) => r.pictures)) {
-    const s = compareShots(runs[0].folder, runs[1].folder, path.join(out, 'compare'));
-    console.log(`\nPictures: ${s.compared} compared, ${s.identical} identical, worst ${s.worst.toFixed(3)} % different` +
-      `${s.onlyInOld.length ? `, ${s.onlyInOld.length} only in the old run` : ''}${s.onlyInNew.length ? `, ${s.onlyInNew.length} only in the new run` : ''}`);
-    console.log(`  ${path.join(out, 'compare', 'summary.md')}`);
-    const limit = Number(value('--max-diff', 'NaN'));
-    if (Number.isFinite(limit) && (s.worst > limit || s.onlyInOld.length)) { bad = true; console.log(`  ✗ pictures differ by more than ${limit} % (or are missing)`); }
-  }
+console.log(`\nUI test, the page shown as ${platform}${platform === real ? '' : ` (on ${real})`}`);
+let result = await run();
+show(result);
+/** What counts against the run: a case that failed (twice, when the run was repeated), or no result at all. */
+let failed = result.failures.map((f) => f.name);
+
+if (failed.length && !result.broken && !argv.includes('--no-retry')) {
+  console.log(`\n${failed.length} case(s) failed: running once more to tell a slow moment from a fault`);
+  const first = path.join(out, 'first-attempt');
+  rmSync(first, { recursive: true, force: true });
+  mkdirSync(first, { recursive: true });
+  renameSync(result.folder, path.join(first, 'shots'));
+  for (const f of ['ui-test.mp4', 'ui-test.webm']) if (existsSync(path.join(out, f))) renameSync(path.join(out, f), path.join(first, f));
+  const again = await run();
+  show(again);
+  // A case the second run never reached still counts.
+  const passedAgain = new Set(again.results.filter((x) => x.ok).map((x) => x.name));
+  failed = failed.filter((n) => !passedAgain.has(n));
+  const onlyNow = again.failures.map((f) => f.name).filter((n) => !result.failures.some((f) => f.name === n));
+  console.log(`\nFailing both times: ${failed.length ? failed.join('; ') : 'nothing'}`
+    + (onlyNow.length ? `\nFailed only the second time (not counted): ${onlyNow.join('; ')}` : ''));
+  if (again.broken) failed.push(again.broken);
+  result = again;
 }
-process.exit(bad ? 1 : 0);
+
+const ok = !result.broken && failed.length === 0;
+console.log(`\nUI test as ${platform}: ${ok ? 'passed' : 'FAILED'} (${result.results.length - result.failures.length} passed, ${result.failures.length} failed in the last run)`);
+process.exit(ok ? 0 : 1);

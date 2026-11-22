@@ -11,8 +11,7 @@ import { buildMenu } from './menu';
 /* The editor window: a native window whose whole content is the editor page. This file is the shell of
    docs/desktop-architecture.md: it owns the window, the menus, dialogs, the clipboard and screenshots (the
    Electron half of `Platform`), and hands every other message of the page to the app's logic (desktop/host),
-   which runs in this process on the core's WebAssembly build.
-   Ported from the AppKit side of app/Sources/OpenPixel/AppDelegate.swift. */
+   which runs in this process on the core's WebAssembly build. */
 
 // ---------------------------------------------------------------- command line
 
@@ -21,8 +20,7 @@ interface Args {
   screenshot?: string;  // --screenshot out.png: open, let the page draw ~120 frames, save the window's picture, quit
   uitest?: string;      // --ui-test <folder>: the page clicks through itself; pictures and report.json land there
   record?: string;      // --record <folder>: where a demo's frames are saved
-  demo?: string;        // --demo <config.json>: the page plays app/web/demo.js
-  legacy: boolean;      // --legacy-ui: the old page from app/web instead of the React one (development and tests)
+  demo?: string;        // --demo <config.json>: the page plays tests/demo.js (a recording for the website)
 }
 
 function parseArgs(argv: string[], cwd = process.cwd()): Args {
@@ -32,13 +30,12 @@ function parseArgs(argv: string[], cwd = process.cwd()): Args {
     const i = list.findIndex((a) => !a.startsWith('-'));
     if (i >= 0) list.splice(i, 1);
   }
-  const out: Args = { legacy: false };
+  const out: Args = {};
   const valued: Record<string, 'screenshot' | 'uitest' | 'record' | 'demo'> =
     { '--screenshot': 'screenshot', '--ui-test': 'uitest', '--record': 'record', '--demo': 'demo' };
   for (let i = 0; i < list.length; i++) {
     const a = list[i];
     if (valued[a]) { if (i + 1 < list.length) out[valued[a]] = path.resolve(cwd, list[++i]); }
-    else if (a === '--legacy-ui') out.legacy = true;
     // Everything else that starts with a dash is Chromium's or Electron's own switch.
     // Linux launchers may hand a file over as an address (file:///…).
     else if (!a.startsWith('-') && !out.file) out.file = a.startsWith('file://') ? fileURLToPath(a) : path.resolve(cwd, a);
@@ -49,7 +46,7 @@ function parseArgs(argv: string[], cwd = process.cwd()): Args {
 const args = parseArgs(process.argv);
 /** Screenshot and UI-test runs never take the focus, never show a dialog and never ask to save. */
 const headless = !!(args.screenshot || args.uitest);
-/** What the page is told it runs on. Tests set OPENPIXEL_PLATFORM to see the Mac layout on Linux. */
+/** What the page is told it runs on. Tests set OPENPIXEL_PLATFORM to see another system's layout and wording. */
 const platform = (['darwin', 'win32', 'linux'] as const).find((p) => p === (process.env.OPENPIXEL_PLATFORM || process.platform)) ?? 'linux';
 const mac = process.platform === 'darwin';
 /** Windows and Linux draw their window buttons over the page's tab bar; a pretended Mac leaves the bar alone. */
@@ -61,9 +58,9 @@ const TAB_BAR_HEIGHT = 38;
 const GLASS = '#2b2b2e';
 
 const desktopFolder = path.join(__dirname, '..');
-const devURL = args.legacy ? undefined : process.env.OPENPIXEL_DEV_URL;
-/** The page: the old one straight from the repository, or the React build. */
-const pageFile = args.legacy ? path.join(desktopFolder, '..', 'app', 'web', 'index.html') : path.join(desktopFolder, 'dist', 'index.html');
+const devURL = process.env.OPENPIXEL_DEV_URL;
+/** The page as `npm run build` leaves it. */
+const pageFile = path.join(desktopFolder, 'dist', 'index.html');
 /** The folder the page was loaded from; the window never shows or reads anything outside it. */
 let pageFolder = path.dirname(pageFile);
 
@@ -213,7 +210,10 @@ function createWindow(): void {
   // A new document has none of the CSS added to the last one; the tab bar moves the window from the start.
   wc.on('did-start-navigation', (details) => { if (details.isMainFrame && !details.isSameDocument) titlebarCSS = undefined; });
   wc.on('dom-ready', () => setTitlebar(true));
-  wc.on('did-finish-load', () => { if (args.uitest && !args.legacy) runUITestInPage(wc); });
+  wc.on('did-finish-load', () => {
+    if (args.uitest) runScriptInPage(wc, 'uitest.js').catch((e: Error) => finishUITest({ error: `the UI test could not be started: ${e.message}` }));
+    else if (args.demo) runScriptInPage(wc, 'demo.js').catch((e: Error) => console.error(`--demo: ${e.message}`));
+  });
   wc.on('render-process-gone', (_e, details) => {
     console.error(`OpenPixel: the page stopped (${details.reason})`);
     if (args.uitest) finishUITest({ error: `the page stopped (${details.reason})` });
@@ -230,43 +230,36 @@ function createWindow(): void {
   if (devURL) wc.loadURL(devURL); else wc.loadFile(pageFile);
 }
 
-/* The old page loads its own UI test (app/web/uitest.js, a classic script that reaches for app.js's globals). The
-   React page runs that same file unchanged: the page publishes those names on window.__OP (src/testing/compat.ts)
-   and the script runs with them in scope. The page's content policy forbids it compiling text itself, so the shell
-   hands the script over. Development and tests only: it needs the repository's app/web folder. */
-async function runUITestInPage(wc: Electron.WebContents): Promise<void> {
-  const file = path.join(desktopFolder, '..', 'app', 'web', 'uitest.js');
-  try {
-    const text = readFileSync(file, 'utf8');
-    // The page's modules have run once it has published its names and the host's calls can reach it.
-    for (let i = 0; i < 200 && !(await wc.executeJavaScript('!!(window.__OP && window.PC)')); i++) await new Promise((r) => setTimeout(r, 50));
-    await wc.executeJavaScript(`with (window.__OP) {\n${text}\n}\n;undefined`);
-    trace('UI test started in the page');
-  } catch (e) {
-    finishUITest({ error: `the UI test could not be started: ${(e as Error).message}` });
-  }
+/* The UI test (tests/uitest.js: the page clicks through itself) and the demo player (tests/demo.js) are plain
+   scripts that use the page's own functions and state by name. The page publishes those names on window.__OP
+   (src/testing/compat.ts) and the script runs with them in scope. The page's content policy forbids it compiling
+   text itself, so the shell hands the script over. Development and tests only: the scripts are in the repository,
+   not in the installed app. */
+async function runScriptInPage(wc: Electron.WebContents, name: 'uitest.js' | 'demo.js'): Promise<void> {
+  // The shell's own test (tests/shell-smoke.mjs) has no engine to run the UI test on: it names a stand-in.
+  const standIn = name === 'uitest.js' && !app.isPackaged ? process.env.OPENPIXEL_UI_TEST_SCRIPT : undefined;
+  const file = standIn ? path.resolve(standIn) : path.join(desktopFolder, 'tests', name);
+  if (!existsSync(file)) throw new Error(`${file} is not there (it is not part of the installed app)`);
+  const text = readFileSync(file, 'utf8');
+  // The page's modules have run once it has published its names and the host's calls can reach it.
+  for (let i = 0; i < 200 && !(await wc.executeJavaScript('!!(window.__OP && window.PC)')); i++) await sleep(50);
+  await wc.executeJavaScript(`with (window.__OP) {\n${text}\n}\n;undefined`);
+  trace(`${path.basename(file)} started in the page`);
 }
 
-/* The tab bar is the window's title bar: its empty parts move the window. The Mac app looked at every click
-   itself, using the positions the page reports (`titlebar`: the x ranges of Home, the tabs, + and the buttons on
-   the right). Here Chromium's app regions do it: the bar drags, everything in it is left to the page. That covers
-   the reported ranges, since each of them is one of the bar's own children (the strip of tabs counts as a whole,
-   which only takes the 4px gaps between tabs out of the dragging area). While a dialog covers the bar (`drag:
-   false`) nothing drags, so a click on its backdrop still closes it. */
+/* The tab bar is the window's title bar: its empty parts move the window. Chromium's app regions do it: the bar
+   drags, everything in it is left to the page. The page also reports where its controls are (`titlebar`: the x
+   ranges of Home, the tabs, + and the buttons on the right); each of them is one of the bar's own children, so the
+   rule below covers them (the strip of tabs counts as a whole, which only takes the 4px gaps between tabs out of
+   the dragging area). While a dialog covers the bar (`drag: false`) nothing drags, so a click on its backdrop still
+   closes it. */
 let titlebarCSS: { drag: boolean; key: Promise<string> } | undefined;
 function setTitlebar(drag: boolean): void {
   const wc = win?.webContents;
   if (!wc || wc.isDestroyed() || titlebarCSS?.drag === drag) return;
-  let css = drag
+  const css = drag
     ? '#tabbar { -webkit-app-region: drag; } #tabbar > *, #tabbar button, #tabbar .tab { -webkit-app-region: no-drag; }'
     : '#tabbar, #tabbar * { -webkit-app-region: no-drag; }';
-  // The old page only knows the Mac's layout (room for the window buttons on the left). Shown on Windows or Linux
-  // for a comparison, its bar makes room for the buttons where they are there. The React page does this itself.
-  if (args.legacy && overlay) {
-    css += ' body:not(.fullscreen) #tabbar { padding-left: env(titlebar-area-x, 0px) !important;'
-      + ' padding-right: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw) + 8px) !important; }'
-      + ' body:not(.fullscreen) #tab-home { margin-left: 8px; }';
-  }
   const old = titlebarCSS;
   // The new rules go in before the old ones come out, so the bar is never without either.
   titlebarCSS = { drag, key: wc.insertCSS(css) };
@@ -281,14 +274,14 @@ async function fromPage(msg: Record<string, unknown>): Promise<unknown> {
   const kind = msg?.kind;
   if (typeof kind !== 'string') throw new Error('bad message');
   if (kind === 'native' && msg.action === 'titlebar') { setTitlebar(msg.drag !== false); return true; }
-  // Electron has no haptic feedback; the trackpad tick of the Mac app is left out.
+  // Electron has no haptic feedback: the page's request for a trackpad tick is answered and nothing happens.
   if (kind === 'native' && msg.action === 'haptic') return true;
   switch (kind) {
     case 'snap': {
       // UI test: save a picture of the window under a name, then answer.
       const name = String(msg.name ?? 'snap').replace(/[/\\]/g, '-');
       // Previews and thumbnails arrive a moment after the change that asked for them (debounced, then drawn by the
-      // core). A comparison of two pages wants both at rest, so a run can ask for a pause before each picture.
+      // core). Pictures meant to be looked at want the page at rest, so a run can ask for a pause before each one.
       const settle = Number(process.env.OPENPIXEL_SNAP_SETTLE_MS) || 0;
       if (args.uitest && settle > 0) await new Promise((r) => setTimeout(r, Math.min(settle, 2000)));
       if (args.uitest) await writeFile(path.join(args.uitest, `${name}.png`), await capture()).catch((e) => trace(`snap ${name} failed: ${e.message}`));
@@ -427,7 +420,7 @@ const ui: PlatformUI = {
     shell.showItemInFolder(file);
     return true;
   },
-  // "Delete permanently" in the library: the file goes to the system's Trash, as in the Mac app. Checks delete it
+  // "Delete permanently" in the library: the file goes to the system's Trash (Recycle Bin). Checks delete it
   // outright, so they leave nothing behind in the person's Trash.
   async trash(file) {
     if (headless) rmSync(file, { force: true, recursive: true });
@@ -603,8 +596,7 @@ app.whenReady().then(async () => {
   trace('setting up');
   if (!devURL) {
     if (!existsSync(pageFile)) {
-      fatal(args.legacy ? `--legacy-ui needs the repository's app/web folder (looked for ${pageFile}).`
-        : `OpenPixel could not find its page (${pageFile}). Build it with \`npm run build\`.`);
+      fatal(`OpenPixel could not find its page (${pageFile}). Build it with \`npm run build\`.`);
       return;
     }
     pageFolder = realpathSync(pageFolder);
