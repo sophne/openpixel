@@ -292,3 +292,32 @@ fn native_files_round_trip_as_the_swift_app_wrote_them() {
     }
     assert!(problems.is_empty());
 }
+
+/// The website's showcase pictures that have a saved model (make-art.py): the treasure chest sprite, the same
+/// made 3D with extrude_to_3d, and the mushroom house; each as a turnaround sheet and an isometric still.
+#[test]
+fn showcase_art_matches_the_swift_app() {
+    let root = repo();
+    let art = root.join("web/public/art");
+    let tmp = out_dir("art");
+    let mut report = Report::default();
+    let turntable = |e: &mut Engine, name: &str, scale: i64, report: &mut Report| {
+        let (sheet, still) = (tmp.join(format!("{name}.png")), tmp.join(format!("{name}-iso.png")));
+        call(e, "export_sheet", json!({"path": text(&sheet), "views": ["turnaround8"], "scale": scale}));
+        call(e, "export_png", json!({"path": text(&still), "view": "iso", "scale": scale * 2}));
+        report.png(&format!("art/{name}.png"), &sheet, &art.join(format!("{name}.png")));
+        report.png(&format!("art/{name}-iso.png"), &still, &art.join(format!("{name}-iso.png")));
+    };
+    let mut e = Engine::new();
+    call(&mut e, "open_model", json!({"path": text(&root.join("web/scripts/treasure-chest.openpixel"))}));
+    let flat = tmp.join("chest.png");
+    call(&mut e, "export_png", json!({"path": text(&flat), "view": "front", "scale": 1}));
+    report.png("art/chest.png", &flat, &art.join("chest.png"));
+    call(&mut e, "extrude_to_3d", json!({"depth": 6}));
+    turntable(&mut e, "chest3d", 3, &mut report);
+    let mut e = Engine::new();
+    call(&mut e, "open_model", json!({"path": text(&root.join("web/scripts/mushroom-house.openpixel"))}));
+    turntable(&mut e, "mushroom", 4, &mut report);
+    let _ = std::fs::remove_dir_all(&tmp);
+    report.finish("showcase art");
+}

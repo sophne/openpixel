@@ -853,3 +853,107 @@ fn damaged_and_hostile_files() {
         assert!(image_files::read_bytes(bytes).is_none(), "a damaged picture is refused");
     }
 }
+
+// MARK: - beyond the Swift list: what the rest of the program relies on
+
+#[test]
+fn the_engine_can_move_between_threads() {
+    fn assert_send<T: Send>() {}
+    assert_send::<Engine>();
+    let mut e = Engine::new();
+    sample::build(&mut e, false);
+    let moved = std::thread::spawn(move || e.name().to_string()).join().expect("joins");
+    assert_eq!(moved, "Mushroom");
+}
+
+#[test]
+fn paths_are_worked_out_as_text_for_both_kinds_of_separator() {
+    use openpixel_core::io::paths;
+    struct Home(&'static str);
+    impl openpixel_core::HostIo for Home {
+        fn read(&self, _: &str) -> Result<Vec<u8>, String> {
+            Err("no".into())
+        }
+        fn write(&self, _: &str, _: &[u8]) -> Result<(), String> {
+            Err("no".into())
+        }
+        fn exists(&self, _: &str) -> bool {
+            false
+        }
+        fn create_dir_all(&self, _: &str) -> Result<(), String> {
+            Ok(())
+        }
+        fn home_dir(&self) -> Option<String> {
+            Some(self.0.to_string())
+        }
+        fn now(&self) -> f64 {
+            0.0
+        }
+        fn http_get(&self, _: &str) -> Result<Vec<u8>, String> {
+            Err("no".into())
+        }
+    }
+    for (path, name, stem, ext, parent) in [
+        ("/a/b/sprite.png", "sprite.png", "sprite", "png", Some("/a/b")),
+        (r"C:\art\sprite.PNG", "sprite.PNG", "sprite", "PNG", Some(r"C:\art")),
+        (r"C:\sprite.vox", "sprite.vox", "sprite", "vox", None),
+        ("sprite", "sprite", "sprite", "", None),
+        ("/a.b/sprite", "sprite", "sprite", "", Some("/a.b")),
+        ("/a/.hidden", ".hidden", ".hidden", "", Some("/a")),
+        ("/a/archive.tar.gz", "archive.tar.gz", "archive.tar", "gz", Some("/a")),
+        ("/x.png", "x.png", "x", "png", None),
+    ] {
+        assert_eq!(paths::file_name(path), name, "{path}");
+        assert_eq!(paths::file_stem(path), stem, "{path}");
+        assert_eq!(paths::extension(path), ext, "{path}");
+        assert_eq!(paths::parent(path), parent, "{path}");
+    }
+    assert_eq!(paths::without_extension(r"C:\art\hut.obj"), r"C:\art\hut");
+    assert_eq!(paths::append_extension("/a/hut", "mtl"), "/a/hut.mtl");
+    assert_eq!(paths::expand_tilde("~/art/x.png", &Home("/home/me")), "/home/me/art/x.png");
+    assert_eq!(paths::expand_tilde(r"~\art\x.png", &Home(r"C:\Users\me")), r"C:\Users\me\art\x.png");
+    assert_eq!(paths::expand_tilde("~", &Home("/home/me/")), "/home/me");
+    assert_eq!(paths::expand_tilde("~other/x.png", &Home("/home/me")), "~other/x.png");
+    assert_eq!(paths::expand_tilde("/a/~b", &Home("/home/me")), "/a/~b");
+
+    // A host without files: every file tool answers with an error, and nothing panics.
+    let mut e = Engine::with_io(Box::new(openpixel_core::NoIo));
+    assert_eq!(error_of(&mut e, "open_model", json!({"path": "/x.openpixel"})), "could not read /x.openpixel: this host cannot read files");
+    assert_eq!(error_of(&mut e, "export_png", json!({"path": "/x/y.png"})), "could not create folder /x: this host cannot create folders");
+    assert_eq!(error_of(&mut e, "export_png", json!({"path": "y"})), "could not write y.png: this host cannot write files");
+    assert_eq!(error_of(&mut e, "import_image", json!({"path": "y.png"})), "could not read image y.png");
+    assert!(run(&mut e, "review_model", json!({})).is_some());
+}
+
+#[test]
+fn absurd_arguments_are_refused_or_ignored_without_a_crash() {
+    let mut e = Engine::new();
+    run(&mut e, "new_model", json!({"size_x": 8, "size_y": 8, "size_z": 8}));
+    let huge = 1.0e300;
+    for (tool, args) in [
+        ("fill_box", json!({"from": [-huge, -huge, -huge], "to": [huge, huge, huge], "color": 1})),
+        ("draw_sphere", json!({"center": [4, 4, 4], "radius": huge, "color": 2})),
+        ("draw_sphere", json!({"center": ["nan", 4, 4], "radius": 2, "color": 2})),
+        ("draw_cylinder", json!({"base": [4, 0, 4], "radius": 1.0e12, "length": 9007199254740993i64, "color": 3})),
+        ("draw_line", json!({"from": [0, 0, 0], "to": [1.0e15, 3, 2], "radius": 2, "color": 4})),
+        ("draw_line", json!({"from": [-9.0e15, 0, 0], "to": [9.0e15, 7, 7], "color": 4})),
+        ("set_voxels", json!({"voxels": [[huge, 0, 0], [-huge, 1, 1]], "color": 5})),
+        ("set_pixels", json!({"pixels": [[0, -huge], [huge, huge]], "color": 5})),
+        ("transform", json!({"op": "move", "dx": 9007199254740993i64, "dy": -9007199254740993i64, "wrap": true})),
+        ("transform", json!({"op": "rotate", "turns": -9007199254740993i64})),
+        ("paint_slice", json!({"rows": ["11"], "index": -5, "depth": 9007199254740993i64, "offset": [huge, -huge]})),
+        ("find_voxels", json!({"from": [40, 40, 40], "to": [50, 50, 50], "limit": huge})),
+        ("render_view", json!({"scale": huge, "yaw": huge, "pitch": -huge})),
+        ("review_model", json!({"scale": 0})),
+        ("review_model", json!({"scale": 1000000})),
+        ("undo", json!({"steps": huge})),
+        ("set_frame_duration", json!({"duration_ms": -huge})),
+        ("get_slice", json!({"index": huge})),
+        ("view_as_text", json!({"region": [huge, -huge, 0, 0]})),
+        ("resize_model", json!({"size_x": huge, "size_y": 1, "size_z": 1})),
+    ] {
+        // An answer or a refusal; the point is that it returns.
+        let _ = e.execute(tool, args.as_object().expect("an object"), "agent");
+    }
+    assert!(run(&mut e, "analyze_model", json!({})).is_some());
+}
