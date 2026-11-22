@@ -206,7 +206,8 @@ export class FakeEngine implements CoreEngine {
   }
 }
 
-/** The wasm package, faked. `updateReport` is only there when asked for (the real export is still to come). */
+/** The wasm package, faked. `updateReport` is only there when asked for (a core without it answers "unknown"). It
+    reads the feed the way the real core does: the top-level `version:` line of electron-builder's file. */
 export function fakeCore(options: { updates?: boolean } = {}): CorePackage {
   FakeEngine.made = 0;
   FakeEngine.freed = 0;
@@ -218,14 +219,15 @@ export function fakeCore(options: { updates?: boolean } = {}): CorePackage {
     buildSample: (engine, threeD) => (engine as FakeEngine).sample(threeD),
   };
   if (options.updates) {
-    core.updateReport = (xml) => {
-      const m = /<v>([^<]+)<\/v>/.exec(xml);
+    core.updateReport = (feed, os) => {
+      FakeEngine.calls.push(`updateReport:${os ?? ''}`);
+      const m = /^version: ([0-9][0-9A-Za-z.+-]*)$/m.exec(feed);
       if (!m) throw new Error('the update feed lists no release');
       const latest = m[1] as string;
       const newer = latest !== '1.0.0';
       return JSON.stringify({
         running_version: '1.0.0', latest_version: latest, update_available: newer,
-        download: `https://example.test/v${latest}/OpenPixel.dmg`, release_notes: `https://example.test/notes/v${latest}`,
+        download: 'https://openpixel.dev/downloads', release_notes: `https://github.com/sophne/openpixel/releases/tag/v${latest}`,
         next: newer ? `Tell the person OpenPixel ${latest} is out.` : 'OpenPixel is up to date.',
       });
     };

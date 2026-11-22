@@ -1,7 +1,8 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import path from 'node:path';
-import type { Host, HostOptions, Platform, PlatformUI } from '../host/platform';
+import type { Host, HostOptions, Platform, PlatformUI, UpdateSettings } from '../host/platform';
+import { agentCommand } from './agent-command';
 import * as seam from './seam';
 
 /* Puts the app together: the Platform (the window's half from main.ts, the Node half from desktop/host/node), the
@@ -18,16 +19,14 @@ export interface AppHostOptions {
   desktopFolder: string;
   packaged: boolean;
   resourcesPath: string;
+  /** How this copy updates (electron/updater.ts): passed on to the app's logic as `desktop.updates`. */
+  updates?: UpdateSettings;
 }
 
 /** The command agents run: the native `openpixel` program. The one named in OPENPIXEL_MCP, the one shipped inside
-    the installed app, or a local build (release before debug; the release path when there is neither). */
+    the installed app (on Linux a copy of it at a path that stays put), or a local build: see agent-command.ts. */
 export function findMcpCommand(o: Pick<AppHostOptions, 'desktopFolder' | 'packaged' | 'resourcesPath'>): string {
-  const exe = process.platform === 'win32' ? 'openpixel.exe' : 'openpixel';
-  if (process.env.OPENPIXEL_MCP) return path.resolve(process.env.OPENPIXEL_MCP);
-  if (o.packaged) return path.join(o.resourcesPath, 'core', exe);
-  const builds = ['release', 'debug'].map((kind) => path.join(o.desktopFolder, '..', 'core', 'target', kind, exe));
-  return builds.find((p) => existsSync(p)) ?? builds[0];
+  return agentCommand(o);
 }
 
 export async function createAppHost(o: AppHostOptions): Promise<Host> {
@@ -37,7 +36,7 @@ export async function createAppHost(o: AppHostOptions): Promise<Host> {
     now: () => Date.now() / 1000,
     ...half,
     ui: o.ui,
-    desktop: { mcpCommand: findMcpCommand(o), socketPath },
+    desktop: { mcpCommand: findMcpCommand(o), socketPath, ...(o.updates ? { updates: o.updates } : {}) },
   } as Platform;
   const options: HostOptions = { platform, core: undefined, uiTest: o.uiTest, screenshot: o.screenshot, open: o.open };
 

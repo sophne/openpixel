@@ -106,8 +106,8 @@ export class AppHost implements Host {
     } else if (!this.screenshot) {
       this.startBridge(platform.desktop?.socketPath);
       // Ask quietly on every open whether a newer version exists (no dialog, no download), so the Update
-      // button can appear in the home and editor sidebars.
-      void this.lookForUpdate();
+      // button can appear in the tab bar. Not while developing: the shell says so.
+      if (platform.desktop?.updates?.atLaunch !== false) void this.lookForUpdate();
     }
     this.updateTitle();
   }
@@ -801,8 +801,10 @@ export class AppHost implements Host {
     if (install && available) void (canUpdate ? this.presentUpdate({ ...o }) : this.checkForUpdates());
     if (install) {
       o.install = !available ? 'Nothing to install.'
-        : canUpdate ? 'The update dialog is open in OpenPixel. The person confirms; OpenPixel then restarts with the new version. Reconnect the OpenPixel MCP server afterwards.'
-        : 'This copy of OpenPixel is not the installed app and cannot update itself; the person can download the new version from the link.';
+        : !canUpdate ? 'This copy of OpenPixel is not the installed app and cannot update itself; the person can download the new version from the link.'
+        : this.platform.desktop?.updates?.selfInstall === false
+          ? 'The update dialog is open in OpenPixel. This copy does not install updates by itself: the dialog offers the download page, and the person installs the new version from there. Reconnect the OpenPixel MCP server afterwards.'
+          : 'The update dialog is open in OpenPixel. The person confirms; OpenPixel then restarts with the new version. Reconnect the OpenPixel MCP server afterwards.';
     }
     return { json: o, images: [] };
   }
@@ -817,7 +819,7 @@ export class AppHost implements Host {
     const { ui } = this.platform;
     const say = (words: string): Promise<void> => ui.alert('Updates', words).catch(() => undefined);
     if (!this.canUpdate) {
-      return say('Updates are checked by the installed OpenPixel app (in Applications). This copy was started on its own.');
+      return say('Updates are checked by the installed OpenPixel app. This copy was started on its own.');
     }
     let o: Json;
     try {

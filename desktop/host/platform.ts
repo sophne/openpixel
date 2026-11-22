@@ -41,7 +41,9 @@ export interface PlatformUI {
   savePanel(options: { name: string; extension: string }): Promise<string | null>;
   askToSave(name: string): Promise<'save' | 'discard' | 'cancel'>;
   alert(title: string, text: string): Promise<void>;
-  /** A newer version exists: tell the person and offer the download. */
+  /** A newer version exists: tell the person and offer it. Where the app can install updates itself the shell
+      downloads it and asks before restarting; elsewhere it offers the download page (`url`). Nothing installs
+      without the person confirming. */
   showUpdateDialog(info: { version: string; url?: string; notes?: string }): Promise<void>;
   copyText(text: string): void;
   openExternal(url: string): Promise<boolean>;
@@ -77,6 +79,18 @@ export interface DesktopServices {
   mcpCommand: string;
   /** Unix socket path, or the Windows pipe name. */
   socketPath: string;
+  /** How this copy updates; a shell that says nothing gets the feed of the newest release and a download link. */
+  updates?: UpdateSettings;
+}
+
+/** What the shell knows about updating this copy (desktop/electron/updater.ts). */
+export interface UpdateSettings {
+  /** The folder (an address ending in "/") the feed files are read from instead of the newest GitHub release. */
+  feed?: string;
+  /** False: this copy cannot install an update by itself; its update dialog offers the download page. */
+  selfInstall?: boolean;
+  /** False: do not look for a newer version at launch (a development build). */
+  atLaunch?: boolean;
 }
 
 /** What `nodePlatform` (host/node/platform-node.ts) adds for the agents on this computer. It arrives on the

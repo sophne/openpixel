@@ -1,47 +1,74 @@
-# Installers for the desktop app: `npm run dist` builds for the system it runs on; `npx electron-builder --mac`,
-# `--win` or `--linux` for one of them. `npm run pack` only assembles the app folder (release/<os>-unpacked).
-# Nothing here signs or notarizes: that needs the maintainer's certificates and is set up where releases are made.
-appId: dev.openpixel.app
+# Installers for the desktop app. Releases are built by scripts/release-build.mjs (`npm run release:build`), which
+# adds what differs from build to build (how the Mac app is signed, the build number, whether the app installs its
+# own updates) and checks the result; see RELEASING.md. `npm run pack` only assembles the app folder
+# (release/<os>-unpacked), for a quick look.
+#
+# The file names below are fixed: the website, the README and the app's updater link to them
+# (https://github.com/sophne/openpixel/releases/latest/download/<file>).
+appId: com.sophne.openpixel
 productName: OpenPixel
 copyright: Open source.
 directories:
   output: release
+  buildResources: assets
 asar: true
-# Updates are a dialog with a download link (electron/main.ts: showUpdateDialog); nothing is published from here.
-publish: null
 npmRebuild: false
-# The page (dist/) and the Electron side (dist-electron/: main.cjs with the app's logic and the core's glue
-# bundled in, preload.cjs, core.wasm). Everything from node_modules is already inside those bundles.
+# The page (dist/) and the Electron side (dist-electron/: main.cjs with the app's logic, the core's glue and the
+# updater bundled in, preload.cjs, core.wasm). Everything from node_modules is already inside those bundles.
 files:
   - dist/**
   - dist-electron/**
   - package.json
   - "!**/*.map"
   - "!node_modules/**"
-# The native `openpixel` program (the MCP server agents start; `mcpCommand` in electron/host.ts) for the system and
-# processor being packed. scripts/stage-core.cjs copies the right build into release/.core/<os>-<arch>/ first.
+# The native `openpixel` program (the MCP server agents start; electron/agent-command.ts) for the system and
+# processor being packed. scripts/stage-core.cjs copies the right build into release/.core/<os>-<arch>/ first. A
+# universal Mac app is packed once per processor and joined afterwards: the two programs at the same path become one
+# universal program (@electron/universal runs `lipo` on every Mach-O file that differs between the two).
 beforePack: scripts/stage-core.cjs
 extraResources:
   - from: release/.core/${os}-${arch}
     to: core
-icon: ../app/assets/icon/icon_1024.png
+icon: assets/icon/icon_1024.png
 fileAssociations:
   - ext: openpixel
     name: OpenPixel Model
     description: OpenPixel Model
     mimeType: application/x-openpixel
     role: Editor
-# deb packages need a home page and a maintainer.
 extraMetadata:
+  # The installed app's name. Windows installs to %LOCALAPPDATA%\Programs\<this name> and the updater keeps its
+  # downloads in "<this name, lower case>-updater", so it is "OpenPixel" rather than the workspace's package name.
+  name: OpenPixel
+  # deb packages need a home page.
   homepage: https://openpixel.dev
+
+# Nothing is uploaded from here (`--publish never`; the release workflow attaches the files itself). Naming the
+# GitHub repository makes electron-builder write the update feed for each system (latest-mac.yml, latest.yml,
+# latest-linux.yml) and tells the installed app's updater where releases are.
+publish:
+  provider: github
+  owner: sophne
+  repo: openpixel
 
 mac:
   category: public.app-category.graphics-design
   darkModeSupport: true
-  identity: null
+  minimumSystemVersion: "12.0"
+  # One app for Apple silicon and Intel. The dmg is what people download; the zip is what the updater installs.
   target:
     - target: dmg
-      arch: [arm64, x64]
+      arch: [universal]
+    - target: zip
+      arch: [universal]
+  artifactName: OpenPixel-mac.${ext}
+  # Signing: with a Developer ID certificate (CSC_LINK) the app is signed with the hardened runtime and these
+  # entitlements, then notarized (APPLE_API_KEY…). Without one, scripts/release-build.mjs signs ad hoc instead
+  # (identity "-", no hardened runtime, no notarization), as the old Mac app's releases were.
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: assets/entitlements.mac.plist
+  entitlementsInherit: assets/entitlements.mac.plist
   # As the Mac app's Info.plist: .vox files open too (imported, never written back).
   fileAssociations:
     - ext: openpixel
@@ -50,20 +77,32 @@ mac:
     - ext: vox
       name: MagicaVoxel Model
       role: Viewer
+dmg:
+  artifactName: OpenPixel.${ext}
 
 win:
   target:
     - target: nsis
       arch: [x64]
+# One click, for the person who runs it: no administrator rights, installed under %LOCALAPPDATA%\Programs\OpenPixel.
 nsis:
   oneClick: true
   perMachine: false
+  artifactName: OpenPixel-Setup.${ext}
 
 linux:
   executableName: openpixel-desktop
   category: Graphics
   synopsis: Pixel art and voxel editor that AI agents can draw in
+  # A placeholder: Debian wants a maintainer address, and the project has no public one yet.
   maintainer: OpenPixel contributors <noreply@openpixel.dev>
   target:
-    - AppImage
-    - deb
+    - target: AppImage
+      arch: [x64]
+    - target: deb
+      arch: [x64]
+appImage:
+  artifactName: OpenPixel.${ext}
+deb:
+  packageName: openpixel
+  artifactName: openpixel.${ext}

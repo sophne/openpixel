@@ -5,8 +5,14 @@ import { fileURLToPath } from 'node:url';
 import os from 'node:os';
 import path from 'node:path';
 import type { Host, PlatformUI } from '../host/platform';
+import { handOverToAgentProgram } from './agent-command';
 import { createAppHost } from './host';
 import { buildMenu } from './menu';
+import { createUpdater, selfUpdateStamp, updateSettings } from './updater';
+
+// Started by an agent as its MCP server (`OpenPixel --mcp`, `--mcp-http`): the native program takes this process's
+// place, and nothing below runs. Before anything else, so no window, no Dock icon and no word on standard output.
+handOverToAgentProgram({ desktopFolder: path.join(__dirname, '..'), packaged: app.isPackaged, resourcesPath: process.resourcesPath });
 
 /* The editor window: a native window whose whole content is the editor page. This file is the shell of
    docs/desktop-architecture.md: it owns the window, the menus, dialogs, the clipboard and screenshots (the
@@ -401,18 +407,8 @@ const ui: PlatformUI = {
     if (headless) { trace(`alert: ${title}: ${text}`); return; }
     await messageBox({ message: title || 'OpenPixel', detail: text, buttons: ['OK'] });
   },
-  async showUpdateDialog({ version, url, notes }) {
-    // Nothing installs by itself: the person gets the new version from the download page.
-    if (headless) return;
-    const got = await messageBox({
-      message: `OpenPixel ${version} is available`,
-      detail: [`You have ${app.getVersion()}.`, notes].filter(Boolean).join('\n\n'),
-      buttons: url ? ['Download…', 'Later'] : ['OK'],
-      defaultId: 0,
-      cancelId: url ? 1 : 0,
-    });
-    if (url && got.response === 0) await ui.openExternal(url);
-  },
+  // The download page, or where this copy installs updates itself, the download and "Restart to Update" (updater.ts).
+  showUpdateDialog: (info) => updater.showUpdateDialog(info),
   copyText(text) {
     clipboard.writeText(text);
   },
@@ -504,6 +500,26 @@ function reallyQuit(): void {
   closing = true;
   app.quit();
 }
+
+/** How this copy updates, and its update dialog (updater.ts). "Restart to Update" saves like quitting does. */
+const updates = updateSettings({ packaged: app.isPackaged, stamped: selfUpdateStamp(app.getAppPath()), platform: process.platform, env: process.env, execPath: process.execPath });
+const updater = createUpdater({
+  headless,
+  version: app.getVersion(),
+  messageBox: (o) => messageBox(o),
+  openExternal: (url) => ui.openExternal(url),
+  progress: (fraction) => liveWindow()?.setProgressBar(fraction ?? -1),
+  async prepareToQuit() {
+    if (closing || asking || !host) return false;
+    asking = true;
+    let ok = false;
+    try { ok = await host.quitting(); } catch (e) { console.error(`OpenPixel: could not save before updating: ${(e as Error).message}`); }
+    asking = false;
+    if (ok) closing = true;
+    return ok;
+  },
+  stayOpen: () => { closing = false; },
+}, updates);
 
 app.on('before-quit', (e) => { if (!closing) { e.preventDefault(); askToQuit(); } });
 app.on('window-all-closed', () => { closing = true; app.quit(); });
@@ -620,7 +636,7 @@ app.whenReady().then(async () => {
   }
   try {
     host = await createAppHost({ ui, uiTest: args.uitest, screenshot: !!args.screenshot, open: args.file,
-      desktopFolder, packaged: app.isPackaged, resourcesPath: process.resourcesPath });
+      desktopFolder, packaged: app.isPackaged, resourcesPath: process.resourcesPath, updates });
   } catch (e) {
     fatal((e as Error).message);
     return;

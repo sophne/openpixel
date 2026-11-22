@@ -5,7 +5,7 @@ import { type TestContext, test } from 'node:test';
 import type { Engine } from '../core';
 import { AppHost } from '../documents';
 import type { HostOptions } from '../platform';
-import { FEED_URL } from '../updates';
+import { feedUrl } from '../updates';
 import { FakeChat, FakeEngine, type MemoryPlatform, fakeCore, memoryPlatform } from './fakes';
 
 const DATA = '/home/me/.local/share/OpenPixel';
@@ -24,6 +24,10 @@ interface Booted {
 }
 
 const mocked = new WeakSet<TestContext>();
+
+/** The feed the memory platform's system (Linux) reads. */
+const FEED_URL = feedUrl('linux') as string;
+const feed = (version: string): string => `version: ${version}\nfiles:\n  - url: OpenPixel.AppImage\n    sha512: c2hhNTEy\n    size: 1\npath: OpenPixel.AppImage\nsha512: c2hhNTEy\nreleaseDate: '2026-11-22T11:24:00.000Z'\n`;
 
 function boot(t: TestContext, options: Partial<HostOptions> & { platform?: MemoryPlatform; updates?: boolean } = {}): Booted {
   if (!mocked.has(t)) {
@@ -504,7 +508,7 @@ test('GitHub stars: the last known count at once, a fresh one at most once an ho
 
 test('updates: the feed decides, the page shows the button, the person confirms in the dialog', async (t) => {
   const p = memoryPlatform();
-  p.web.set(FEED_URL, '<rss><v>2.0.0</v></rss>');
+  p.web.set(FEED_URL, feed('2.0.0'));
   const b = boot(t, { platform: p, updates: true });
   await settle();
   // Asked quietly at launch: only the button appears.
@@ -516,15 +520,15 @@ test('updates: the feed decides, the page shows the button, the person confirms 
   // An agent asks: the feed's answer (kept for ten minutes), and with install=true the dialog opens.
   const answer = await b.agent({ tool: 'check_for_updates', args: {} });
   assert.deepEqual(answer.json, {
-    running_version: '1.0.0', latest_version: '2.0.0', update_available: true, download: 'https://example.test/v2.0.0/OpenPixel.dmg',
-    release_notes: 'https://example.test/notes/v2.0.0', next: 'Tell the person OpenPixel 2.0.0 is out.',
+    running_version: '1.0.0', latest_version: '2.0.0', update_available: true, download: 'https://openpixel.dev/downloads',
+    release_notes: 'https://github.com/sophne/openpixel/releases/tag/v2.0.0', next: 'Tell the person OpenPixel 2.0.0 is out.',
   });
   assert.equal(b.p.fetched.length, 1);
   const install = await b.agent({ tool: 'check_for_updates', args: { install: 'yes', refresh: true } });
   assert.equal(install.json.install, 'The update dialog is open in OpenPixel. The person confirms; OpenPixel then restarts with the new version. Reconnect the OpenPixel MCP server afterwards.');
   assert.equal(b.p.fetched.length, 2);
   await settle();
-  assert.deepEqual(b.p.ui.updateDialogs, [{ version: '2.0.0', url: 'https://example.test/v2.0.0/OpenPixel.dmg', notes: 'https://example.test/notes/v2.0.0' }]);
+  assert.deepEqual(b.p.ui.updateDialogs, [{ version: '2.0.0', url: 'https://openpixel.dev/downloads', notes: 'https://github.com/sophne/openpixel/releases/tag/v2.0.0' }]);
   assert.equal(FakeEngine.calls.includes('agent:check_for_updates'), false, 'the window answers this one itself');
 
   // The Update button and the menu item do the same.
@@ -533,7 +537,7 @@ test('updates: the feed decides, the page shows the button, the person confirms 
   assert.equal(b.p.ui.updateDialogs.length, 2);
 
   // Up to date: the button goes away; install has nothing to do.
-  b.p.web.set(FEED_URL, '<rss><v>1.0.0</v></rss>');
+  b.p.web.set(FEED_URL, feed('1.0.0'));
   b.p.clock.now += 601;
   const current = await b.agent({ tool: 'check_for_updates', args: { install: true } });
   assert.deepEqual([current.json.update_available, current.json.install], [false, 'Nothing to install.']);
@@ -543,7 +547,7 @@ test('updates: the feed decides, the page shows the button, the person confirms 
   assert.equal(b.p.ui.log.at(-1), 'alert Updates: OpenPixel 1.0.0 is currently the newest version available.');
 
   // A feed without a release, or no network, is an error, never "up to date".
-  b.p.web.set(FEED_URL, '<rss></rss>');
+  b.p.web.set(FEED_URL, '<html><body>Not Found</body></html>');
   assert.deepEqual(await b.agent({ tool: 'check_for_updates', args: { refresh: true } }), { ok: false, error: 'the update feed lists no release' });
   b.p.web.delete(FEED_URL);
   assert.deepEqual(await b.agent({ tool: 'check_for_updates', args: { refresh: 1 } }), { ok: false, error: 'the update feed did not answer (offline?)' });
@@ -552,9 +556,45 @@ test('updates: the feed decides, the page shows the button, the person confirms 
   assert.equal(b.p.ui.log.at(-1), 'alert Updates: OpenPixel could not check for updates: the update feed did not answer (offline?).');
 });
 
+test('updates: every system reads its own feed; the shell says where, whether at launch, and whether it installs', async (t) => {
+  assert.deepEqual([feedUrl('darwin'), feedUrl('win32'), feedUrl('linux'), feedUrl('web')], [
+    'https://github.com/sophne/openpixel/releases/latest/download/latest-mac.yml',
+    'https://github.com/sophne/openpixel/releases/latest/download/latest.yml',
+    'https://github.com/sophne/openpixel/releases/latest/download/latest-linux.yml',
+    null,
+  ]);
+  assert.equal(feedUrl('linux', 'http://127.0.0.1:8123/feed'), 'http://127.0.0.1:8123/feed/latest-linux.yml');
+
+  // A Mac reads latest-mac.yml and tells the core which system the feed is for.
+  const mac = memoryPlatform({ os: 'darwin' });
+  mac.web.set(feedUrl('darwin') as string, feed('2.0.0'));
+  mac.web.set(feedUrl('linux') as string, feed('9.9.9'));
+  const a = boot(t, { platform: mac, updates: true });
+  await settle();
+  assert.deepEqual(mac.fetched.map((f) => f.url), [feedUrl('darwin')]);
+  assert.equal(FakeEngine.calls.includes('updateReport:darwin'), true);
+  assert.deepEqual(mac.ui.takePages('updateAvailable'), ['updateAvailable("2.0.0")']);
+  a.host.dispose();
+
+  // A development build does not ask at launch; asked by hand it still answers, from the folder the shell names.
+  const dev = memoryPlatform({ os: 'win32' });
+  (dev.desktop as NonNullable<typeof dev.desktop>).updates = { atLaunch: false, selfInstall: false, feed: 'http://127.0.0.1:8123/' };
+  dev.web.set('http://127.0.0.1:8123/latest.yml', feed('3.0.0'));
+  const b = boot(t, { platform: dev, updates: true });
+  await settle();
+  assert.equal(dev.fetched.length, 0);
+  assert.deepEqual(dev.ui.takePages('updateAvailable'), []);
+  // This copy cannot install by itself: the agent hears that the dialog offers the download page.
+  const install = await b.agent({ tool: 'check_for_updates', args: { install: true } });
+  assert.deepEqual(dev.fetched.map((f) => f.url), ['http://127.0.0.1:8123/latest.yml']);
+  assert.equal(install.json.install, 'The update dialog is open in OpenPixel. This copy does not install updates by itself: the dialog offers the download page, and the person installs the new version from there. Reconnect the OpenPixel MCP server afterwards.');
+  await settle();
+  assert.deepEqual(dev.ui.updateDialogs, [{ version: '3.0.0', url: 'https://openpixel.dev/downloads', notes: 'https://github.com/sophne/openpixel/releases/tag/v3.0.0' }]);
+});
+
 test('updates with a core that cannot read the feed yet: "unknown", not a guess', async (t) => {
   const p = memoryPlatform();
-  p.web.set(FEED_URL, '<rss><v>2.0.0</v></rss>');
+  p.web.set(FEED_URL, feed('2.0.0'));
   const b = boot(t, { platform: p });
   await settle();
   assert.deepEqual(b.p.ui.takePages('updateAvailable'), ['updateAvailable(null)']);
@@ -620,7 +660,7 @@ test('a UI test run: its own empty library and files, a private socket, no netwo
   p.fs.addModel('/runs/7/Files/Left over.openpixel', 'Left over');
   p.fs.write('/runs/7/recents.json', '[{"path":"/x.openpixel","name":"x","kind":"2d","size":[1,1,1],"touched":1}]');
   p.web.set(STARS, '{"stargazers_count":5}');
-  p.web.set(FEED_URL, '<rss><v>9.0.0</v></rss>');
+  p.web.set(FEED_URL, feed('9.0.0'));
   const made: { chat?: FakeChat } = {};
   const b = boot(t, { platform: p, uiTest: '/runs/7/', updates: true, chat: (o) => (made.chat = new FakeChat(o)) });
   await settle();
@@ -635,7 +675,7 @@ test('a UI test run: its own empty library and files, a private socket, no netwo
   assert.deepEqual(await b.native('version'), { version: '1.0.0', build: '', updates: false, automatic: false, available: null });
   await b.native('checkUpdates');
   await settle();
-  assert.equal(p.ui.log.at(-1), 'alert Updates: Updates are checked by the installed OpenPixel app (in Applications). This copy was started on its own.');
+  assert.equal(p.ui.log.at(-1), 'alert Updates: Updates are checked by the installed OpenPixel app. This copy was started on its own.');
   assert.deepEqual(p.fetched, [], 'nothing went to the network');
 
   assert.deepEqual(await b.host.handle({ kind: 'chat', action: 'providers' }), []);

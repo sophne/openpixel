@@ -22,10 +22,16 @@
     "test:ui": "node tests/run-ui-test.mjs",
     "test:web": "node tests/web-preview.mjs",
     "compare:shots": "node tests/compare-shots.mjs",
+    "test:release": "node --test \"tests/releasing/*.test.mjs\"",
+    "test:packaged": "node tests/packaged-app.mjs",
+    "test:update": "node tests/update-e2e.mjs",
     "pack": "npm run build && electron-builder --dir",
-    "dist": "npm run build:core && npm run build:mcp && npm run build && electron-builder"
+    "dist": "npm run build:core && npm run build:mcp && npm run build && npm run release:build",
+    "release:build": "node scripts/release-build.mjs",
+    "release:tag": "sh scripts/tag-release.sh"
   },
   "dependencies": {
+    "electron-updater": "^6.8.11",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },

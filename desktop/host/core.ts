@@ -38,9 +38,10 @@ export interface CorePackage {
   version(): string;
   toolCatalog(): string;
   buildSample(engine: CoreEngine, threeD: boolean): void;
-  /** What check_for_updates answers for this feed text, as JSON (Updates.report in the Swift source). The host
-      fetches the feed itself, since the core's own `httpGet` cannot wait for the network here. */
-  updateReport?(feedXml: string): string;
+  /** What check_for_updates answers for this feed text (electron-builder's `latest*.yml` for the system `os`:
+      "darwin", "win32" or "linux"), as JSON. The host fetches the feed itself, since the core's own `httpGet`
+      cannot wait for the network here. */
+  updateReport?(feedText: string, os?: string): string;
 }
 
 export type Source = 'person' | 'agent' | 'sample' | 'home';
