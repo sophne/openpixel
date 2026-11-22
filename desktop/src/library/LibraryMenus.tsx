@@ -1,11 +1,11 @@
 /* The file menu of the editor's panel head, the card menu and "Move to…". openCardMenu() and openMoveMenu() decide
-   what the last two show; the logic is in ./home. */
+   what the last two show; the logic is in ./homePage. */
 import { Fragment, type MouseEvent, type ReactElement } from 'react';
 import { actions } from '../app/actions';
 import { Icon } from '../lib/icons';
 import { REVEAL_LABEL } from '../lib/platform';
 import { useStore } from '../lib/store';
-import { cardMenu, cardMenuAction, moveMenu, moveMenuNewFolder, moveMenuPick, type CardAction } from './home';
+import { cardMenu, cardMenuAction, moveMenu, moveMenuNewFolder, moveMenuPick, type CardAction } from './homePage';
 
 const doc = (act: string) => (e: MouseEvent) => { e.stopPropagation(); actions.docMenuAction(act); };
 const card = (act: CardAction) => (e: MouseEvent) => { e.stopPropagation(); cardMenuAction(act); };

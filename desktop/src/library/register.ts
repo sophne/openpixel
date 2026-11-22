@@ -7,7 +7,7 @@ import { agentsState, loadAgents, showAgentHelp, showAgentInfo, stopAgentsPollin
 import {
   draggingNow, fileById, folderById, hideHome, homePrefs, latestInFolder, loadHome, menus, openCardMenu, openFolder, openMoveMenu, renderHome,
   setHomeLayout, setHomeSort, showHome,
-} from './home';
+} from './homePage';
 import { closeNewPage, openNewFileDialog, openNewPage, renderNewRecents } from './newpage';
 import { applyTabs, closeTab, renderTabs, reportTitlebar, showStars, showUpdate, switchTab, titlebarSentNow } from './tabs';
 

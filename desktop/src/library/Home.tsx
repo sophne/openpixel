@@ -1,5 +1,5 @@
 /* The home screen, #home: Recents, All folders, Archive, Agents: the title, the file and folder cards, the list
-   layout and their handlers. The logic is in ./home. The Agents list (#home-agents-wrap) is <AgentsList/> from
+   layout and their handlers. The logic is in ./homePage. The Agents list (#home-agents-wrap) is <AgentsList/> from
    library/Agents. */
 import { Fragment, memo, useLayoutEffect, useRef, type HTMLAttributes, type ReactElement, type ReactNode, type RefObject } from 'react';
 import { Dropdown, inlineRename, RenameText } from '../kit';
@@ -14,7 +14,7 @@ import {
   documentDragOver, documentDrop, emptyArchive, endDrag, fileRename, FILTERS, folderById, folderSummary, homeFiles, homeTop, latestInFolder, layoutSeg,
   locationText, menus, newFolder, openCardMenu, openFolder, openHomePage, openItem, renamers, renameFolderTo, renderHome, setHomeFilter, setHomeLayout,
   setHomeSort, sizeText, SORTS, startDrag, startPrefs, whenText, type LibFile, type RenameSpec,
-} from './home';
+} from './homePage';
 import { openNewPage } from './newpage';
 
 /** A class that is put on and taken off with classList after every drawing, for an element whose other classes are
