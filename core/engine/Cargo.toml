@@ -9,7 +9,7 @@ license.workspace = true
 serde_json = "1"
 base64 = "0.23"
 flate2 = "1"
-png = "0.17"
+png = "0.18"
 gif = "0.14"
 # sin and cos for the renderer: the same results on every platform and under WebAssembly.
 libm = "0.2"
