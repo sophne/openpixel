@@ -10,3 +10,8 @@
 .claude/
 
 __pycache__/
+
+# Swift Package Manager's build folder.
+.build/
+# What the removed Mac-only Swift app left behind in old checkouts (its build, the packed app, screenshots).
+/app/
