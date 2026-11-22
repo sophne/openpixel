@@ -1,9 +1,14 @@
 # Checks every pull request. Each job runs only when its part of the repository changed; a skipped job counts as
 # passed, so the required checks (app-ci, web-ci) never block a pull request that doesn't touch them.
-#   app-ci   the app (required): the Rust core and the desktop app, on Linux, with the UI test.
+#   app-ci   the app (required), on Linux. It only collects the results of the jobs that do the work, which run side
+#            by side: the core (core), the desktop app's build and quick checks (desktop), and then, from that one
+#            build, the shell, the UI test (twice: as on Linux and as on a Mac) and the packed app (desktop: …).
 #   web-ci   the website (required).
-#   app on macOS / Windows   the same app on the other two systems, and an unsigned package of it. Not required:
+#   core / app on macOS / Windows   the same on the other two systems, and an unsigned package of it. Not required:
 #            it tells you early that something broke there, but a pull request can merge without it.
+# Speed: wasm-bindgen comes as a ready-made program (taiki-e/install-action checks it against its published
+# checksum) instead of being compiled in every job, and Rust's downloaded and compiled dependencies are cached
+# (Swatinem/rust-cache; a pull request's later runs reuse its earlier ones).
 # See docs/desktop-architecture.md for what the parts are.
 # Nothing runs on pushes to main: main only changes through pull requests that already passed here, Coolify builds
 # the website on its own, and the release workflow builds and checks the app again before it ships anything.
@@ -46,16 +51,51 @@ jobs:
 
   # If working out the changes fails, the jobs below run rather than silently skipping.
 
-  # The app, on Linux: the core (build without warnings, self-test, golden files, the MCP program, one scripted
-  # session run natively and through the WebAssembly build with every answer and file compared), then the desktop
-  # app (types, the app logic's checks, the bundle, the shell, the UI test, the browser preview, known
-  # vulnerabilities).
-  app:
-    name: app-ci
+  # The core, on Linux: built without warnings, then the self-test, the golden files, the MCP program, and one
+  # scripted session run natively and through the WebAssembly build with every answer and file compared.
+  # `-D warnings` is set for the whole job, so the tests reuse what the build compiled instead of starting again.
+  core:
+    name: core
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.app == 'true') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
+    env:
+      RUSTFLAGS: -D warnings
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: WebAssembly target
+        run: rustup target add wasm32-unknown-unknown
+      # Must be exactly the version of the wasm-bindgen crate in core/wasm/Cargo.toml.
+      - uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
+        with:
+          tool: wasm-bindgen@0.2.100
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: core -> target
+      - name: Build without warnings
+        working-directory: core
+        run: cargo build --release
+      - name: Tests (self-test, golden files, MCP, native against WebAssembly)
+        working-directory: core
+        run: cargo test --release
+      - name: Self-test of the MCP program
+        working-directory: core
+        run: cargo run --release --bin openpixel -- --selftest
+
+  # The desktop app, on Linux: the core as WebAssembly and the MCP program, types, the app logic's checks, the
+  # bundle, the release scripts and known vulnerabilities. What it built goes to the jobs below as an artifact.
+  desktop:
+    name: desktop
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.app == 'true') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -65,76 +105,124 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: desktop/package-lock.json
-      - name: WebAssembly tools
-        run: |
-          rustup target add wasm32-unknown-unknown
-          cargo install wasm-bindgen-cli --version 0.2.100 --locked
-
-      - name: "Core: build without warnings"
-        working-directory: core
-        env:
-          RUSTFLAGS: -D warnings
-        run: cargo build --release
-      - name: "Core: tests (self-test, golden files, MCP, native against WebAssembly)"
-        working-directory: core
-        run: cargo test --release
-      - name: "Core: self-test of the MCP program"
-        working-directory: core
-        run: cargo run --release --bin openpixel -- --selftest
-
-      - name: "Desktop: packages"
+      - name: WebAssembly target
+        run: rustup target add wasm32-unknown-unknown
+      - uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
+        with:
+          tool: wasm-bindgen@0.2.100
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: core -> target
+      - name: Packages
         working-directory: desktop
         run: npm ci --no-fund
-      - name: "Desktop: the core as WebAssembly, and the MCP program"
+      - name: The core as WebAssembly, and the MCP program
         working-directory: desktop
         run: npm run build:core && npm run build:mcp
-      - name: "Desktop: types"
+      - name: Types
         working-directory: desktop
         run: npm run typecheck
-      - name: "Desktop: app logic (tabs, autosave, library, agents, Agent Chat)"
+      - name: App logic (tabs, autosave, library, agents, Agent Chat)
         working-directory: desktop
         run: npm test
-      - name: "Desktop: build"
+      - name: Build
         working-directory: desktop
         run: npm run build
       # What a release is made with: the version stamp, the signing plan, the release's file list and checksums,
       # the old Mac app's update feed and its signature, the tag script, and the shell's update and agent-command rules.
-      - name: "Desktop: release scripts and update logic"
+      - name: Release scripts and update logic
         working-directory: desktop
         run: npm run test:release
+      - name: Known vulnerabilities in dependencies
+        working-directory: desktop
+        run: npm audit --audit-level=high
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: desktop-linux
+          path: |
+            desktop/core-pkg/
+            desktop/dist/
+            desktop/dist-electron/
+            core/target/release/openpixel
+          if-no-files-found: error
+          retention-days: 1
+
+  # The slow checks of the desktop app, side by side, all on the build above.
+  desktop-checks:
+    name: "desktop: ${{ matrix.name }}"
+    needs: desktop
+    if: ${{ !cancelled() && needs.desktop.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The window, menus, messages, shortcuts shown against shortcuts bound, screenshots; then the same core
+          # package in a plain browser.
+          - name: shell and browser preview
+            video: true
+            run: npm run test:shell && npx playwright install chromium && npm run test:web
+          # The page clicks through itself in the real app, on the real core. A run with failures is repeated once
+          # and only what fails both times counts (tests/run-ui-test.mjs).
+          - name: UI test
+            run: npm run test:ui -- --no-video --no-build
+          # The same test with the page shown as on a Mac (its tab bar layout and ⌘ wording), since the macOS job
+          # below is not required.
+          - name: UI test, the page shown as on macOS
+            run: npm run test:ui -- --platform darwin --no-video --no-build
+          # Packed as a release packs it (AppImage and deb, the fixed file names, the update feed), then the packed
+          # app itself: it starts, gives agents their MCP server, keeps Linux's copy of the agent program, and
+          # updates from a local feed (download, checksum, nothing installed without a yes). The release workflow
+          # runs the same on all three systems; here a pull request finds out first. About three minutes
+          # normally; a hang (a process that never ends) fails at the step's 15 minutes, not the job's half hour.
+          - name: packed as for a release, the packed app and its update path
+            run: npm run release:build && npm run test:packaged && npm run test:update
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - name: Packages
+        working-directory: desktop
+        run: npm ci --no-fund
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: desktop-linux
+      # Artifacts do not keep the executable bit.
+      - name: The MCP program can run
+        run: chmod +x core/target/release/openpixel
+      # A screen for the app, and for the shell test (which records the run) ffmpeg to make the recording an MP4.
       - name: Display and video tools
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb ${{ matrix.video && 'ffmpeg' || '' }}
       - name: Video recorder for the tests
         working-directory: desktop
         run: npx playwright install ffmpeg
-      - name: "Desktop: shell (window, menus, messages, shortcuts shown against shortcuts bound, screenshots)"
+      - name: ${{ matrix.name }}
         working-directory: desktop
-        run: npm run test:shell
-      # The page clicks through itself in the real app, on the real core. A run with failures is repeated once and
-      # only what fails both times counts (tests/run-ui-test.mjs).
-      - name: "Desktop: UI test"
-        working-directory: desktop
-        run: npm run test:ui -- --no-video --no-build
-      # The same test with the page shown as on a Mac (its tab bar layout and ⌘ wording), since the macOS job below
-      # is not required.
-      - name: "Desktop: UI test, the page shown as on macOS"
-        working-directory: desktop
-        run: npm run test:ui -- --platform darwin --no-video --no-build
-      - name: "Desktop: the same core package in a plain browser"
-        working-directory: desktop
-        run: npx playwright install chromium && npm run test:web
-      # Packed as a release packs it (AppImage and deb, the fixed file names, the update feed), then the packed app
-      # itself: it starts, gives agents their MCP server, keeps Linux's copy of the agent program, and updates
-      # from a local feed (download, checksum, nothing installed without a yes). The release workflow runs the
-      # same on all three systems; here a pull request finds out first.
-      - name: "Desktop: packed as for a release, the packed app and its update path"
-        working-directory: desktop
-        # About three minutes normally; a hang (a process that never ends) fails here, not at the job's hour.
         timeout-minutes: 15
-        run: npm run release:build && npm run test:packaged && npm run test:update
-      - name: "Desktop: known vulnerabilities in dependencies"
-        working-directory: desktop
-        run: npm audit --audit-level=high
+        run: ${{ matrix.run }}
+
+  # The required check: passes when every app job above passed or was skipped (nothing in the app changed).
+  app:
+    name: app-ci
+    needs: [core, desktop, desktop-checks]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Every app job passed or was skipped
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "core, desktop, desktop checks: $RESULTS"
+          for r in $RESULTS; do
+            case "$r" in success|skipped) ;; *) exit 1 ;; esac
+          done
 
   web:
     name: web-ci
@@ -161,7 +249,53 @@ jobs:
       - name: Known vulnerabilities in dependencies
         run: npm audit --audit-level=high
 
-  # The app on the other two systems it ships for. Not a required check.
+  # The app on the other two systems it ships for. Not required checks. The core and the desktop app run side by
+  # side, as on Linux.
+  platform-core:
+    name: core on ${{ matrix.name }} (not required)
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.app == 'true') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-15, name: macOS }
+          - { os: windows-latest, name: Windows }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    env:
+      RUSTFLAGS: -D warnings
+    defaults:
+      run:
+        shell: bash
+        working-directory: core
+    steps:
+      # Golden files are compared as they are in the repository: no line-ending conversion on Windows.
+      - name: Keep line endings
+        working-directory: .
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: WebAssembly target
+        run: rustup target add wasm32-unknown-unknown
+      - uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
+        with:
+          tool: wasm-bindgen@0.2.100
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: core -> target
+          key: ${{ matrix.name }}
+      - name: Build without warnings
+        run: cargo build --release
+      - name: Tests (self-test, golden files, MCP, native against WebAssembly)
+        run: cargo test --release
+      - name: Self-test of the MCP program
+        run: cargo run --release --bin openpixel -- --selftest
+
   platforms:
     name: app on ${{ matrix.name }} (not required)
     needs: changes
@@ -173,13 +307,14 @@ jobs:
           - { os: macos-15, name: macOS, arch: arm64 }
           - { os: windows-latest, name: Windows, arch: x64 }
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    timeout-minutes: 45
     defaults:
       run:
         shell: bash
+        working-directory: desktop
     steps:
-      # Golden files are compared as they are in the repository: no line-ending conversion on Windows.
       - name: Keep line endings
+        working-directory: .
         run: git config --global core.autocrlf false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -189,57 +324,39 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: desktop/package-lock.json
-      - name: WebAssembly tools
-        run: |
-          rustup target add wasm32-unknown-unknown
-          cargo install wasm-bindgen-cli --version 0.2.100 --locked
-
-      - name: "Core: build without warnings"
-        working-directory: core
-        env:
-          RUSTFLAGS: -D warnings
-        run: cargo build --release
-      - name: "Core: tests (self-test, golden files, MCP, native against WebAssembly)"
-        working-directory: core
-        run: cargo test --release
-      - name: "Core: self-test of the MCP program"
-        working-directory: core
-        run: cargo run --release --bin openpixel -- --selftest
-
-      - name: "Desktop: packages"
-        working-directory: desktop
+      - name: WebAssembly target
+        run: rustup target add wasm32-unknown-unknown
+      - uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
+        with:
+          tool: wasm-bindgen@0.2.100
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: core -> target
+          key: ${{ matrix.name }}
+      - name: Packages
         run: npm ci --no-fund
-      - name: "Desktop: the core as WebAssembly, and the MCP program"
-        working-directory: desktop
+      - name: The core as WebAssembly, and the MCP program
         run: npm run build:core && npm run build:mcp
-      - name: "Desktop: types"
-        working-directory: desktop
+      - name: Types
         run: npm run typecheck
-      - name: "Desktop: app logic (tabs, autosave, library, agents, Agent Chat)"
-        working-directory: desktop
+      - name: App logic (tabs, autosave, library, agents, Agent Chat)
         run: npm test
-      - name: "Desktop: build"
-        working-directory: desktop
+      - name: Build
         run: npm run build
       # What a release is made with: the version stamp, the signing plan, the release's file list and checksums,
       # the old Mac app's update feed and its signature, the tag script, and the shell's update and agent-command rules.
-      - name: "Desktop: release scripts and update logic"
-        working-directory: desktop
+      - name: Release scripts and update logic
         run: npm run test:release
       - name: Video recorder for the tests
-        working-directory: desktop
         run: npx playwright install ffmpeg
-      - name: "Desktop: shell (window, menus, messages, shortcuts shown against shortcuts bound, screenshots)"
-        working-directory: desktop
+      - name: Shell (window, menus, messages, shortcuts shown against shortcuts bound, screenshots)
         run: npm run test:shell
       # The UI test was written and tuned on Linux with software rendering and has not yet proved itself on this
       # system's own window, fonts and graphics card. Until it has, its result is shown but does not fail the job.
-      - name: "Desktop: UI test (shown only: does not fail the job yet)"
-        working-directory: desktop
+      - name: UI test (shown only, does not fail the job yet)
         continue-on-error: true
         run: npm run test:ui -- --no-video --no-build
       # Packaging breaks in its own ways (files missing from the package, the MCP program not staged): assemble the
       # unsigned app for this machine's processor, as the release does before it signs and wraps it.
-      - name: "Desktop: package the unsigned app"
-        working-directory: desktop
+      - name: Package the unsigned app
         run: npx electron-builder --dir --${{ matrix.arch }} --publish never

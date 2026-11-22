@@ -51,7 +51,7 @@ runs:
         cache: npm
         cache-dependency-path: desktop/package-lock.json
 
-    - name: Rust targets and the WebAssembly tools
+    - name: Rust targets
       shell: bash
       env:
         PLATFORM: ${{ inputs.platform }}
@@ -59,8 +59,13 @@ runs:
         rustup target add wasm32-unknown-unknown
         # A universal Mac app carries the agent program for both processors.
         if [ "$PLATFORM" = "mac" ]; then rustup target add x86_64-apple-darwin aarch64-apple-darwin; fi
-        # Must be exactly the version of the wasm-bindgen crate in core/wasm/Cargo.toml.
-        cargo install wasm-bindgen-cli --version 0.2.100 --locked
+
+    # Must be exactly the version of the wasm-bindgen crate in core/wasm/Cargo.toml. The project's own ready-made
+    # program, checked against its published checksum, instead of compiling it (one to three minutes per system).
+    - name: The WebAssembly tools
+      uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
+      with:
+        tool: wasm-bindgen@0.2.100
 
     - name: Dependencies
       shell: bash

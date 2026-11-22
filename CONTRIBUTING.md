@@ -16,7 +16,8 @@ Thanks for helping. Bug fixes, new tools, better agent support, docs and website
 4. Open a pull request against `main` and fill in the template.
 
 CI checks only what your pull request changes. `app-ci` is the app on Linux: the core (build without warnings, tests,
-the MCP program's self-test) and the desktop app (types, logic, build, shell, the UI test, dependency audit).
+the MCP program's self-test) and the desktop app (types, logic, build, shell, the UI test, the packed app, dependency
+audit). These run as separate jobs side by side (`core`, `desktop`, `desktop: …`); `app-ci` passes when all of them do.
 `web-ci` is the website (lint, types, build, audit). Both must pass. The app is also built, tested and packaged on
 macOS and Windows; those jobs are not required, but look at them when they fail. CodeQL analyses the
 JavaScript/TypeScript of a pull request. For first-time contributors a maintainer approves the CI run.
