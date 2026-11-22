@@ -17,5 +17,5 @@ path = "src/main.rs"
 openpixel-core = { path = "../engine" }
 serde_json = "1"
 base64 = "0.23"
-dirs = "6"
+dirs = "7"
 uuid = { version = "1", features = ["v4"] }
