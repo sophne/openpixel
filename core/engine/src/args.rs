@@ -45,11 +45,16 @@ pub fn exact_int(v: &Json) -> Option<i64> {
 pub fn exact_bool(v: &Json) -> Option<bool> {
     match v {
         Json::Bool(b) => Some(*b),
-        Json::Number(n) => match n.as_f64() {
-            Some(f) if f == 0.0 => Some(false),
-            Some(f) if f == 1.0 => Some(true),
-            _ => None,
-        },
+        Json::Number(n) => {
+            let f = n.as_f64()?;
+            if f == 0.0 {
+                Some(false)
+            } else if f == 1.0 {
+                Some(true)
+            } else {
+                None
+            }
+        }
         _ => None,
     }
 }

@@ -353,13 +353,19 @@ pub fn update_feed_url() -> String {
     op::updates::DEFAULT_FEED.to_string()
 }
 
-/// What check_for_updates answers, as JSON text, from feed text the host fetched itself: for a program
-/// running version `running` (default: this core's), when `installed` is the version on disk, if known.
-/// Throws when the feed lists no release.
+/// What check_for_updates answers, as JSON text, from feed XML the host fetched itself. It assumes the
+/// running program is this core (its `version()`), that the feed text is fresh (the host decides when to
+/// fetch again; nothing is cached here) and that no newer copy is known to be installed on disk (so no
+/// `installed_version`/`restart_needed`; `updateReportFor` takes those). Throws when the feed lists no release.
 #[wasm_bindgen(js_name = updateReport)]
-pub fn update_report(feed_xml: &str, running: Option<String>, installed: Option<String>) -> Result<String, JsError> {
-    let running = running.unwrap_or_else(|| op::VERSION.to_string());
-    let report = op::updates::report_from_feed(feed_xml, &running, installed.as_deref()).map_err(to_js_error)?;
+pub fn update_report(feed_xml: &str) -> Result<String, JsError> {
+    update_report_for(feed_xml, op::VERSION, None)
+}
+
+/// `updateReport` for a program running version `running`, when `installed` is the version on disk (if known).
+#[wasm_bindgen(js_name = updateReportFor)]
+pub fn update_report_for(feed_xml: &str, running: &str, installed: Option<String>) -> Result<String, JsError> {
+    let report = op::updates::report_from_feed(feed_xml, running, installed.as_deref()).map_err(to_js_error)?;
     Ok(serde_json::to_string(&report).unwrap_or_else(|_| "{}".to_string()))
 }
 

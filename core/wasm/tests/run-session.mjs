@@ -75,7 +75,7 @@ steps.forEach((step, i) => {
       text = pkg.toolCatalog();
     } else if (step.updateReport) {
       const [xml, running, installed] = step.updateReport;
-      text = pkg.updateReport(xml, running, installed ?? undefined);
+      text = running === null ? pkg.updateReport(xml) : pkg.updateReportFor(xml, running, installed ?? undefined);
     } else {
       const e = engines.get(step.e);
       if (step.tool) {

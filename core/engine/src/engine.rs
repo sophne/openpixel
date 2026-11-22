@@ -1248,7 +1248,7 @@ impl Engine {
                 let cell = |p: (f64, f64, f64)| (trunc(p.0), trunc(p.1), trunc(p.2));
                 let lo = a.point("from").map(cell).unwrap_or((0, 0, 0));
                 let hi = a.point("to").map(cell).unwrap_or((doc.sx() - 1, doc.sy() - 1, doc.sz() - 1));
-                let limit = a.int_or("limit", 500).max(1) as usize;
+                let limit = a.int_or("limit", 500).clamp(1, u32::MAX as i64) as usize;
                 let mut cells: Vec<[i64; 4]> = Vec::new();
                 let mut total = 0i64;
                 // A box that lies outside the model finds nothing. (The Mac app crashed on it.)
@@ -1699,7 +1699,7 @@ impl Engine {
                             grid[d.index(x, y, z)] = v;
                         }
                     }
-                    n += per_pixel;
+                    n = n.saturating_add(per_pixel);
                 }
             }
             d.cels[l][f] = Grid::from_data(grid);

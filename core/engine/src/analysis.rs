@@ -54,7 +54,7 @@ pub fn full(doc: &Document, frame: usize, style: Option<&StyleLock>) -> (JsonMap
     // Most used first. (Swift left colours with equal counts in no particular order; here the lower index
     // comes first.)
     let mut used: Vec<(usize, i64)> = per_color.iter().copied().enumerate().filter(|(_, n)| *n > 0).collect();
-    used.sort_by(|a, b| b.1.cmp(&a.1));
+    used.sort_by_key(|u| std::cmp::Reverse(u.1));
     result.insert(
         "colors".into(),
         json!(used.iter().map(|(i, n)| json!({"index": i, "hex": doc.color(*i as u8).hex(), "voxels": n})).collect::<Vec<_>>()),

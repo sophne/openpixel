@@ -117,7 +117,8 @@ fn run_native(session: &Path, out_dir: &Path) {
                 return Ok(catalog_json());
             }
             if let Some(a) = step.get("updateReport").and_then(Json::as_array) {
-                let report = updates::report_from_feed(a[0].as_str().unwrap_or(""), a[1].as_str().unwrap_or(""), a[2].as_str()).map_err(|e| e.0)?;
+                let running = a[1].as_str().unwrap_or(openpixel_core::VERSION);
+                let report = updates::report_from_feed(a[0].as_str().unwrap_or(""), running, a[2].as_str()).map_err(|e| e.0)?;
                 return Ok(serde_json::to_string(&report).expect("JSON"));
             }
             let e = &mut engines.get_mut(&name).expect("a known engine").engine;

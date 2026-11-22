@@ -89,7 +89,7 @@ impl Findings {
         }
         let total = (100 - lost.iter().map(|(_, v)| (*v).min(Findings::CATEGORY_CAP)).sum::<i64>()).max(0);
         let mut deducted: Vec<&Finding> = self.list.iter().filter(|f| f.points > 0).collect();
-        deducted.sort_by(|a, b| b.points.cmp(&a.points));
+        deducted.sort_by_key(|f| std::cmp::Reverse(f.points));
         let deductions: Vec<Json> = deducted
             .iter()
             .map(|f| json!({"code": f.code, "category": f.category, "level": f.level.raw(), "points": -f.points}))

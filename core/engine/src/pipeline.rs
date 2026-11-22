@@ -378,7 +378,7 @@ impl Engine {
             // The side most files share first. (Swift left sides with equally many files in no particular
             // order; here the one seen first comes first.)
             let mut by_count = lights.clone();
-            by_count.sort_by(|a, b| b.1.len().cmp(&a.1.len()));
+            by_count.sort_by_key(|side| std::cmp::Reverse(side.1.len()));
             let desc: Vec<String> = by_count
                 .iter()
                 .map(|(side, files)| format!("{}: files {}", side, files.iter().map(|k| k.to_string()).collect::<Vec<_>>().join(",")))

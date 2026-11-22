@@ -221,6 +221,9 @@ pub mod native_file {
 pub mod image_files {
     use super::*;
 
+    /// The largest picture that is read (4096 × 4096 pixels).
+    const MAX_DECODED_PIXELS: i64 = 1 << 24;
+
     /// PNG bytes of a picture (empty if it can't be encoded, as in the Mac app).
     pub fn png(p: &Picture) -> Vec<u8> {
         let mut out = Vec::new();
@@ -250,6 +253,9 @@ pub mod image_files {
         let (Ok(w), Ok(h)) = (u16::try_from(first.width), u16::try_from(first.height)) else {
             return Err(PcError::invalid("a GIF is at most 65535 pixels per side; use a smaller scale"));
         };
+        if frames.iter().any(|f| (f.width, f.height) != (first.width, first.height)) {
+            return Err(PcError::invalid("every frame of a GIF must have the same size"));
+        }
         let opaque = |a: u8| a >= 128;
         let group = |p: &Picture, i: usize| -> usize {
             ((p.pixels[i * 4] as usize >> 3) << 10) | ((p.pixels[i * 4 + 1] as usize >> 3) << 5) | (p.pixels[i * 4 + 2] as usize >> 3)
@@ -376,6 +382,10 @@ pub mod image_files {
         decoder.set_transformations(png::Transformations::EXPAND | png::Transformations::STRIP_16);
         let mut reader = decoder.read_info().ok()?;
         let (w, h) = (reader.info().width as i64, reader.info().height as i64);
+        // A picture is unpacked whole before any of it is used: refuse ones that would need gigabytes.
+        if w * h > MAX_DECODED_PIXELS {
+            return None;
+        }
         let mut pic = Picture::clear(w, h).ok()?;
         let mut buf = vec![0u8; reader.output_buffer_size()];
         let info = reader.next_frame(&mut buf).ok()?;
@@ -415,6 +425,9 @@ pub mod image_files {
         options.set_color_output(gif::ColorOutput::RGBA);
         let mut decoder = options.read_info(data).ok()?;
         let (w, h) = (decoder.width() as i64, decoder.height() as i64);
+        if w * h > MAX_DECODED_PIXELS {
+            return None;
+        }
         let mut canvas = Picture::clear(w, h).ok()?;
         let mut out = Vec::new();
         while out.len() < limit {
@@ -717,8 +730,8 @@ pub mod web_files {
         format!(
             "<svg xmlns=\"http://www.w3.org/2000/svg\"{} width=\"{}\" height=\"{}\" viewBox=\"0 0 {} {}\" shape-rendering=\"crispEdges\">{}</svg>",
             id_attr,
-            p.width as i64 * z,
-            p.height as i64 * z,
+            (p.width as i64).saturating_mul(z),
+            (p.height as i64).saturating_mul(z),
             p.width,
             p.height,
             rects

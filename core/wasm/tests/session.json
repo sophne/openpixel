@@ -5,6 +5,13 @@
  {
   "updateReport": [
    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<rss version=\"2.0\" xmlns:sparkle=\"http://www.andymatuschak.org/xml-namespaces/sparkle\"><channel><title>OpenPixel</title>\n<item><title>OpenPixel 9.10.1</title><sparkle:version>1</sparkle:version>\n<sparkle:shortVersionString>9.10.1</sparkle:shortVersionString>\n<sparkle:fullReleaseNotesLink>https://github.com/sophne/openpixel/releases/tag/v9.10.1</sparkle:fullReleaseNotesLink>\n<enclosure url=\"https://github.com/sophne/openpixel/releases/download/v9.10.1/OpenPixel.dmg\" sparkle:edSignature=\"x\" length=\"1\" type=\"application/octet-stream\"/>\n</item>\n</channel></rss>",
+   null,
+   null
+  ]
+ },
+ {
+  "updateReport": [
+   "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<rss version=\"2.0\" xmlns:sparkle=\"http://www.andymatuschak.org/xml-namespaces/sparkle\"><channel><title>OpenPixel</title>\n<item><title>OpenPixel 9.10.1</title><sparkle:version>1</sparkle:version>\n<sparkle:shortVersionString>9.10.1</sparkle:shortVersionString>\n<sparkle:fullReleaseNotesLink>https://github.com/sophne/openpixel/releases/tag/v9.10.1</sparkle:fullReleaseNotesLink>\n<enclosure url=\"https://github.com/sophne/openpixel/releases/download/v9.10.1/OpenPixel.dmg\" sparkle:edSignature=\"x\" length=\"1\" type=\"application/octet-stream\"/>\n</item>\n</channel></rss>",
    "9.9.0",
    "9.10.1"
   ]

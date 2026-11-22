@@ -3,6 +3,10 @@
 //!
 //! The engine never touches the operating system itself: files, the clock and the network go through
 //! [`HostIo`], so the same code runs natively and as WebAssembly.
+// The arithmetic is kept in the shape of the Swift source it was ported from, so the two can be read side
+// by side (and so NaN and negative values behave the same).
+#![allow(clippy::manual_clamp, clippy::manual_range_contains, clippy::manual_rem_euclid, clippy::manual_is_multiple_of, clippy::needless_range_loop)]
+
 use std::fmt;
 
 pub mod analysis;
