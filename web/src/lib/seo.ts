@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { DOWNLOAD_URL, REPO_URL, X_URL } from "@/lib/github";
+import { REPO_URL, X_URL, assetUrl, hasFile, type Release } from "@/lib/github";
+import { FILES } from "@/lib/platforms";
 
 /**
  * Search and social metadata shared by every page. The preview cards in public/og are made by
@@ -10,9 +11,14 @@ export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3
 export const SITE_NAME = "OpenPixel";
 export const X_HANDLE = `@${X_URL.replace(/\/$/, "").split("/").pop()}`;
 
-const CARD_VERSION = 2;
+/** The site's title and description, wherever a page doesn't set its own. */
+export const TAGLINE = "OpenPixel: the agentic pixel editor for Mac, Windows and Linux";
+export const DESCRIPTION =
+  "Free, open-source pixel art and voxel editor for Mac, Windows and Linux with a built-in MCP server. Draw sprites, animations and 3D models with Claude, Codex, Cursor or any agent.";
+
+const CARD_VERSION = 3;
 const CARD_ALT =
-  "OpenPixel is an agentic pixel editor for sprites and voxel worlds: a 32×32 pixel-art treasure chest drawn in OpenPixel, next to the prompt that made it.";
+  "OpenPixel is an agentic pixel editor for sprites and voxel worlds, free for Mac, Windows and Linux: a 32×32 pixel-art treasure chest drawn in OpenPixel, next to the prompt that made it.";
 export const OG_IMAGE = { url: `/og/opengraph.png?v=${CARD_VERSION}`, width: 1200, height: 630, alt: CARD_ALT, type: "image/png" };
 export const TWITTER_IMAGE = { url: `/og/twitter.png?v=${CARD_VERSION}`, width: 1200, height: 600, alt: CARD_ALT };
 
@@ -61,7 +67,9 @@ const organization = {
 };
 
 /** Structured data for the home page: the site, its publisher and the app itself. */
-export function homeJsonLd(version?: string) {
+export function homeJsonLd(release: Release | null) {
+  // Only files the newest release carries (all of them when GitHub didn't answer).
+  const downloads = FILES.filter((f) => hasFile(release, f) !== false).map((f) => assetUrl(f.file));
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -72,14 +80,14 @@ export function homeJsonLd(version?: string) {
         "@id": abs("/#app"),
         name: SITE_NAME,
         description:
-          "Free, open-source pixel art and voxel editor for the Mac with a built-in MCP server, so AI agents can draw, review and refine sprites, animations and 3D models with you.",
+          "Free, open-source pixel art and voxel editor for Mac, Windows and Linux with a built-in MCP server, so AI agents can draw, review and refine sprites, animations and 3D models with you.",
         applicationCategory: "DesignApplication",
         applicationSubCategory: "Pixel art and voxel editor",
-        operatingSystem: "macOS 13 or later",
-        processorRequirements: "Apple silicon or Intel",
-        ...(version ? { softwareVersion: version } : {}),
+        operatingSystem: "macOS 12 or later, Windows 10 or later, Linux",
+        processorRequirements: "Apple silicon or Intel on macOS; 64-bit x86 on Windows and Linux",
+        ...(release ? { softwareVersion: release.version } : {}),
         url: abs("/"),
-        downloadUrl: DOWNLOAD_URL,
+        downloadUrl: downloads,
         installUrl: abs("/downloads"),
         releaseNotes: abs("/changelog"),
         image: abs("/icon.png"),

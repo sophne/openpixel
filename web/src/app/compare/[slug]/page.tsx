@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import AppWindow from "@/components/AppWindow";
+import DownloadButton, { DownloadNote } from "@/components/DownloadButton";
 import Sprite from "@/components/Sprite";
 import { Footer, Header } from "@/components/Chrome";
 import { featureArt } from "@/lib/feature-art";
@@ -70,9 +71,7 @@ function CardVisual({ v }: { v: Visual }) {
 function Buttons() {
   return (
     <div className="cmp-buttons">
-      <a className="cmp-btn primary" href="/downloads/mac" data-download="compare">
-        Download
-      </a>
+      <DownloadButton place="compare" className="cmp-btn primary" />
       <a className="cmp-btn" href={REPO_URL} target="_blank" rel="noopener noreferrer">
         View on GitHub
       </a>
@@ -103,7 +102,7 @@ export default async function CompareDetail({ params }: { params: Promise<{ slug
           <p className="cmp-tagline">{c.tagline}</p>
           <p className="cmp-intro">{c.intro}</p>
           <Buttons />
-          <p className="cmp-note">Free for macOS 13 or later, on Apple silicon and Intel.</p>
+          <DownloadNote className="cmp-note" free />
         </section>
 
         <div className="cmp-wide">
@@ -201,7 +200,7 @@ export default async function CompareDetail({ params }: { params: Promise<{ slug
 
         <section className="cmp-show compact">
           <h2>
-            Native and fast. <span>See an agent draw it live.</span>
+            Watch it happen. <span>See an agent draw it live.</span>
           </h2>
           <AppWindow
             src={editorShot}

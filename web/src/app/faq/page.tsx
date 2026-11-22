@@ -9,7 +9,7 @@ export const metadata: Metadata = pageMeta({
   path: "/faq",
   title: "FAQ: pixel art, sprites, voxels and AI agents",
   description:
-    "Answers about OpenPixel, the free pixel art and voxel editor for Mac: sprite sizes, sprite sheets, animation, palettes, MagicaVoxel .vox, exports for Unity and Godot, and drawing with AI agents.",
+    "Answers about OpenPixel, the free pixel art and voxel editor for Mac, Windows and Linux: sprite sizes, sprite sheets, animation, palettes, MagicaVoxel .vox, exports for Unity and Godot, and drawing with AI agents.",
 });
 
 export default function Faq() {

@@ -4,9 +4,10 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 
 /**
- * The macOS Dock with OpenPixel in the middle of the apps people use it with. The icons are the apps' own
- * dark-mode Dock icons, rendered from a Mac by web/scripts/dock-icons.swift; other apps' icons are their
- * owners' trademarks and only show what OpenPixel works alongside.
+ * The macOS Dock with OpenPixel in the middle of the apps people use it with: a picture of one of the three
+ * systems the app runs on, kept as the hero's ornament. The icons are the apps' own dark-mode Dock icons,
+ * rendered from a Mac by web/scripts/dock-icons.swift; other apps' icons are their owners' trademarks and only
+ * show what OpenPixel works alongside.
  *
  * Motion, like the real Dock:
  * - Icons grow with the pointer's distance (a cosine falloff over about three icons) and push their neighbours

@@ -3,7 +3,10 @@
 compare pages) and the examples (the "Start from a sentence" tabs, the Review loop card, the closing band), in the same style as
 the app's empty states: 32×32 animated sprites in the app's grays and accent orange, lit from the top left, a dark
 outline, 12 frames of equal length. The palette, outline and helpers are the empty states' own
-(app/tools/make-empty-states.py), so the two sets stay one family.
+(desktop/tools/make-empty-states.py), so the two sets stay one family.
+
+OpenPixel here is the native `openpixel` program: $OPENPIXEL if set, else core/target/release/openpixel, else the
+installed app's (find_openpixel.py).
 
     python3 web/scripts/make-feature-art.py               # draw, review and export with OpenPixel
     python3 web/scripts/make-feature-art.py --preview DIR # contact sheets only (no OpenPixel), to look at drawings
@@ -17,10 +20,18 @@ import math
 import os
 import sys
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-spec = importlib.util.spec_from_file_location("empty_states", os.path.join(ROOT, "app", "tools", "make-empty-states.py"))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import find_openpixel  # noqa: E402
+
+ROOT = find_openpixel.ROOT
+# The empty states' script lives with the desktop app (it was in app/tools while the Mac app existed).
+ES = next((p for p in (os.path.join(ROOT, d, "tools", "make-empty-states.py") for d in ("desktop", "app")) if os.path.exists(p)), None)
+if not ES:
+    raise SystemExit("desktop/tools/make-empty-states.py is missing: the feature art shares its palette and helpers.")
+spec = importlib.util.spec_from_file_location("empty_states", ES)
 es = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(es)
+es.APP = find_openpixel.program()  # the empty states' own default is the old place; its Agent starts es.APP
 W, H, LEG, FRAME_MS = es.W, es.H, es.LEG, es.FRAME_MS
 blank, outline, rect, rows = es.blank, es.outline, es.rect, es.rows
 
@@ -773,6 +784,7 @@ def main():
         return
     os.makedirs(OUT, exist_ok=True)
     os.makedirs(SRC, exist_ok=True)
+    find_openpixel.require(es.APP)
     a = es.Agent()
     a.call("pixel_art_guide", topic="animation")
     entries = {}

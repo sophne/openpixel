@@ -419,6 +419,11 @@ html[data-scrolled="true"] .site-header {
   color: var(--text-3);
 }
 
+/* The second line under the hero's button sits close to the first. */
+.hero-note + .hero-note {
+  margin-top: 4px;
+}
+
 .hero-note a {
   color: var(--text-2);
   text-decoration: underline;
@@ -2791,16 +2796,143 @@ html[data-scrolled="true"] .site-header {
 }
 
 
-/* The button is a flex box, which drops a leading space inside the span, so the gap is set here. */
-.site-header .for-mac {
+/* ---------- the visitor's system
+   A script in the page's first bytes writes the system on <html data-os="mac | windows | linux"> before anything is
+   painted (OS_SCRIPT in lib/platforms.ts); phones, tablets, other systems and browsers without JavaScript get no
+   value. Anything that differs by system is in the page once per system, marked data-for-os, with a neutral
+   data-for-os="other": only the matching one stays. The rest is removed outright, so it takes no room and is
+   skipped by the keyboard and by screen readers, and since this happens before first paint nothing jumps. */
+html:not([data-os]) [data-for-os]:not([data-for-os="other"]),
+html[data-os="mac"] [data-for-os]:not([data-for-os="mac"]),
+html[data-os="windows"] [data-for-os]:not([data-for-os="windows"]),
+html[data-os="linux"] [data-for-os]:not([data-for-os="linux"]) {
+  display: none !important;
+}
+
+/* The header's button is a flex box, which drops the space before the span, so the gap is set here. */
+.site-header .for-os {
   margin-left: 0.28em;
 }
 
-/* Phones: the header button shortens to "Download" so the row fits. */
+/* Narrow windows: the header button shortens to "Download" so the row fits. */
 @media (max-width: 420px) {
-  .site-header .for-mac {
+  .site-header .for-os {
     display: none;
   }
+}
+
+/* The downloads page: the visitor's own system comes first, is marked "Your system", and its main file gets the
+   one orange button. Only the order on screen changes; the cards stay independent of each other. */
+.dl-systems > .dl-head {
+  order: -2;
+}
+
+html[data-os="mac"] .dl-os[data-os-card="mac"],
+html[data-os="windows"] .dl-os[data-os-card="windows"],
+html[data-os="linux"] .dl-os[data-os-card="linux"] {
+  order: -1;
+  border-color: var(--line);
+}
+
+.dl-os {
+  scroll-margin-top: 96px;
+}
+
+.dl-card-title h3 .dl-yours {
+  display: none;
+  margin-left: 10px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  vertical-align: 3px;
+  text-align: left;
+}
+
+html[data-os="mac"] [data-os-card="mac"] .dl-yours,
+html[data-os="windows"] [data-os-card="windows"] .dl-yours,
+html[data-os="linux"] [data-os-card="linux"] .dl-yours {
+  display: inline-block;
+}
+
+html[data-os="mac"] [data-os-card="mac"] .dl-main,
+html[data-os="windows"] [data-os-card="windows"] .dl-main,
+html[data-os="linux"] [data-os-card="linux"] .dl-main {
+  background: var(--accent);
+  color: #fff;
+}
+
+html[data-os="mac"] [data-os-card="mac"] .dl-main:hover,
+html[data-os="windows"] [data-os-card="windows"] .dl-main:hover,
+html[data-os="linux"] [data-os-card="linux"] .dl-main:hover {
+  background: var(--accent-hover);
+}
+
+/* A file the newest release doesn't carry yet: said plainly, where its button would be. */
+.dl-soon {
+  font-size: 13px;
+  color: var(--text-3);
+  text-align: right;
+}
+
+/* Mac, Windows or Linux: three radio buttons drawn as one control. They choose which system's commands the
+   Agents and Headless sections show (data-agent-os); the visitor's own system is chosen to begin with. */
+.dl-seg {
+  display: flex;
+  flex: none;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--deep);
+  border: 1px solid var(--line-soft);
+}
+
+.dl-seg label {
+  position: relative;
+  display: block;
+  cursor: pointer;
+}
+
+.dl-seg input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.dl-card-title .dl-seg span {
+  display: block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.dl-card-title .dl-seg input:checked + span {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.dl-seg input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.dl-agents:has(input[name="agents-os"][value="mac"]:checked) [data-agent-os]:not([data-agent-os="mac"]),
+.dl-agents:has(input[name="agents-os"][value="windows"]:checked) [data-agent-os]:not([data-agent-os="windows"]),
+.dl-agents:has(input[name="agents-os"][value="linux"]:checked) [data-agent-os]:not([data-agent-os="linux"]) {
+  display: none;
+}
+
+.dl-card-title + [data-agent-os] > .dl-code:first-child {
+  margin-top: 4px;
 }
 
 /* The first-launch note on the downloads page, shown while releases aren't notarized. */
@@ -2820,6 +2952,12 @@ html[data-scrolled="true"] .site-header {
 
 .dl-first-launch + * {
   margin-top: 18px;
+}
+
+/* Linux: the two commands sit inside the note. */
+.dl-first-launch .dl-code {
+  margin: 10px 0 0;
+  background: var(--canvas);
 }
 
 /* Cookie banner: a small card at the bottom left that never covers the page or takes focus.

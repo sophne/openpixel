@@ -2,8 +2,9 @@ import Image, { type StaticImageData } from "next/image";
 import WindowVideo from "./WindowVideo";
 
 /**
- * A Mac window showing the editor. The app's tab bar is its title bar, so the screenshot already has it: the frame
- * only adds the window buttons macOS draws there (the app's --screenshot picture is of the page alone). Pass a static
+ * A window showing the editor, as it looks on a Mac (the screenshots were taken there; on Windows and Linux the
+ * app is the same inside its own window frame). The app's tab bar is its title bar, so the screenshot already has it:
+ * the frame only adds the window buttons macOS draws there (the app's --screenshot picture is of the page alone). Pass a static
  * import of a 1440×855 window shot (1× or 2×) so its size comes with it; the buttons are placed in proportion to it.
  * With `video`, a recording of the same window plays over the shot (which should be the recording's last frame).
  */

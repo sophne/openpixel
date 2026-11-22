@@ -49,7 +49,7 @@ export const COMPETITORS: Competitor[] = [
     card: "Agents built in, voxels included, free.",
     tagline: "Pixel art with an agent at your side",
     intro:
-      "Everything you draw sprites with, plus a built-in MCP server and real 3D. Free, open source and native on your Mac.",
+      "Everything you draw sprites with, plus a built-in MCP server and real 3D. Free and open source, for Mac, Windows and Linux.",
     whySub: "Agents draw with you. Sprites turn 3D. And it costs nothing.",
     rows: [
       { feature: "Let AI agents draw over MCP", us: y(), them: p("Third-party tools") },
@@ -61,10 +61,10 @@ export const COMPETITORS: Competitor[] = [
       { feature: "Export MagicaVoxel .vox and OBJ", us: y(), them: n() },
       { feature: "Automate from scripts", us: y("MCP, headless mode"), them: y("Lua, command line") },
       { feature: "Read files as plain JSON", us: y(), them: p("Documented binary format") },
+      { feature: "Use it on Mac, Windows and Linux", us: y(), them: y() },
       { feature: "Use it for free", us: y(), them: p("Paid, or compile it yourself") },
       { feature: "Open source licence", us: y("MIT"), them: p("Source available, EULA") },
       { feature: "Draw with tilemaps", us: n(), them: y() },
-      { feature: "Use it on Windows or Linux", us: n(), them: y() },
     ],
     bring: {
       title: "Bring your Aseprite sprites with you",
@@ -75,7 +75,7 @@ export const COMPETITORS: Competitor[] = [
         { title: "Take it to 3D", text: "Make 3D gives any sprite depth in one click or one tool call.", visual: "make3d" },
       ],
     },
-    cta: { title: "Bring your sprites into OpenPixel", sub: "Download OpenPixel for macOS. Free and open source, with agents built in." },
+    cta: { title: "Bring your sprites into OpenPixel", sub: "Download OpenPixel for Mac, Windows or Linux. Free and open source, with agents built in." },
   },
   {
     slug: "pixelorama",
@@ -84,9 +84,9 @@ export const COMPETITORS: Competitor[] = [
     logo: "/compare/pixelorama.png",
     pixelLogo: true,
     card: "Same freedom, with agents and voxels.",
-    tagline: "A native Mac editor that agents can use",
+    tagline: "A free pixel editor that agents can use",
     intro:
-      "Like Pixelorama, OpenPixel is free and MIT licensed. It adds a built-in MCP server, full voxel models and a native Swift app.",
+      "Like Pixelorama, OpenPixel is free, MIT licensed and runs on Mac, Windows and Linux. It adds a built-in MCP server and full voxel models.",
     whySub: "Free and open, like Pixelorama. Plus agents and real voxel models.",
     rows: [
       { feature: "Let AI agents draw over MCP", us: y(), them: n() },
@@ -96,11 +96,10 @@ export const COMPETITORS: Competitor[] = [
       { feature: "Animate with layers, frames and onion skin", us: y(), them: y() },
       { feature: "Export sprite sheets and GIFs", us: y(), them: y() },
       { feature: "Automate from scripts", us: y("MCP, headless mode"), them: p("Extensions") },
-      { feature: "Native Mac app", us: y("Swift"), them: p("Godot engine") },
+      { feature: "Use it on Mac, Windows and Linux", us: y(), them: y() },
       { feature: "Use it for free", us: y(), them: y() },
       { feature: "Open source licence", us: y("MIT"), them: y("MIT") },
       { feature: "Use it in a web browser", us: n(), them: y() },
-      { feature: "Use it on Windows or Linux", us: n(), them: y() },
     ],
     bring: {
       title: "Bring your Pixelorama work with you",
@@ -111,7 +110,7 @@ export const COMPETITORS: Competitor[] = [
         { title: "Hand it to an agent", text: "Ask Claude, Codex or Cursor to draw, review and fix it with you.", visual: "agent" },
       ],
     },
-    cta: { title: "Bring your pixel art into OpenPixel", sub: "Download OpenPixel for macOS. Free and open source, with agents built in." },
+    cta: { title: "Bring your pixel art into OpenPixel", sub: "Download OpenPixel for Mac, Windows or Linux. Free and open source, with agents built in." },
   },
   {
     slug: "magicavoxel",
@@ -122,7 +121,7 @@ export const COMPETITORS: Competitor[] = [
     card: "Open your .vox files and add sprites.",
     tagline: "Voxels, sprites and agents in one app",
     intro:
-      "Open your .vox models, draw 2D sprites next to them, and let an agent build with you. Free, open source and native on your Mac.",
+      "Open your .vox models, draw 2D sprites next to them, and let an agent build with you. Free and open source, for Mac, Windows and Linux.",
     whySub: "Your .vox files open as they are. Sprites and agents come with them.",
     rows: [
       { feature: "Let AI agents build over MCP", us: y(), them: n() },
@@ -132,10 +131,10 @@ export const COMPETITORS: Competitor[] = [
       { feature: "Draw 2D sprites and animations", us: y(), them: n() },
       { feature: "Render isometric pixel-art sprites", us: y("8-angle sprite sheets"), them: p("Path-traced renders") },
       { feature: "Read files as plain JSON", us: y(), them: n() },
+      { feature: "Use it on Mac and Windows", us: y("And Linux"), them: y() },
       { feature: "Use it for free", us: y(), them: y() },
       { feature: "Open source licence", us: y("MIT"), them: n() },
       { feature: "Build scenes from many models", us: n(), them: y() },
-      { feature: "Use it on Windows", us: n(), them: y() },
     ],
     bring: {
       title: "Bring your MagicaVoxel models with you",
@@ -146,7 +145,7 @@ export const COMPETITORS: Competitor[] = [
         { title: "Let agents build", text: "Agents place voxels, spheres and cylinders, then review every angle.", visual: "voxagent" },
       ],
     },
-    cta: { title: "Bring your voxel models into OpenPixel", sub: "Download OpenPixel for macOS. Free and open source, with agents built in." },
+    cta: { title: "Bring your voxel models into OpenPixel", sub: "Download OpenPixel for Mac, Windows or Linux. Free and open source, with agents built in." },
   },
   // ---------- More desktop apps
 
@@ -159,7 +158,7 @@ export const COMPETITORS: Competitor[] = [
     card: "Free and open, with agents and voxels.",
     tagline: "Free sprite editing, with agents and 3D",
     intro:
-      "LibreSprite carries on the last open-source version of Aseprite. OpenPixel is free and open source too, with a built-in MCP server, voxel models and a native Swift app.",
+      "LibreSprite carries on the last open-source version of Aseprite. OpenPixel is free and open source too, with a built-in MCP server and voxel models, on Mac, Windows and Linux.",
     whySub: "Open source like LibreSprite. Agents and voxels built in.",
     rows: [
       { feature: "Let AI agents draw over MCP", us: y(), them: n() },
@@ -172,7 +171,8 @@ export const COMPETITORS: Competitor[] = [
       { feature: "Read files as plain JSON", us: y(), them: p("Documented binary format") },
       { feature: "Use it for free", us: y(), them: y() },
       { feature: "Open source licence", us: y("MIT"), them: y("GPL 2.0") },
-      { feature: "Use it on Windows, Linux or Android", us: n(), them: y() },
+      { feature: "Use it on Mac, Windows and Linux", us: y(), them: y() },
+      { feature: "Use it on Android", us: n(), them: y() },
     ],
     bring: {
       title: "Bring your LibreSprite sprites with you",
@@ -183,17 +183,17 @@ export const COMPETITORS: Competitor[] = [
         { title: "Hand it to an agent", text: "Ask Claude, Codex or Cursor to draw, review and fix it with you.", visual: "agent" },
       ],
     },
-    cta: { title: "Bring your sprites into OpenPixel", sub: "Download OpenPixel for macOS. Free and open source, with agents built in." },
+    cta: { title: "Bring your sprites into OpenPixel", sub: "Download OpenPixel for Mac, Windows or Linux. Free and open source, with agents built in." },
   },
   {
     slug: "pyxel-edit",
     name: "Pyxel Edit",
     kind: "desktop",
     logo: "/compare/pyxel-edit.png",
-    card: "Free, native on your Mac, with agents.",
+    card: "Free and open source, with agents.",
     tagline: "Sprites and 3D, with an agent at your side",
     intro:
-      "Pyxel Edit is loved for its tileset tools and sold as a paid beta. OpenPixel is free and open source, native on your Mac, with voxel models and a built-in MCP server.",
+      "Pyxel Edit is loved for its tileset tools and sold as a paid beta. OpenPixel is free and open source, for Mac, Windows and Linux, with voxel models and a built-in MCP server.",
     whySub: "Free and open, with agents and 3D voxels. Tilesets stay Pyxel Edit's strength.",
     rows: [
       { feature: "Let AI agents draw over MCP", us: y(), them: n() },
@@ -202,12 +202,11 @@ export const COMPETITORS: Competitor[] = [
       { feature: "Turn a sprite into a 3D model", us: y(), them: n() },
       { feature: "Animate with frames and onion skin", us: y(), them: y() },
       { feature: "Export sprite sheets and GIFs", us: y(), them: y() },
-      { feature: "Native Mac app", us: y("Swift"), them: p("Adobe AIR") },
+      { feature: "Use it on Mac and Windows", us: y("And Linux"), them: y("Adobe AIR") },
       { feature: "Use it for free", us: y(), them: p("Paid beta, older version free") },
       { feature: "Open source licence", us: y("MIT"), them: n() },
       { feature: "Draw tilesets with linked tiles", us: n(), them: y() },
       { feature: "Export tilemaps as JSON or XML", us: n(), them: y() },
-      { feature: "Use it on Windows", us: n(), them: y() },
     ],
     bring: {
       title: "Bring your Pyxel Edit art with you",
@@ -218,18 +217,18 @@ export const COMPETITORS: Competitor[] = [
         { title: "Take it to 3D", text: "Make 3D gives any sprite depth in one click or one tool call.", visual: "make3d" },
       ],
     },
-    cta: { title: "Bring your pixel art into OpenPixel", sub: "Download OpenPixel for macOS. Free and open source, with agents built in." },
+    cta: { title: "Bring your pixel art into OpenPixel", sub: "Download OpenPixel for Mac, Windows or Linux. Free and open source, with agents built in." },
   },
   {
     slug: "pro-motion-ng",
     name: "Pro Motion NG",
     kind: "desktop",
     logo: "/compare/pro-motion.png",
-    card: "Native on the Mac, free, with agents.",
-    tagline: "Pixel art and animation, native on the Mac",
+    card: "On Mac and Linux too, free, with agents.",
+    tagline: "Pixel art and animation on Mac, Windows and Linux",
     intro:
-      "Pro Motion NG is a long-standing Windows studio for pixel art, animation and tilemaps. OpenPixel runs natively on your Mac, is free and open source, and lets AI agents draw with you.",
-    whySub: "Native on your Mac, free, and agents built in. Retro-hardware tools stay Pro Motion's strength.",
+      "Pro Motion NG is a long-standing Windows studio for pixel art, animation and tilemaps. OpenPixel runs on Mac, Windows and Linux, is free and open source, and lets AI agents draw with you.",
+    whySub: "On Mac and Linux too, free, and agents built in. Retro-hardware tools stay Pro Motion's strength.",
     rows: [
       { feature: "Let AI agents draw over MCP", us: y(), them: n() },
       { feature: "Watch agent edits live and undo them", us: y(), them: n() },
@@ -237,7 +236,7 @@ export const COMPETITORS: Competitor[] = [
       { feature: "Turn a sprite into a 3D model", us: y(), them: n() },
       { feature: "Animate with layers, frames and onion skin", us: y(), them: y() },
       { feature: "Export sprite sheets", us: y(), them: y() },
-      { feature: "Run natively on a Mac", us: y(), them: n("Windows only") },
+      { feature: "Use it on Mac and Linux", us: y(), them: n("Windows only") },
       { feature: "Use it for free", us: y(), them: p("Paid, or a limited free edition") },
       { feature: "Open source licence", us: y("MIT"), them: n() },
       { feature: "Draw with tilemaps", us: n(), them: y() },
@@ -246,14 +245,14 @@ export const COMPETITORS: Competitor[] = [
     ],
     bring: {
       title: "Bring your Pro Motion art with you",
-      sub: "Export PNGs or sprite sheets from Pro Motion NG and import them on your Mac.",
+      sub: "Export PNGs or sprite sheets from Pro Motion NG and import them, on Windows, Mac or Linux.",
       cards: [
         { title: "Import your PNGs", text: "Turn any PNG into a sprite or a voxel slice, snapped to your palette.", visual: "import" },
         { title: "Keep your palettes", text: "DawnBringer, PICO-8 and Endesga are built in, or bring your own colours.", visual: "palettes" },
         { title: "Animate the same way", text: "Layers, frames, onion skin and per-frame timing work the way you expect.", visual: "animate" },
       ],
     },
-    cta: { title: "Bring your pixel art to your Mac", sub: "Download OpenPixel for macOS. Free and open source, with agents built in." },
+    cta: { title: "Bring your pixel art into OpenPixel", sub: "Download OpenPixel for Mac, Windows or Linux. Free and open source, with agents built in." },
   },
 
   // ---------- Web apps
@@ -264,11 +263,11 @@ export const COMPETITORS: Competitor[] = [
     kind: "web",
     logo: "/compare/piskel.png",
     pixelLogo: true,
-    card: "A real Mac app, with agents and voxels.",
+    card: "A desktop app, with agents and voxels.",
     tagline: "From browser sprites to an agentic editor",
     intro:
-      "Piskel is a handy free sprite editor in the browser. OpenPixel is free and open source too, and adds a built-in MCP server, voxel models and a native Mac app.",
-    whySub: "Free like Piskel. Plus agents, 3D voxels and a native app.",
+      "Piskel is a handy free sprite editor in the browser. OpenPixel is free and open source too, and adds a built-in MCP server, voxel models and a desktop app for Mac, Windows and Linux.",
+    whySub: "Free like Piskel. Plus agents, 3D voxels and a desktop app.",
     rows: [
       { feature: "Let AI agents draw over MCP", us: y(), them: n() },
       { feature: "Watch agent edits live and undo them", us: y(), them: n() },
@@ -276,11 +275,10 @@ export const COMPETITORS: Competitor[] = [
       { feature: "Turn a sprite into a 3D model", us: y(), them: n() },
       { feature: "Animate with layers, frames and onion skin", us: y(), them: y() },
       { feature: "Export sprite sheets and GIFs", us: y(), them: y() },
-      { feature: "Native Mac app", us: y("Swift"), them: p("Browser, older desktop builds") },
+      { feature: "Desktop app for Mac, Windows and Linux", us: y(), them: p("Browser, older desktop builds") },
       { feature: "Use it for free", us: y(), them: y() },
       { feature: "Open source licence", us: y("MIT"), them: y("Apache 2.0") },
       { feature: "Use it in a web browser", us: n(), them: y() },
-      { feature: "Use it on Windows or Linux", us: n(), them: y() },
     ],
     bring: {
       title: "Bring your Piskel sprites with you",
@@ -291,7 +289,7 @@ export const COMPETITORS: Competitor[] = [
         { title: "Hand it to an agent", text: "Ask Claude, Codex or Cursor to draw, review and fix it with you.", visual: "agent" },
       ],
     },
-    cta: { title: "Bring your sprites into OpenPixel", sub: "Download OpenPixel for macOS. Free and open source, with agents built in." },
+    cta: { title: "Bring your sprites into OpenPixel", sub: "Download OpenPixel for Mac, Windows or Linux. Free and open source, with agents built in." },
   },
   {
     slug: "pixilart",
@@ -302,7 +300,7 @@ export const COMPETITORS: Competitor[] = [
     card: "No ads, no account, agents built in.",
     tagline: "A pixel editor that works with your agents",
     intro:
-      "Pixilart is a friendly browser editor with a big community. OpenPixel is a native Mac app with a built-in MCP server and voxel models: free, open source, and your files stay on your Mac.",
+      "Pixilart is a friendly browser editor with a big community. OpenPixel is a desktop app for Mac, Windows and Linux with a built-in MCP server and voxel models: free, open source, and your files stay on your computer.",
     whySub: "No ads, no account, no subscription. Agents and 3D included.",
     rows: [
       { feature: "Let AI agents draw over MCP", us: y(), them: n() },
@@ -326,17 +324,17 @@ export const COMPETITORS: Competitor[] = [
         { title: "Hand it to an agent", text: "Ask Claude, Codex or Cursor to draw, review and fix it with you.", visual: "agent" },
       ],
     },
-    cta: { title: "Bring your pixel art into OpenPixel", sub: "Download OpenPixel for macOS. Free and open source, with agents built in." },
+    cta: { title: "Bring your pixel art into OpenPixel", sub: "Download OpenPixel for Mac, Windows or Linux. Free and open source, with agents built in." },
   },
   {
     slug: "pixellab",
     name: "PixelLab",
     kind: "web",
     logo: "/compare/pixellab.png",
-    card: "Your own agent, drawing on your Mac.",
-    tagline: "Your agent draws, pixel by pixel, on your Mac",
+    card: "Your own agent, drawing on your computer.",
+    tagline: "Your agent draws, pixel by pixel, on your computer",
     intro:
-      "PixelLab generates pixel art with its own AI models in the cloud. OpenPixel is a free, open-source editor where the agent you already use draws, reviews and fixes art pixel by pixel on your Mac.",
+      "PixelLab generates pixel art with its own AI models in the cloud. OpenPixel is a free, open-source editor where the agent you already use draws, reviews and fixes art pixel by pixel on your Mac, Windows or Linux computer.",
     whySub: "Use the agent you already have. No credits, no subscription, and your files stay local.",
     rows: [
       { feature: "Let AI agents draw over MCP", us: y(), them: y("Through PixelLab's generator") },
@@ -344,7 +342,7 @@ export const COMPETITORS: Competitor[] = [
       { feature: "Watch agent edits live and undo them", us: y(), them: n() },
       { feature: "Edit by hand in a pixel editor", us: y(), them: y() },
       { feature: "Model in 3D voxels", us: y(), them: n() },
-      { feature: "Work offline, with files on your Mac", us: y(), them: n("Runs on cloud GPUs") },
+      { feature: "Work offline, with files on your computer", us: y(), them: n("Runs on cloud GPUs") },
       { feature: "Use it for free", us: y(), them: p("Free trial, then paid plans") },
       { feature: "Open source licence", us: y("MIT"), them: n() },
       { feature: "Generate art and animation from a prompt", us: p("Your agent draws it"), them: y() },
@@ -360,7 +358,7 @@ export const COMPETITORS: Competitor[] = [
         { title: "Take it to 3D", text: "Make 3D gives any sprite depth in one click or one tool call.", visual: "make3d" },
       ],
     },
-    cta: { title: "Let your agent draw in OpenPixel", sub: "Download OpenPixel for macOS. Free and open source, with agents built in." },
+    cta: { title: "Let your agent draw in OpenPixel", sub: "Download OpenPixel for Mac, Windows or Linux. Free and open source, with agents built in." },
   },
   {
     slug: "lospec-pixel-editor",
@@ -370,7 +368,7 @@ export const COMPETITORS: Competitor[] = [
     card: "Still growing, with animation and agents.",
     tagline: "Keep drawing after the Lospec editor",
     intro:
-      "The Lospec Pixel Editor is no longer developed. OpenPixel is a free, open-source pixel editor for the Mac that keeps growing, with classic palettes, animation, voxels and a built-in MCP server.",
+      "The Lospec Pixel Editor is no longer developed. OpenPixel is a free, open-source pixel editor for Mac, Windows and Linux that keeps growing, with classic palettes, animation, voxels and a built-in MCP server.",
     whySub: "Still developed, still free. Animation, voxels and agents on top.",
     rows: [
       { feature: "Let AI agents draw over MCP", us: y(), them: n() },
@@ -382,8 +380,8 @@ export const COMPETITORS: Competitor[] = [
       { feature: "Actively developed", us: y(), them: n("No longer developed") },
       { feature: "Use it for free", us: y(), them: y() },
       { feature: "Open source licence", us: y("MIT"), them: y("GPL 3.0") },
+      { feature: "Use it on Mac, Windows and Linux", us: y("Desktop app"), them: y("In the browser") },
       { feature: "Use it in a web browser", us: n(), them: y() },
-      { feature: "Use it on Windows or Linux", us: n(), them: y("In the browser") },
     ],
     bring: {
       title: "Bring your Lospec art with you",
@@ -394,7 +392,7 @@ export const COMPETITORS: Competitor[] = [
         { title: "Start animating", text: "Layers, frames, onion skin and per-frame timing, ready when you are.", visual: "animate" },
       ],
     },
-    cta: { title: "Keep drawing in OpenPixel", sub: "Download OpenPixel for macOS. Free and open source, with agents built in." },
+    cta: { title: "Keep drawing in OpenPixel", sub: "Download OpenPixel for Mac, Windows or Linux. Free and open source, with agents built in." },
   },
 
   // ---------- More voxel editors
@@ -405,7 +403,7 @@ export const COMPETITORS: Competitor[] = [
     kind: "voxel",
     logo: "/compare/goxel.png",
     card: "Voxels and sprites, with agents built in.",
-    tagline: "Voxels, sprites and agents in one Mac app",
+    tagline: "Voxels, sprites and agents in one app",
     intro:
       "Goxel is a capable open-source voxel editor. OpenPixel opens and saves the same .vox files, adds 2D sprites and isometric renders, and lets AI agents build with you.",
     whySub: "Your .vox files open as they are. Sprites and agents come with them.",
@@ -421,7 +419,8 @@ export const COMPETITORS: Competitor[] = [
       { feature: "Open source licence", us: y("MIT"), them: y("GPL 3.0") },
       { feature: "Build scenes of any size", us: p("Up to 256 voxels a side"), them: y() },
       { feature: "Ray-traced renders", us: n(), them: y() },
-      { feature: "Use it on Windows, Linux or phones", us: n(), them: y() },
+      { feature: "Use it on Mac, Windows and Linux", us: y(), them: y() },
+      { feature: "Use it on phones", us: n(), them: y() },
     ],
     bring: {
       title: "Bring your Goxel models with you",
@@ -432,7 +431,7 @@ export const COMPETITORS: Competitor[] = [
         { title: "Let agents build", text: "Agents place voxels, spheres and cylinders, then review every angle.", visual: "voxagent" },
       ],
     },
-    cta: { title: "Bring your voxel models into OpenPixel", sub: "Download OpenPixel for macOS. Free and open source, with agents built in." },
+    cta: { title: "Bring your voxel models into OpenPixel", sub: "Download OpenPixel for Mac, Windows or Linux. Free and open source, with agents built in." },
   },
 ];
 

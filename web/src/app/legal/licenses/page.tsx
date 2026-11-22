@@ -13,10 +13,17 @@ export const metadata: Metadata = pageMeta({
 const PARTS = [
   { name: "OpenPixel", what: "The app and this website", licence: "MIT", url: `${REPO_URL}/blob/main/LICENSE` },
   {
-    name: "Sparkle",
-    what: "Automatic updates in the app",
+    name: "Electron",
+    what: "The app's window and menus, with Chromium and Node.js inside it under their own licences",
     licence: "MIT",
-    url: "https://github.com/sparkle-project/Sparkle",
+    url: "https://github.com/electron/electron",
+  },
+  { name: "React", what: "The editor's interface in the app", licence: "MIT", url: "https://react.dev" },
+  {
+    name: "electron-updater",
+    what: "Updates in the app",
+    licence: "MIT",
+    url: "https://github.com/electron-userland/electron-builder",
   },
   { name: "Lucide", what: "Interface icons in the app", licence: "ISC", url: "https://lucide.dev/license" },
   {
@@ -52,6 +59,25 @@ const PARTS = [
   },
 ];
 
+// The Rust crates the app's core is built on (the Cargo.toml files under core/), with the licences their own
+// packages state (`cargo metadata`). MIT or Apache 2.0, at your choice, where none is given here.
+const CRATES: { name: string; what: string; licence?: string; url: string }[] = [
+  { name: "serde_json", what: "Reading and writing JSON", url: "https://github.com/serde-rs/json" },
+  { name: "base64", what: "Pictures in tool answers", url: "https://github.com/marshallpierce/rust-base64" },
+  { name: "flate2", what: "Compression", url: "https://github.com/rust-lang/flate2-rs" },
+  { name: "png", what: "PNG files", url: "https://github.com/image-rs/image-png" },
+  { name: "gif", what: "Animated GIFs", url: "https://github.com/image-rs/image-gif" },
+  { name: "libm", what: "Maths for the renderer", licence: "MIT", url: "https://github.com/rust-lang/compiler-builtins" },
+  { name: "ureq", what: "Reading the update feed over HTTPS", url: "https://github.com/algesten/ureq" },
+  { name: "dirs", what: "Finding your Documents folder", url: "https://github.com/soc/dirs-rs" },
+  { name: "uuid", what: "Session ids for MCP over HTTP", url: "https://github.com/uuid-rs/uuid" },
+  {
+    name: "wasm-bindgen and js-sys",
+    what: "Running the core inside the app as WebAssembly",
+    url: "https://github.com/rustwasm/wasm-bindgen",
+  },
+];
+
 const PALETTES = ["DawnBringer 16 and 32 by Richard Fhager", "PICO-8 by Lexaloffle", "Endesga 32 by Endesga"];
 
 export default function Licenses() {
@@ -75,6 +101,25 @@ export default function Licenses() {
               </li>
             ))}
           </ul>
+          <h2>The app&apos;s core</h2>
+          <p>
+            The core of the app (the document, every tool, rendering and file formats) is written in Rust and builds
+            on these crates. Each is offered under MIT or Apache 2.0, at your choice, unless it says otherwise:
+          </p>
+          <ul>
+            {CRATES.map((c) => (
+              <li key={c.name}>
+                <a href={c.url} target="_blank" rel="noopener noreferrer">
+                  {c.name}
+                </a>
+                : {c.what}.{c.licence ? ` ${c.licence}.` : ""}
+              </li>
+            ))}
+          </ul>
+          <p>
+            They bring further crates with them, under MIT, Apache 2.0, BSD, ISC, Zlib, MPL 2.0, Unicode 3.0 and
+            CDLA Permissive 2.0 licences. <code>core/Cargo.lock</code> in the repository names every one.
+          </p>
           <h2>Palettes</h2>
           <p>The built-in palettes are well-known community palettes, credited to their authors:</p>
           <ul>
@@ -84,8 +129,8 @@ export default function Licenses() {
           </ul>
           <h2>Trademarks</h2>
           <p>
-            Claude, ChatGPT, Codex, Cursor, Grok, Google Chrome, Finder, macOS, OpenClaw, Hermes Agent, Aseprite,
-            Pixelorama and MagicaVoxel are trademarks of their owners. Their names and app icons appear on this site
+            Claude, ChatGPT, Codex, Cursor, Grok, Google Chrome, Finder, macOS, Windows, Linux, OpenClaw, Hermes
+            Agent, Aseprite, Pixelorama and MagicaVoxel are trademarks of their owners. Their names and app icons appear on this site
             only to show what OpenPixel works with or to compare features; OpenPixel is not affiliated with or endorsed
             by them.
           </p>
