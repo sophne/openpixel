@@ -1,6 +1,6 @@
 //! File formats (port of Formats.swift): the native .openpixel file, PNG and GIF pictures,
 //! MagicaVoxel .vox, Wavefront .obj, SVG and HTML.
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, HashSet};
 use std::io::{Read, Write};
 
 use base64::Engine as _;
@@ -239,8 +239,11 @@ pub mod image_files {
 
     /// Animated GIF; delays in milliseconds. Transparent pixels stay transparent.
     ///
-    /// Colours are kept exactly while a frame has at most 255 of them (pixel art nearly always does);
-    /// a frame with more is reduced to 255.
+    /// The colours are reduced the way the Mac app's GIF writer (ImageIO) did, so the pictures come out the
+    /// same: colours whose red, green and blue share their top five bits become one colour, the average of the
+    /// pixels that have them over all frames; the darkest group becomes pure black and the lightest pure white.
+    /// Flat sprite colours pass through unchanged; the shades of a 3D render merge slightly.
+    /// With more than 255 such groups (ImageIO's answer to that is not known) each frame is reduced on its own.
     pub fn gif(frames: &[Picture], delays: &[i64], looped: bool) -> Result<Vec<u8>, PcError> {
         let fail = |e: gif::EncodingError| PcError::invalid(format!("could not write the GIF: {e}"));
         let Some(first) = frames.first() else { return Err(PcError::invalid("a GIF needs at least one frame")) };
@@ -248,30 +251,45 @@ pub mod image_files {
             return Err(PcError::invalid("a GIF is at most 65535 pixels per side; use a smaller scale"));
         };
         let opaque = |a: u8| a >= 128;
-        let key = |p: &Picture, i: usize| -> [u8; 3] { [p.pixels[i * 4], p.pixels[i * 4 + 1], p.pixels[i * 4 + 2]] };
-        // One palette for the whole file when all frames together have few enough colours.
-        let mut global: Vec<[u8; 3]> = Vec::new();
-        let mut index: HashMap<[u8; 3], u8> = HashMap::new();
-        let mut shared = true;
-        'all: for f in frames {
+        let group = |p: &Picture, i: usize| -> usize {
+            ((p.pixels[i * 4] as usize >> 3) << 10) | ((p.pixels[i * 4 + 1] as usize >> 3) << 5) | (p.pixels[i * 4 + 2] as usize >> 3)
+        };
+        // Per group of colours: the sums of red, green and blue, and the number of pixels.
+        let mut sums = vec![[0u64; 4]; 1 << 15];
+        let mut any_transparent = false;
+        for f in frames {
             for i in 0..f.width * f.height {
                 if !opaque(f.pixels[i * 4 + 3]) {
+                    any_transparent = true;
                     continue;
                 }
-                let k = key(f, i);
-                if !index.contains_key(&k) {
-                    if global.len() == 255 {
-                        shared = false;
-                        break 'all;
-                    }
-                    index.insert(k, global.len() as u8);
-                    global.push(k);
-                }
+                let s = &mut sums[group(f, i)];
+                s[0] += f.pixels[i * 4] as u64;
+                s[1] += f.pixels[i * 4 + 1] as u64;
+                s[2] += f.pixels[i * 4 + 2] as u64;
+                s[3] += 1;
             }
         }
+        const NONE: u16 = u16::MAX;
+        let mut index = vec![NONE; 1 << 15];
+        let mut table: Vec<[u8; 3]> = Vec::new();
+        for (g, s) in sums.iter().enumerate() {
+            if s[3] == 0 {
+                continue;
+            }
+            let mean = |sum: u64| ((sum * 2 + s[3]) / (2 * s[3])) as u8;
+            let colour = match g {
+                0 => [0, 0, 0],
+                0x7fff => [255, 255, 255],
+                _ => [mean(s[0]), mean(s[1]), mean(s[2])],
+            };
+            index[g] = table.len() as u16;
+            table.push(colour);
+        }
+        let shared = table.len() + usize::from(any_transparent) <= 256;
         let flat = |pal: &[[u8; 3]]| -> Vec<u8> {
             let mut v: Vec<u8> = pal.iter().flatten().copied().collect();
-            // Index 255 at most is left for "transparent"; a colour table needs at least two entries.
+            // A colour table needs at least two entries.
             while v.len() < 6 {
                 v.extend([0, 0, 0]);
             }
@@ -279,7 +297,7 @@ pub mod image_files {
         };
         let mut out = Vec::new();
         {
-            let global_table = if shared { flat(&global) } else { Vec::new() };
+            let global_table = if shared { flat(&table) } else { Vec::new() };
             let mut enc = gif::Encoder::new(&mut out, w, h, &global_table).map_err(fail)?;
             enc.set_repeat(if looped { gif::Repeat::Infinite } else { gif::Repeat::Finite(1) }).map_err(fail)?;
             for (fi, f) in frames.iter().enumerate() {
@@ -288,44 +306,25 @@ pub mod image_files {
                 let count = f.width * f.height;
                 let mut frame;
                 if shared {
-                    let transparent = global.len() as u8;
+                    let transparent = table.len() as u8;
                     let buffer: Vec<u8> =
-                        (0..count).map(|i| if opaque(f.pixels[i * 4 + 3]) { index[&key(f, i)] } else { transparent }).collect();
+                        (0..count).map(|i| if opaque(f.pixels[i * 4 + 3]) { index[group(f, i)] as u8 } else { transparent }).collect();
                     frame = gif::Frame { buffer: buffer.into(), ..gif::Frame::default() };
-                    frame.transparent = Some(transparent);
-                } else {
-                    let mut local: Vec<[u8; 3]> = Vec::new();
-                    let mut local_index: HashMap<[u8; 3], u8> = HashMap::new();
-                    let mut fits = true;
-                    for i in 0..count {
-                        if !opaque(f.pixels[i * 4 + 3]) {
-                            continue;
-                        }
-                        let k = key(f, i);
-                        if !local_index.contains_key(&k) {
-                            if local.len() == 255 {
-                                fits = false;
-                                break;
-                            }
-                            local_index.insert(k, local.len() as u8);
-                            local.push(k);
-                        }
-                    }
-                    if fits {
-                        let transparent = local.len() as u8;
-                        let buffer: Vec<u8> =
-                            (0..count).map(|i| if opaque(f.pixels[i * 4 + 3]) { local_index[&key(f, i)] } else { transparent }).collect();
-                        frame = gif::Frame { buffer: buffer.into(), ..gif::Frame::default() };
-                        frame.palette = Some(flat(&local));
+                    if any_transparent {
                         frame.transparent = Some(transparent);
-                    } else {
-                        // Too many colours for a GIF frame: reduce them.
-                        let mut rgba = f.pixels.clone();
-                        for px in rgba.chunks_exact_mut(4) {
-                            px[3] = if opaque(px[3]) { 255 } else { 0 };
-                        }
-                        frame = gif::Frame::from_rgba_speed(w, h, &mut rgba, 10);
                     }
+                } else {
+                    // Too many colours for one table: reduce this frame's (already merged) colours on its own.
+                    let mut rgba = Vec::with_capacity(count * 4);
+                    for i in 0..count {
+                        if opaque(f.pixels[i * 4 + 3]) {
+                            let c = table[index[group(f, i)] as usize];
+                            rgba.extend([c[0], c[1], c[2], 255]);
+                        } else {
+                            rgba.extend([0, 0, 0, 0]);
+                        }
+                    }
+                    frame = gif::Frame::from_rgba_speed(w, h, &mut rgba, 10);
                 }
                 frame.width = w;
                 frame.height = h;
