@@ -1,0 +1,16 @@
+/* What the desktop app adds to style.css (which is app/web/style.css, copied as it is and never edited here). */
+
+/* React renders into #root. It makes no box of its own, so the tab bar, the editor, the pages, the menus and the
+   dialogs are laid out as the children of <body> they were in the old page. */
+#root { display: contents; }
+
+/* Fonts: the old page names the Mac's (-apple-system, SF Mono, Menlo). Elsewhere the same roles go to the
+   platform's interface and monospace fonts. <html data-platform> is set at startup (app/startup.ts). */
+html[data-platform="win32"] { font-family: "Segoe UI Variable Text", "Segoe UI", "Inter", sans-serif; }
+html[data-platform="linux"] { font-family: system-ui, "Inter", "Cantarell", "Ubuntu", "Noto Sans", sans-serif; }
+html[data-platform="win32"] :is(.mono, pre.code, .cmd code, .md code, kbd) { font-family: "Cascadia Mono", Consolas, monospace; }
+html[data-platform="linux"] :is(.mono, pre.code, .cmd code, .md code, kbd) { font-family: ui-monospace, "DejaVu Sans Mono", "Liberation Mono", monospace; }
+
+/* The tab bar is the window's title bar. On the Mac its first 80px are left to the close, minimise and zoom
+   buttons; Windows and Linux have none there. */
+html:not([data-platform="darwin"]) #tabbar { padding-left: 8px; }
