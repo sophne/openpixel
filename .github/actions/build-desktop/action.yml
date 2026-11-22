@@ -1,0 +1,172 @@
+# Builds, checks and packs the desktop app for the system the job runs on, and uploads the files that system adds
+# to a release as a workflow artifact. Used twice by .github/workflows/release.yml: by the release's build jobs
+# (which run in the `release` environment and pass its secrets) and by the dry run (which has none).
+# The repository must be checked out first. Nothing is published from here.
+name: Build the desktop app
+description: Build, check and pack OpenPixel for this system; upload its release files as an artifact.
+inputs:
+  platform:
+    description: mac, win or linux
+    required: true
+  version:
+    description: The version to stamp (the release tag without its v)
+    required: true
+  build-number:
+    description: The commit count (macOS build number, and the old Mac app's update feed)
+    required: true
+  artifact-name:
+    description: The name of the workflow artifact the files are uploaded as
+    required: true
+  retention-days:
+    description: How long the artifact is kept
+    default: "7"
+  # The release environment's secrets, under the names they have had since the Mac-only pipeline. All optional:
+  # without the certificate the Mac app is ad-hoc signed; without the Sparkle key no bridge appcast is written.
+  macos-cert-p12:
+    description: Developer ID certificate (.p12, base64)
+    default: ""
+  macos-cert-password:
+    description: Its password
+    default: ""
+  notary-key-p8:
+    description: App Store Connect API key (.p8, base64) for notarization
+    default: ""
+  notary-key-id:
+    description: Its key ID
+    default: ""
+  notary-issuer-id:
+    description: Its issuer ID
+    default: ""
+  sparkle-private-key:
+    description: The old Mac app's update key (Sparkle, Ed25519 seed in base64)
+    default: ""
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: 22
+        # Downloaded packages only; `npm ci` checks each against the lock file's checksum. No build output is
+        # cached: a release is built from scratch.
+        cache: npm
+        cache-dependency-path: desktop/package-lock.json
+
+    - name: Rust targets and the WebAssembly tools
+      shell: bash
+      env:
+        PLATFORM: ${{ inputs.platform }}
+      run: |
+        rustup target add wasm32-unknown-unknown
+        # A universal Mac app carries the agent program for both processors.
+        if [ "$PLATFORM" = "mac" ]; then rustup target add x86_64-apple-darwin aarch64-apple-darwin; fi
+        # Must be exactly the version of the wasm-bindgen crate in core/wasm/Cargo.toml.
+        cargo install wasm-bindgen-cli --version 0.2.100 --locked
+
+    - name: Dependencies
+      shell: bash
+      working-directory: desktop
+      run: npm ci --no-fund
+
+    - name: Stamp the version
+      shell: bash
+      working-directory: desktop
+      env:
+        VERSION: ${{ inputs.version }}
+      run: node scripts/set-version.mjs "$VERSION"
+
+    # Before the long part: a key that is not the one installed apps trust would only show at the very end.
+    - name: Check the old Mac app's update key
+      if: inputs.platform == 'mac' && inputs.sparkle-private-key != ''
+      shell: bash
+      working-directory: desktop
+      env:
+        SPARKLE_PRIVATE_KEY: ${{ inputs.sparkle-private-key }}
+      run: node scripts/appcast.mjs --check-key
+
+    - name: Core (self-test, golden files, the MCP program)
+      shell: bash
+      working-directory: core
+      env:
+        # As in CI: the native-against-WebAssembly comparison runs on Linux.
+        OPENPIXEL_SKIP_WASM_TEST: ${{ runner.os == 'Linux' && '0' || '1' }}
+      run: |
+        cargo test --release
+        cargo run --release --bin openpixel -- --selftest
+
+    - name: Core as WebAssembly, and the agent program
+      shell: bash
+      working-directory: desktop
+      env:
+        PLATFORM: ${{ inputs.platform }}
+        # The oldest macOS the app runs on (electron-builder.yml: mac.minimumSystemVersion).
+        MACOSX_DEPLOYMENT_TARGET: "12.0"
+      run: |
+        npm run build:core
+        if [ "$PLATFORM" = "mac" ]; then
+          for target in x86_64-apple-darwin aarch64-apple-darwin; do
+            cargo build --release --manifest-path ../core/Cargo.toml --bin openpixel --target "$target"
+          done
+        else
+          npm run build:mcp
+        fi
+
+    - name: App (types, the app's logic, the release scripts, the bundle)
+      shell: bash
+      working-directory: desktop
+      run: |
+        npm run typecheck
+        npm test
+        npm run test:release
+        npm run build
+
+    - name: Pack (and sign and notarize the Mac app, when set up)
+      shell: bash
+      working-directory: desktop
+      env:
+        PLATFORM: ${{ inputs.platform }}
+        BUILD: ${{ inputs.build-number }}
+        MACOS_CERT_P12: ${{ inputs.macos-cert-p12 }}
+        MACOS_CERT_PASSWORD: ${{ inputs.macos-cert-password }}
+        NOTARY_KEY_P8: ${{ inputs.notary-key-p8 }}
+        NOTARY_KEY_ID: ${{ inputs.notary-key-id }}
+        NOTARY_ISSUER_ID: ${{ inputs.notary-issuer-id }}
+      run: node scripts/release-build.mjs --platform "$PLATFORM" --build-number "$BUILD"
+
+    - name: A screen for the checks
+      if: runner.os == 'Linux'
+      shell: bash
+      run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb
+
+    - name: Check the packed app (it starts, its version, the agents' MCP server)
+      shell: bash
+      working-directory: desktop
+      env:
+        BUILD: ${{ inputs.build-number }}
+      run: node tests/packaged-app.mjs --build-number "$BUILD"
+
+    - name: Check the update path against a local feed (AppImage)
+      if: runner.os == 'Linux'
+      shell: bash
+      working-directory: desktop
+      run: node tests/update-e2e.mjs
+
+    # The bridge for people who still run the old Mac app: its updater reads appcast.xml.
+    - name: Write the old Mac app's update feed
+      if: inputs.platform == 'mac' && inputs.sparkle-private-key != ''
+      shell: bash
+      working-directory: desktop
+      env:
+        SPARKLE_PRIVATE_KEY: ${{ inputs.sparkle-private-key }}
+        VERSION: ${{ inputs.version }}
+        BUILD: ${{ inputs.build-number }}
+        REPO: ${{ github.repository }}
+      run: node scripts/appcast.mjs --dmg release/upload/OpenPixel.dmg --version "$VERSION" --build "$BUILD" --out release/upload/appcast.xml
+
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: desktop/release/upload/
+        if-no-files-found: error
+        retention-days: ${{ inputs.retention-days }}
+        # Installers are compressed already.
+        compression-level: 0

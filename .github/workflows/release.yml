@@ -1,35 +1,40 @@
 # Publishes a release when a maintainer pushes a tag like v1.2.0 (only repository admins can; see RELEASING.md).
-# Builds a universal app, signs the Sparkle update and creates the GitHub release with OpenPixel.dmg and
-# appcast.xml. Tags with a "-" (v1.3.0-beta.1) become pre-releases, which neither the website nor installed apps
-# pick up.
+# Builds the desktop app for macOS (universal), Windows and Linux, checks each packed app, and creates the GitHub
+# release with every file at once: the installers, the update feeds the installed apps read (latest-mac.yml,
+# latest.yml, latest-linux.yml) and, for people who still run the old Mac app, its Sparkle feed (appcast.xml).
+# A release is complete or it is not published: the last job runs only when all three systems succeeded.
+# Tags with a "-" (v1.3.0-beta.1) become pre-releases, which neither the website nor installed apps pick up.
 #
-# Developer ID signing and notarization are optional: they run when the MACOS_CERT_P12 and NOTARY_KEY_P8 secrets
-# exist. Without them the release is ad-hoc signed (it runs, but macOS asks people to confirm the first launch).
-# Only SPARKLE_PRIVATE_KEY is required, because every update must be signed for installed apps to accept it.
+# Signing is optional. With the MACOS_CERT_P12 and NOTARY_KEY_P8 secrets the Mac app is signed with the Developer ID
+# and notarized; without them it is ad-hoc signed (it runs, but macOS asks people to confirm the first launch, and
+# the app sends people to the download page instead of installing updates itself). Windows is not code-signed.
+# With SPARKLE_PRIVATE_KEY the old Mac app's feed is written too; without it that app is simply not told.
 #
 # Secrets live in the "release" environment, which only v* tags may use: pull requests never see them.
+#
+# Dry run: start this workflow by hand (Actions → release → Run workflow). It builds, checks and packs everything
+# for all three systems and keeps the files as workflow artifacts. It publishes nothing and uses no secret.
 name: release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
-  group: release
-  cancel-in-progress: false
+  # One release at a time, never cancelled half-way; dry runs of the same branch replace each other.
+  group: ${{ github.event_name == 'push' && 'release' || format('release-dry-run-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.event_name != 'push' }}
 jobs:
-  release:
-    runs-on: macos-15
-    timeout-minutes: 60
-    environment: release
-    permissions:
-      contents: write
-    env:
-      TAG: ${{ github.ref_name }}
-      GH_TOKEN: ${{ github.token }}
-      # Secrets can't be tested in a step's `if`, so whether they exist is worked out here.
-      HAS_DEVELOPER_ID: ${{ secrets.MACOS_CERT_P12 != '' }}
-      HAS_NOTARY_KEY: ${{ secrets.NOTARY_KEY_P8 != '' }}
+  prepare:
+    name: check the tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      version: ${{ steps.tag.outputs.version }}
+      build_number: ${{ steps.tag.outputs.build_number }}
+      prerelease: ${{ steps.tag.outputs.prerelease }}
+      title: ${{ steps.tag.outputs.title }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -37,106 +42,197 @@ jobs:
           persist-credentials: false
 
       - name: Check the tag
+        id: tag
+        env:
+          TAG: ${{ github.ref_name }}
         run: |
-          case "$TAG" in
-            v[0-9]*.[0-9]*.[0-9]*) ;;
-            *) echo "::error::tag must look like v1.2.3 or v1.2.3-beta.1 (got $TAG)"; exit 1 ;;
-          esac
-          # Only commits that went through review on main can be released.
-          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo "::error::$TAG is not on main"; exit 1; }
-          # The build number is the commit count, and installed apps only update to a higher one (scripts/tag-release.sh
-          # checks this too; this catches tags pushed by hand).
-          LAST_STABLE="$(git tag -l 'v*' --sort=-v:refname | grep -v -e '-' | grep -vx "$TAG" | head -1 || true)"
-          if [ -n "$LAST_STABLE" ] && [ "$(git rev-list --count "$GITHUB_SHA")" -le "$(git rev-list --count "$LAST_STABLE")" ]; then
-            echo "::error::no new commits since $LAST_STABLE: $TAG would get the same build number and installed apps would never be offered it"
-            exit 1
+          # The build number is the commit count: the Mac app's CFBundleVersion, which the old Mac app's updater
+          # (Sparkle) compares, as its own releases were numbered.
+          echo "build_number=$(git rev-list --count "$GITHUB_SHA")" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_EVENT_NAME" != "push" ]; then
+            # A dry run: a version below every release, so a copy of it would update to any real one.
+            echo "version=0.0.0-dryrun.$GITHUB_RUN_NUMBER" >> "$GITHUB_OUTPUT"
+            echo "prerelease=--prerelease" >> "$GITHUB_OUTPUT"
+            echo "title=Dry run" >> "$GITHUB_OUTPUT"
+            echo "::notice::Dry run: everything is built and checked, nothing is published."
+            exit 0
           fi
           VERSION="${TAG#v}"
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          case "$VERSION" in *-*) echo "PRERELEASE=--prerelease" >> "$GITHUB_ENV" ;; *) echo "PRERELEASE=--latest" >> "$GITHUB_ENV" ;; esac
+          # Three numbers, and for a pre-release a dash and a name: what the apps' updater can compare.
+          if [ "$TAG" = "$VERSION" ] || ! printf '%s\n' "$VERSION" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z][0-9A-Za-z.-]*)?$'; then
+            echo "::error::tag must look like v1.2.3 or v1.2.3-beta.1 (got $TAG)"; exit 1
+          fi
+          # Only commits that went through review on main can be released.
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo "::error::$TAG is not on main"; exit 1; }
+          LAST_STABLE="$(git tag -l 'v*' --sort=-v:refname | grep -v -e '-' | grep -vx "$TAG" | head -1 || true)"
+          if [ -n "$LAST_STABLE" ]; then
+            # Installed apps only move forward: the updater installs a release only when its version is higher
+            # than the one running (desktop/scripts/tag-release.sh checks this too; this catches tags pushed by hand).
+            NUMBERS="${VERSION%%-*}"
+            NEWEST="$(printf '%s\n%s\n' "${LAST_STABLE#v}" "$NUMBERS" | sort -t. -k1,1n -k2,2n -k3,3n | tail -1)"
+            if [ "$NUMBERS" = "${LAST_STABLE#v}" ] || [ "$NEWEST" != "$NUMBERS" ]; then
+              echo "::error::$TAG is not newer than $LAST_STABLE, the newest release: installed apps would never be offered it"; exit 1
+            fi
+            # The old Mac app goes by the build number (the commit count) instead.
+            if [ "$(git rev-list --count "$GITHUB_SHA")" -le "$(git rev-list --count "$LAST_STABLE")" ]; then
+              echo "::error::no new commits since $LAST_STABLE: $TAG would get the same build number and copies of the old Mac app would never be offered it"
+              exit 1
+            fi
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          case "$VERSION" in *-*) echo "prerelease=--prerelease" >> "$GITHUB_OUTPUT" ;; *) echo "prerelease=--latest" >> "$GITHUB_OUTPUT" ;; esac
           # The tag's message names the release ("OpenPixel 1.2.0: <message>"). Checkout can leave an annotated
           # tag as a lightweight one, so fetch the tag object itself first.
           git fetch --force --quiet origin "refs/tags/$TAG:refs/tags/$TAG"
           SUBJECT="$(git tag -l --format='%(contents:subject)' "$TAG" | tr -d '\r\n')"
           case "$SUBJECT" in ""|"OpenPixel $VERSION") TITLE="OpenPixel $VERSION" ;; *) TITLE="OpenPixel $VERSION: $SUBJECT" ;; esac
-          echo "TITLE=$TITLE" >> "$GITHUB_ENV"
+          # One line, written through a file: the title is a person's words, not a command.
+          { printf 'title='; printf '%s' "$TITLE" | tr -d '\r\n'; printf '\n'; } >> "$GITHUB_OUTPUT"
 
-      - name: Import the Developer ID certificate into a temporary keychain
-        if: env.HAS_DEVELOPER_ID == 'true'
-        env:
-          MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
-          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-        run: |
-          KC="$RUNNER_TEMP/signing.keychain-db"
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KC"
-          security set-keychain-settings -lut 3600 "$KC"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KC"
-          printf '%s' "$MACOS_CERT_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
-          security import "$RUNNER_TEMP/cert.p12" -k "$KC" -P "$MACOS_CERT_PASSWORD" -T /usr/bin/codesign
-          rm -f "$RUNNER_TEMP/cert.p12"
-          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KC" >/dev/null
-          # Add the new keychain to the search list, keeping the existing ones (one path per word).
-          # shellcheck disable=SC2046
-          security list-keychains -d user -s "$KC" $(security list-keychains -d user | tr -d '"')
-          ID="$(security find-identity -v -p codesigning "$KC" | sed -nE 's/.*"(Developer ID Application: .*)"/\1/p' | head -1)"
-          [ -n "$ID" ] || { echo "::error::no Developer ID Application certificate in MACOS_CERT_P12"; exit 1; }
-          echo "SIGN_ID=$ID" >> "$GITHUB_ENV"
+  # The release's builds: one per system, in the release environment (its secrets sign the Mac app).
+  build:
+    name: build (${{ matrix.platform }})
+    if: github.event_name == 'push'
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: mac, os: macos-15 }
+          - { platform: win, os: windows-latest }
+          - { platform: linux, os: ubuntu-latest }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    environment: release
+    steps:
+      # Golden files are compared as they are in the repository: no line-ending conversion on Windows.
+      - name: Keep line endings
+        shell: bash
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/build-desktop
+        with:
+          platform: ${{ matrix.platform }}
+          version: ${{ needs.prepare.outputs.version }}
+          build-number: ${{ needs.prepare.outputs.build_number }}
+          artifact-name: release-${{ matrix.platform }}
+          # Only the Mac build signs anything; the others never see the keys.
+          macos-cert-p12: ${{ matrix.platform == 'mac' && secrets.MACOS_CERT_P12 || '' }}
+          macos-cert-password: ${{ matrix.platform == 'mac' && secrets.MACOS_CERT_PASSWORD || '' }}
+          notary-key-p8: ${{ matrix.platform == 'mac' && secrets.NOTARY_KEY_P8 || '' }}
+          notary-key-id: ${{ matrix.platform == 'mac' && secrets.NOTARY_KEY_ID || '' }}
+          notary-issuer-id: ${{ matrix.platform == 'mac' && secrets.NOTARY_ISSUER_ID || '' }}
+          sparkle-private-key: ${{ matrix.platform == 'mac' && secrets.SPARKLE_PRIVATE_KEY || '' }}
 
-      - name: Write the Sparkle key (and notarization key, if any) to temporary files
-        env:
-          NOTARY_KEY_P8: ${{ secrets.NOTARY_KEY_P8 }}
-          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
-        run: |
-          umask 077
-          [ -n "$SPARKLE_PRIVATE_KEY" ] || { echo "::error::SPARKLE_PRIVATE_KEY is missing: installed apps only accept signed updates"; exit 1; }
-          printf '%s' "$SPARKLE_PRIVATE_KEY" > "$RUNNER_TEMP/sparkle.key"
-          echo "SPARKLE_KEY_FILE=$RUNNER_TEMP/sparkle.key" >> "$GITHUB_ENV"
-          if [ "$HAS_NOTARY_KEY" = "true" ] && [ "$HAS_DEVELOPER_ID" = "true" ]; then
-            printf '%s' "$NOTARY_KEY_P8" | base64 --decode > "$RUNNER_TEMP/notary.p8"
-            echo "NOTARY_KEY_PATH=$RUNNER_TEMP/notary.p8" >> "$GITHUB_ENV"
-          else
-            echo "::notice::No Developer ID or notarization key: this release is ad-hoc signed and not notarized."
-          fi
+  publish:
+    name: publish the release
+    if: github.event_name == 'push'
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: release
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ github.ref_name }}
+      VERSION: ${{ needs.prepare.outputs.version }}
+      PRERELEASE: ${{ needs.prepare.outputs.prerelease }}
+      TITLE: ${{ needs.prepare.outputs.title }}
+      GH_TOKEN: ${{ github.token }}
+      # Secrets can't be tested in a step's `if`, so whether they exist is worked out here.
+      HAS_DEVELOPER_ID: ${{ secrets.MACOS_CERT_P12 != '' }}
+      HAS_NOTARY_KEY: ${{ secrets.NOTARY_KEY_P8 != '' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: release-*
+          path: upload
+          merge-multiple: true
+
+      - name: Check that the release is complete
+        run: node desktop/scripts/check-release.mjs upload --version "$VERSION"
 
       - name: Release notes (every pull request merged since the last tag)
         run: |
           gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" -f tag_name="$TAG" --jq .body > "$RUNNER_TEMP/notes.md"
-          # Unsigned builds tell people how to open them the first time.
-          if [ "$HAS_DEVELOPER_ID" != "true" ]; then
-            {
-              echo "> **First launch:** this build isn't notarized by Apple yet, so macOS asks you to confirm it once."
-              echo "> Open OpenPixel, then go to **System Settings → Privacy & Security** and click **Open Anyway**."
-              echo
-              cat "$RUNNER_TEMP/notes.md"
-            } > "$RUNNER_TEMP/notes-with-intro.md"
-            mv "$RUNNER_TEMP/notes-with-intro.md" "$RUNNER_TEMP/notes.md"
-          fi
-          # The update window shows a short plain-text version; the full notes are on the release page.
           {
-            echo "RELEASE_NOTES<<NOTES_END"
-            # (Leaves out the first-launch note: whoever sees the update window already has the app open.)
-            grep -v '^> ' "$RUNNER_TEMP/notes.md" | sed -E 's/^#+ //; s/\*\*//g; s/ by @[^ ]+ in https:[^ ]+//' | grep -v '^Full Changelog' | head -c 1500
+            # Builds that are not signed tell people how to open them the first time.
+            if [ "$HAS_DEVELOPER_ID" != "true" ] || [ "$HAS_NOTARY_KEY" != "true" ]; then
+              echo "> **First launch on macOS:** this build isn't notarized by Apple yet, so macOS asks you to confirm it once."
+              echo "> Open OpenPixel, then go to **System Settings → Privacy & Security** and click **Open Anyway**."
+              echo ">"
+            fi
+            echo "> **First run on Windows:** the installer isn't code-signed yet. If Windows shows \"Windows protected your PC\","
+            echo "> click **More info**, then **Run anyway**."
             echo
-            echo "NOTES_END"
-          } >> "$GITHUB_ENV"
-
-      - name: Build, sign (and notarize, if set up), write appcast
-        working-directory: app
-        env:
-          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
-          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
-          REPO: ${{ github.repository }}
-        run: sh scripts/release.sh "$VERSION"
+            cat "$RUNNER_TEMP/notes.md"
+          } > "$RUNNER_TEMP/notes-with-intro.md"
+          mv "$RUNNER_TEMP/notes-with-intro.md" "$RUNNER_TEMP/notes.md"
 
       - name: Publish the GitHub release
         run: |
-          gh release create "$TAG" app/dist/OpenPixel.dmg app/dist/appcast.xml \
+          gh release create "$TAG" upload/* \
             --repo "$GITHUB_REPOSITORY" --verify-tag "$PRERELEASE" \
             --title "$TITLE" --notes-file "$RUNNER_TEMP/notes.md"
 
-      - name: Remove keys and keychain
-        if: always()
+  # The dry run: the same builds and checks, outside the release environment, with no secret and nothing published.
+  dry-run:
+    name: dry run (${{ matrix.platform }})
+    if: github.event_name != 'push'
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: mac, os: macos-15 }
+          - { platform: win, os: windows-latest }
+          - { platform: linux, os: ubuntu-latest }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    steps:
+      - name: Keep line endings
+        shell: bash
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/build-desktop
+        with:
+          platform: ${{ matrix.platform }}
+          version: ${{ needs.prepare.outputs.version }}
+          build-number: ${{ needs.prepare.outputs.build_number }}
+          artifact-name: dry-run-${{ matrix.platform }}
+          retention-days: "3"
+
+  dry-run-check:
+    name: dry run (the release would be complete)
+    if: github.event_name != 'push'
+    needs: [prepare, dry-run]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: dry-run-*
+          path: upload
+          merge-multiple: true
+      - name: Check that a release from these files would be complete
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          security delete-keychain "$RUNNER_TEMP/signing.keychain-db" 2>/dev/null || true
-          rm -f "$RUNNER_TEMP/notary.p8" "$RUNNER_TEMP/sparkle.key" "$RUNNER_TEMP/cert.p12"
+          node desktop/scripts/check-release.mjs upload --version "$VERSION"
+          echo "::notice::Dry run finished: nothing was published. The installers are in this run's artifacts (dry-run-mac, dry-run-win, dry-run-linux)."
