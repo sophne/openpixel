@@ -94,17 +94,18 @@ async function shortcutsAgree(app, page, platform) {
   else assert.ok(all.includes('Ctrl') && !all.some((k) => /[⌘⇧⌥⌃⌫↩]/.test(k)), `Mac glyphs off the Mac: ${all.filter((k) => /[⌘⇧⌥⌃⌫↩]/.test(k))}`);
   // Tooltips: the control's title, shown as a label and key caps.
   for (const [sel, id] of Object.entries(TIPS)) {
-    const shown = await page.evaluate(async (s) => {
-      const el = document.querySelector(s);
-      if (!el) return 'no such control';
-      el.dispatchEvent(new PointerEvent('pointerover', { bubbles: true, pointerType: 'mouse' }));
-      // The first tooltip waits half a second; the next ones come at once.
-      for (let i = 0; i < 60 && !document.querySelector('.tip.on'); i++) await new Promise((r) => setTimeout(r, 50));
+    // The browser's own mouse goes over the control and away again, as a person's would. (An event made up in the
+    // page is not enough where the system's pointer sits over the window, as on a Windows CI machine: the pointer's
+    // own events cancel the made-up hover before the tooltip's half-second is up.)
+    await page.hover(sel, { timeout: 5000 });
+    await page.waitForFunction(() => document.querySelector('.tip.on'), null, { timeout: 3000 }).catch(() => {});
+    const shown = await page.evaluate(() => {
       const tip = document.querySelector('.tip.on');
-      const shown = tip ? { text: tip.firstElementChild.textContent, keys: [...tip.querySelectorAll('kbd')].map((k) => k.textContent) } : 'no tooltip';
-      el.dispatchEvent(new PointerEvent('pointerout', { bubbles: true, pointerType: 'mouse', relatedTarget: document.body }));
-      return shown;
-    }, sel);
+      return tip ? { text: tip.firstElementChild.textContent, keys: [...tip.querySelectorAll('kbd')].map((k) => k.textContent) } : 'no tooltip';
+    });
+    const stage = await page.locator('#stage').boundingBox();
+    await page.mouse.move(stage.x + stage.width / 2, stage.y + stage.height / 3);
+    await page.waitForFunction(() => !document.querySelector('.tip.on'), null, { timeout: 3000 }).catch(() => {});
     // On the Mac the sidebar button's tooltip names its shortcut in its text ("Hide sidebar (⌘\)"), not as caps.
     if (sel === '#left-collapse' && platform === 'darwin') { assert.deepEqual(shown, { text: 'Hide sidebar (⌘\\)', keys: [] }); continue; }
     assert.deepEqual(shown.keys, caps(keyOf(id), platform), `tooltip of ${sel}: ${JSON.stringify(shown)}`);
