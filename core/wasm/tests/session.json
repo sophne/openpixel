@@ -1,0 +1,1601 @@
+[
+ {
+  "catalog": true
+ },
+ {
+  "updateReport": [
+   "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<rss version=\"2.0\" xmlns:sparkle=\"http://www.andymatuschak.org/xml-namespaces/sparkle\"><channel><title>OpenPixel</title>\n<item><title>OpenPixel 9.10.1</title><sparkle:version>1</sparkle:version>\n<sparkle:shortVersionString>9.10.1</sparkle:shortVersionString>\n<sparkle:fullReleaseNotesLink>https://github.com/sophne/openpixel/releases/tag/v9.10.1</sparkle:fullReleaseNotesLink>\n<enclosure url=\"https://github.com/sophne/openpixel/releases/download/v9.10.1/OpenPixel.dmg\" sparkle:edSignature=\"x\" length=\"1\" type=\"application/octet-stream\"/>\n</item>\n</channel></rss>",
+   "9.9.0",
+   "9.10.1"
+  ]
+ },
+ {
+  "updateReport": [
+   "<rss></rss>",
+   "1.0.0",
+   null
+  ]
+ },
+ {
+  "new": "a"
+ },
+ {
+  "e": "a",
+  "tool": "get_model_info",
+  "args": {}
+ },
+ {
+  "e": "a",
+  "tool": "pixel_art_guide",
+  "args": {
+   "topic": "shading"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "new_sprite",
+  "args": {
+   "width": 24,
+   "height": 24,
+   "name": "Orb & <Friends>"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "make_color_ramp",
+  "args": {
+   "base": "#c0503c"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "make_color_ramp",
+  "args": {
+   "from": "#1a1c2c",
+   "to": "#f4f4f4",
+   "steps": 6,
+   "hue_shift": 10
+  }
+ },
+ {
+  "e": "a",
+  "tool": "add_colors",
+  "args": {
+   "colors": [
+    "#a75b87",
+    "#a65a86",
+    3
+   ]
+  }
+ },
+ {
+  "e": "a",
+  "tool": "paint_slice",
+  "args": {
+   "rows": [
+    "........................",
+    "........................",
+    ".........111111.........",
+    ".......1122222211.......",
+    ".....11222222222211.....",
+    "....1122233333322211....",
+    "....1222333333332221....",
+    "...122233333333332221...",
+    "...122333344443333221...",
+    "..12233334444443333221..",
+    "..12233344444444333221..",
+    "..12233344444444333221..",
+    "..12233344444444333221..",
+    "..12233344444444333221..",
+    "..12233334444443333221..",
+    "...122333344443333221...",
+    "...122233333333332221...",
+    "....1222333333332221....",
+    "....1122233333322211....",
+    ".....11222222222211.....",
+    ".......1122222211.......",
+    ".........111111.........",
+    "........................",
+    "........................"
+   ],
+   "legend": {
+    "1": "#222034",
+    "2": "#45283c",
+    "3": "#ac3232",
+    "4": "#d95763"
+   }
+  }
+ },
+ {
+  "e": "a",
+  "tool": "review_model",
+  "args": {}
+ },
+ {
+  "e": "a",
+  "tool": "paint_slice",
+  "args": {
+   "rows": [
+    "........................",
+    "........................",
+    ".........111111.........",
+    ".......1144444311.......",
+    ".....11444444333311.....",
+    "....1144444433333311....",
+    "....1444444333333331....",
+    "...144444433333333221...",
+    "...144444333333332221...",
+    "..14444433333333222221..",
+    "..14444333333332222221..",
+    "..14443333333322222221..",
+    "..14433333333222222221..",
+    "..14333333332222222221..",
+    "..13333333322222222221..",
+    "...133333322222222221...",
+    "...133333222222222221...",
+    "....1333222222222221....",
+    "....1132222222222211....",
+    ".....11222222222211.....",
+    ".......1122222211.......",
+    ".........111111.........",
+    "........................",
+    "........................"
+   ],
+   "legend": {
+    "1": "#222034",
+    "2": "#45283c",
+    "3": "#ac3232",
+    "4": "#d95763"
+   }
+  }
+ },
+ {
+  "e": "a",
+  "tool": "pixel_perfect",
+  "args": {}
+ },
+ {
+  "e": "a",
+  "tool": "set_pixels",
+  "args": {
+   "pixels": [
+    [
+     6,
+     9,
+     "#ff00ff"
+    ],
+    [
+     7,
+     9,
+     5
+    ],
+    [
+     0,
+     0
+    ]
+   ],
+   "color": "#00ff88",
+   "symmetry": "x"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "set_pixels",
+  "args": {
+   "pixels": [
+    [
+     1,
+     1
+    ]
+   ]
+  }
+ },
+ {
+  "e": "a",
+  "tool": "flood_fill",
+  "args": {
+   "at": [
+    12,
+    12,
+    0
+   ],
+   "color": "#3b5dc9"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "replace_color",
+  "args": {
+   "from": "#3b5dc9",
+   "to": 3
+  }
+ },
+ {
+  "e": "a",
+  "tool": "apply_gradient",
+  "args": {
+   "colors": [
+    2,
+    3,
+    4,
+    "#ffd23f"
+   ],
+   "axis": "y"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "undo",
+  "args": {
+   "steps": 2
+  }
+ },
+ {
+  "e": "a",
+  "tool": "redo",
+  "args": {}
+ },
+ {
+  "e": "a",
+  "tool": "get_history",
+  "args": {}
+ },
+ {
+  "e": "a",
+  "tool": "transform",
+  "args": {
+   "op": "flip",
+   "axis": "x"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "transform",
+  "args": {
+   "op": "rotate",
+   "axis": "z",
+   "turns": 1
+  }
+ },
+ {
+  "e": "a",
+  "tool": "transform",
+  "args": {
+   "op": "mirror",
+   "axis": "x",
+   "keep": "high"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "transform",
+  "args": {
+   "op": "move",
+   "dx": 2,
+   "dy": -1,
+   "wrap": true
+  }
+ },
+ {
+  "e": "a",
+  "tool": "transform",
+  "args": {
+   "op": "spin"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "add_layer",
+  "args": {
+   "name": "Glow"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "set_pixels",
+  "args": {
+   "pixels": [
+    [
+     3,
+     3,
+     "#fbf236"
+    ],
+    [
+     4,
+     3,
+     "#fbf236"
+    ],
+    [
+     3,
+     4,
+     "#fbf236"
+    ]
+   ]
+  }
+ },
+ {
+  "e": "a",
+  "tool": "set_layer",
+  "args": {
+   "layer": "glow",
+   "name": "Glow!",
+   "visible": true,
+   "locked": true
+  }
+ },
+ {
+  "e": "a",
+  "tool": "set_pixels",
+  "args": {
+   "pixels": [
+    [
+     5,
+     5,
+     2
+    ]
+   ]
+  }
+ },
+ {
+  "e": "a",
+  "tool": "set_layer",
+  "args": {
+   "layer": 1,
+   "locked": false
+  }
+ },
+ {
+  "e": "a",
+  "tool": "duplicate_layer",
+  "args": {
+   "layer": 1
+  }
+ },
+ {
+  "e": "a",
+  "tool": "move_layer",
+  "args": {
+   "layer": 2,
+   "to": 0
+  }
+ },
+ {
+  "e": "a",
+  "tool": "merge_layer_down",
+  "args": {
+   "layer": 1
+  }
+ },
+ {
+  "e": "a",
+  "tool": "delete_layer",
+  "args": {
+   "layer": 1
+  }
+ },
+ {
+  "e": "a",
+  "tool": "add_layer",
+  "args": {}
+ },
+ {
+  "e": "a",
+  "tool": "clear",
+  "args": {
+   "layer": 0
+  }
+ },
+ {
+  "e": "a",
+  "tool": "undo",
+  "args": {}
+ },
+ {
+  "e": "a",
+  "tool": "set_active",
+  "args": {
+   "layer": 0,
+   "frame": 0
+  }
+ },
+ {
+  "e": "a",
+  "tool": "add_frame",
+  "args": {}
+ },
+ {
+  "e": "a",
+  "tool": "transform",
+  "args": {
+   "op": "move",
+   "dy": 1
+  }
+ },
+ {
+  "e": "a",
+  "tool": "add_frame",
+  "args": {
+   "after": 1,
+   "copy": false
+  }
+ },
+ {
+  "e": "a",
+  "tool": "paint_slice",
+  "args": {
+   "rows": [
+    "..11..",
+    ".1221.",
+    "112211"
+   ],
+   "offset": [
+    8,
+    10
+   ],
+   "mode": "merge",
+   "legend": {
+    "1": "#222034",
+    "2": "#df7126"
+   }
+  }
+ },
+ {
+  "e": "a",
+  "tool": "set_frame_duration",
+  "args": {
+   "duration_ms": 135,
+   "all_frames": true
+  }
+ },
+ {
+  "e": "a",
+  "tool": "set_frame_duration",
+  "args": {
+   "frame": 0,
+   "duration_ms": 1200
+  }
+ },
+ {
+  "e": "a",
+  "tool": "delete_frame",
+  "args": {
+   "frame": 9
+  }
+ },
+ {
+  "e": "a",
+  "tool": "analyze_model",
+  "args": {
+   "frame": 1
+  }
+ },
+ {
+  "e": "a",
+  "tool": "review_model",
+  "args": {}
+ },
+ {
+  "e": "a",
+  "tool": "view_as_text",
+  "args": {
+   "maps": [
+    "pixels",
+    "values",
+    "silhouette",
+    "diff"
+   ],
+   "frame": 1,
+   "compare_frame": 0
+  }
+ },
+ {
+  "e": "a",
+  "tool": "view_as_text",
+  "args": {
+   "region": [
+    0,
+    0,
+    7,
+    7
+   ]
+  }
+ },
+ {
+  "e": "a",
+  "tool": "get_slice",
+  "args": {
+   "axis": "z",
+   "index": 0
+  }
+ },
+ {
+  "e": "a",
+  "tool": "get_voxel",
+  "args": {
+   "at": [
+    12,
+    12,
+    0
+   ]
+  }
+ },
+ {
+  "e": "a",
+  "tool": "get_voxel",
+  "args": {
+   "at": [
+    99,
+    0,
+    0
+   ]
+  }
+ },
+ {
+  "e": "a",
+  "tool": "find_voxels",
+  "args": {
+   "color": 3,
+   "limit": 5
+  }
+ },
+ {
+  "e": "a",
+  "tool": "find_voxels",
+  "args": {
+   "from": [
+    40,
+    40,
+    0
+   ],
+   "to": [
+    50,
+    50,
+    0
+   ]
+  }
+ },
+ {
+  "e": "a",
+  "tool": "get_palette",
+  "args": {}
+ },
+ {
+  "e": "a",
+  "tool": "render_view",
+  "args": {
+   "scale": 3
+  }
+ },
+ {
+  "e": "a",
+  "tool": "render_view",
+  "args": {
+   "view": "iso",
+   "scale": 2,
+   "background": "#102030"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "ui_state",
+  "args": {
+   "onion": true
+  },
+  "source": "person"
+ },
+ {
+  "e": "a",
+  "tool": "take_snapshot",
+  "args": {
+   "name": "before"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "set_pixels",
+  "args": {
+   "pixels": [
+    [
+     10,
+     10,
+     "#ff0000"
+    ]
+   ]
+  },
+  "source": "person"
+ },
+ {
+  "e": "a",
+  "tool": "compare_snapshot",
+  "args": {
+   "name": "before"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "compare_snapshot",
+  "args": {
+   "name": "nope"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "export_png",
+  "args": {
+   "path": "$OUT/a/orb.png"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "export_png",
+  "args": {
+   "path": "$OUT/a/orb-big",
+   "scale": 4,
+   "frame": 1
+  }
+ },
+ {
+  "e": "a",
+  "tool": "export_sheet",
+  "args": {
+   "path": "$OUT/a/sheet.png"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "export_gif",
+  "args": {
+   "path": "$OUT/a/orb.gif",
+   "scale": 3
+  }
+ },
+ {
+  "e": "a",
+  "tool": "export_svg",
+  "args": {
+   "path": "$OUT/a/orb.svg"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "export_html",
+  "args": {
+   "path": "$OUT/a/orb.html",
+   "zoom": 4
+  }
+ },
+ {
+  "e": "a",
+  "tool": "export_vox",
+  "args": {
+   "path": "$OUT/a/orb.vox"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "export_obj",
+  "args": {
+   "path": "$OUT/a/orb.obj"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "save_model",
+  "args": {
+   "path": "$OUT/a/orb"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "save_model",
+  "args": {
+   "path": "~/home-save.openpixel"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "save_model",
+  "args": {}
+ },
+ {
+  "e": "a",
+  "tool": "import_image",
+  "args": {
+   "path": "$OUT/a/orb-big.png",
+   "add_colors": true,
+   "axis": "z",
+   "index": 0
+  }
+ },
+ {
+  "e": "a",
+  "tool": "import_image",
+  "args": {
+   "path": "$OUT/a/missing.png"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "set_style",
+  "args": {
+   "name": "house",
+   "preset": "pico8",
+   "max_colors": 6,
+   "light": "top-left",
+   "outline": "dark",
+   "size": [
+    16,
+    16
+   ],
+   "notes": [
+    "2px chunky outlines"
+   ],
+   "save_path": "$OUT/a/house"
+  }
+ },
+ {
+  "e": "a",
+  "tool": "get_style",
+  "args": {}
+ },
+ {
+  "e": "a",
+  "tool": "set_pixels",
+  "args": {
+   "pixels": [
+    [
+     3,
+     3,
+     "#123456"
+    ]
+   ]
+  }
+ },
+ {
+  "e": "a",
+  "tool": "set_pixels",
+  "args": {
+   "pixels": [
+    [
+     3,
+     3,
+     "#123456"
+    ]
+   ]
+  },
+  "source": "person"
+ },
+ {
+  "e": "a",
+  "tool": "review_model",
+  "args": {
+   "scale": 5
+  }
+ },
+ {
+  "e": "a",
+  "tool": "new_sprite",
+  "args": {}
+ },
+ {
+  "e": "a",
+  "tool": "set_style",
+  "args": {
+   "clear": true
+  }
+ },
+ {
+  "e": "a",
+  "tool": "set_style",
+  "args": {
+   "path": "$OUT/a/house.json",
+   "lock_palette": false
+  }
+ },
+ {
+  "e": "a",
+  "tool": "set_feedback",
+  "args": {
+   "auto_critique": false
+  }
+ },
+ {
+  "e": "a",
+  "tool": "batch",
+  "args": {
+   "calls": [
+    {
+     "tool": "paint_slice",
+     "args": {
+      "rows": [
+       "........",
+       ".1111...",
+       ".1221...",
+       ".1111..."
+      ],
+      "legend": {
+       "1": "#000000",
+       "2": "#ffa300"
+      }
+     }
+    },
+    {
+     "tool": "set_pixels",
+     "args": {
+      "pixels": [
+       [
+        5,
+        2,
+        "#ffa300"
+       ]
+      ]
+     }
+    },
+    {
+     "tool": "view_as_text",
+     "args": {
+      "maps": [
+       "silhouette"
+      ]
+     }
+    }
+   ]
+  }
+ },
+ {
+  "e": "a",
+  "tool": "batch",
+  "args": {
+   "atomic": true,
+   "calls": [
+    {
+     "tool": "set_pixels",
+     "args": {
+      "pixels": [
+       [
+        0,
+        7,
+        1
+       ],
+       [
+        1,
+        7,
+        1
+       ]
+      ]
+     }
+    },
+    {
+     "tool": "fill_box",
+     "args": {
+      "from": [
+       0,
+       0,
+       0
+      ]
+     }
+    }
+   ]
+  }
+ },
+ {
+  "e": "a",
+  "tool": "batch",
+  "args": {
+   "calls": [
+    {
+     "tool": "set_pixel"
+    }
+   ]
+  }
+ },
+ {
+  "e": "a",
+  "tool": "set_feedback",
+  "args": {
+   "auto_critique": true
+  }
+ },
+ {
+  "e": "a",
+  "tool": "no_such_tool",
+  "args": {}
+ },
+ {
+  "e": "a",
+  "tool": "get_editor_screenshot",
+  "args": {}
+ },
+ {
+  "e": "a",
+  "hostTool": "get_editor_screenshot"
+ },
+ {
+  "e": "a",
+  "tool": "get_editor_screenshot",
+  "args": {
+   "why": "test"
+  }
+ },
+ {
+  "e": "a",
+  "dropHostTool": "get_editor_screenshot"
+ },
+ {
+  "e": "a",
+  "tool": "get_editor_screenshot",
+  "args": {}
+ },
+ {
+  "e": "a",
+  "tool": "check_for_updates",
+  "args": {
+   "refresh": true
+  }
+ },
+ {
+  "e": "a",
+  "tool": "check_for_updates",
+  "args": {
+   "install": true
+  }
+ },
+ {
+  "e": "a",
+  "autosave": "$OUT/a/autosaved"
+ },
+ {
+  "e": "a",
+  "rename": [
+   "$OUT/a/renamed.openpixel",
+   "Renamed"
+  ]
+ },
+ {
+  "e": "a",
+  "autosave": null
+ },
+ {
+  "e": "a",
+  "rename": [
+   null,
+   "Again"
+  ]
+ },
+ {
+  "e": "a",
+  "markClean": true
+ },
+ {
+  "e": "a",
+  "tool": "ui_activity",
+  "args": {},
+  "source": "person"
+ },
+ {
+  "e": "a",
+  "tool": "get_model_info",
+  "args": {}
+ },
+ {
+  "new": "b"
+ },
+ {
+  "e": "b",
+  "autosave": null
+ },
+ {
+  "e": "b",
+  "tool": "new_model",
+  "args": {
+   "size_x": 16,
+   "size_y": 16,
+   "size_z": 16,
+   "name": "Hut",
+   "palette": "edg32"
+  }
+ },
+ {
+  "e": "b",
+  "tool": "new_model",
+  "args": {
+   "palette": "nope"
+  }
+ },
+ {
+  "e": "b",
+  "tool": "fill_box",
+  "args": {
+   "from": [
+    2,
+    0,
+    2
+   ],
+   "to": [
+    13,
+    5,
+    13
+   ],
+   "color": 3
+  }
+ },
+ {
+  "e": "b",
+  "tool": "fill_box",
+  "args": {
+   "from": [
+    4,
+    1,
+    4
+   ],
+   "to": [
+    11,
+    5,
+    11
+   ],
+   "color": 5,
+   "hollow": true,
+   "mode": "paint"
+  }
+ },
+ {
+  "e": "b",
+  "tool": "draw_sphere",
+  "args": {
+   "center": [
+    7.5,
+    9,
+    7.5
+   ],
+   "radius": [
+    5,
+    3.5,
+    5
+   ],
+   "color": "#e43b44",
+   "symmetry": "xz"
+  }
+ },
+ {
+  "e": "b",
+  "tool": "draw_sphere",
+  "args": {
+   "center": [
+    8,
+    9,
+    8
+   ],
+   "radius": 2,
+   "color": 7,
+   "hollow": true,
+   "mode": "add"
+  }
+ },
+ {
+  "e": "b",
+  "tool": "draw_cylinder",
+  "args": {
+   "base": [
+    3,
+    6,
+    3
+   ],
+   "radius": 1.5,
+   "length": 6,
+   "color": "#733e39"
+  }
+ },
+ {
+  "e": "b",
+  "tool": "draw_cylinder",
+  "args": {
+   "base": [
+    1,
+    12,
+    8
+   ],
+   "radius": 2,
+   "length": 14,
+   "axis": "x",
+   "hollow": true,
+   "color": 9
+  }
+ },
+ {
+  "e": "b",
+  "tool": "draw_line",
+  "args": {
+   "from": [
+    0,
+    15,
+    0
+   ],
+   "to": [
+    15,
+    0,
+    15
+   ],
+   "radius": 1,
+   "color": "#ffffff"
+  }
+ },
+ {
+  "e": "b",
+  "tool": "draw_line",
+  "args": {
+   "from": [
+    -40,
+    3,
+    3
+   ],
+   "to": [
+    60,
+    9,
+    12
+   ],
+   "color": 12
+  }
+ },
+ {
+  "e": "b",
+  "tool": "set_voxels",
+  "args": {
+   "voxels": [
+    [
+     0,
+     0,
+     0,
+     "#00ff00"
+    ],
+    [
+     1,
+     0,
+     0
+    ],
+    [
+     15,
+     15,
+     15,
+     4
+    ]
+   ],
+   "color": 8
+  }
+ },
+ {
+  "e": "b",
+  "tool": "erase_voxels",
+  "args": {
+   "voxels": [
+    [
+     0,
+     0,
+     0
+    ],
+    {
+     "x": 1,
+     "y": 0,
+     "z": 0
+    }
+   ],
+   "symmetry": "y"
+  }
+ },
+ {
+  "e": "b",
+  "tool": "flood_fill",
+  "args": {
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "color": 14,
+   "volume": false
+  }
+ },
+ {
+  "e": "b",
+  "tool": "paint_slice",
+  "args": {
+   "axis": "y",
+   "index": 14,
+   "depth": 3,
+   "rows": [
+    "aaaa",
+    "a..a",
+    "aaaa"
+   ],
+   "offset": [
+    6,
+    6
+   ]
+  }
+ },
+ {
+  "e": "b",
+  "tool": "paint_slice",
+  "args": {
+   "axis": "x",
+   "index": 0,
+   "slices": [
+    [
+     "11",
+     "11"
+    ],
+    [
+     "22",
+     "22"
+    ]
+   ],
+   "depth": 2
+  }
+ },
+ {
+  "e": "b",
+  "tool": "get_slice",
+  "args": {
+   "axis": "y",
+   "index": 14
+  }
+ },
+ {
+  "e": "b",
+  "tool": "get_slice",
+  "args": {
+   "axis": "x",
+   "index": 1,
+   "merged": false
+  }
+ },
+ {
+  "e": "b",
+  "tool": "apply_gradient",
+  "args": {
+   "colors": [
+    1,
+    2,
+    3
+   ],
+   "only_color": 3
+  }
+ },
+ {
+  "e": "b",
+  "tool": "transform",
+  "args": {
+   "op": "rotate",
+   "axis": "y",
+   "turns": 3
+  }
+ },
+ {
+  "e": "b",
+  "tool": "resize_model",
+  "args": {
+   "size_x": 20,
+   "size_y": 18,
+   "size_z": 20
+  }
+ },
+ {
+  "e": "b",
+  "tool": "resize_model",
+  "args": {
+   "size_x": 300,
+   "size_y": 18,
+   "size_z": 20
+  }
+ },
+ {
+  "e": "b",
+  "tool": "analyze_model",
+  "args": {}
+ },
+ {
+  "e": "b",
+  "tool": "review_model",
+  "args": {}
+ },
+ {
+  "e": "b",
+  "tool": "view_as_text",
+  "args": {
+   "view": "top"
+  }
+ },
+ {
+  "e": "b",
+  "tool": "view_as_text",
+  "args": {
+   "view": "left",
+   "maps": [
+    "silhouette"
+   ]
+  }
+ },
+ {
+  "e": "b",
+  "tool": "render_view",
+  "args": {
+   "yaw": 22.5,
+   "pitch": 40,
+   "scale": 3,
+   "outline": false
+  }
+ },
+ {
+  "e": "b",
+  "tool": "export_png",
+  "args": {
+   "path": "$OUT/b/hut.png",
+   "view": "iso",
+   "scale": 5
+  }
+ },
+ {
+  "e": "b",
+  "tool": "export_png",
+  "args": {
+   "path": "$OUT/b/hut-back.png",
+   "view": "iso-back-left",
+   "scale": 3,
+   "background": "#20303080"
+  }
+ },
+ {
+  "e": "b",
+  "tool": "export_sheet",
+  "args": {
+   "path": "$OUT/b/hut-sheet.png",
+   "views": [
+    "turnaround4",
+    "top"
+   ],
+   "scale": 2
+  }
+ },
+ {
+  "e": "b",
+  "tool": "export_sheet",
+  "args": {
+   "path": "$OUT/b/hut-sheet8.png",
+   "scale": 1
+  }
+ },
+ {
+  "e": "b",
+  "tool": "export_gif",
+  "args": {
+   "path": "$OUT/b/hut.gif",
+   "scale": 3,
+   "steps": 8
+  }
+ },
+ {
+  "e": "b",
+  "tool": "export_html",
+  "args": {
+   "path": "$OUT/b/hut.html",
+   "steps": 4
+  }
+ },
+ {
+  "e": "b",
+  "tool": "export_svg",
+  "args": {
+   "path": "$OUT/b/hut.svg",
+   "scale": 2
+  }
+ },
+ {
+  "e": "b",
+  "tool": "export_vox",
+  "args": {
+   "path": "$OUT/b/hut.vox"
+  }
+ },
+ {
+  "e": "b",
+  "tool": "export_obj",
+  "args": {
+   "path": "$OUT/b/hut.obj"
+  }
+ },
+ {
+  "e": "b",
+  "tool": "save_model",
+  "args": {
+   "path": "$OUT/b/hut.openpixel"
+  }
+ },
+ {
+  "e": "b",
+  "tool": "open_model",
+  "args": {
+   "path": "$OUT/b/hut.vox"
+  }
+ },
+ {
+  "e": "b",
+  "tool": "get_model_info",
+  "args": {}
+ },
+ {
+  "e": "b",
+  "tool": "open_model",
+  "args": {
+   "path": "$OUT/b/hut.openpixel"
+  }
+ },
+ {
+  "e": "b",
+  "tool": "open_model",
+  "args": {
+   "path": "$OUT/b/missing.openpixel"
+  }
+ },
+ {
+  "e": "b",
+  "tool": "open_model",
+  "args": {
+   "path": "$OUT/b/hut.png"
+  }
+ },
+ {
+  "e": "b",
+  "tool": "review_set",
+  "args": {
+   "paths": [
+    "$OUT/a/orb.openpixel",
+    "$OUT/b/hut.openpixel",
+    "$OUT/b/hut.vox"
+   ]
+  }
+ },
+ {
+  "e": "b",
+  "tool": "undo",
+  "args": {
+   "steps": 50
+  }
+ },
+ {
+  "e": "b",
+  "tool": "redo",
+  "args": {
+   "steps": 3
+  }
+ },
+ {
+  "e": "b",
+  "tool": "ui_state",
+  "args": {},
+  "source": "person"
+ },
+ {
+  "new": "c"
+ },
+ {
+  "e": "c",
+  "sample": false
+ },
+ {
+  "e": "c",
+  "tool": "get_model_info",
+  "args": {}
+ },
+ {
+  "e": "c",
+  "tool": "ui_state",
+  "args": {
+   "onion": true
+  },
+  "source": "person"
+ },
+ {
+  "e": "c",
+  "tool": "review_model",
+  "args": {}
+ },
+ {
+  "e": "c",
+  "tool": "export_gif",
+  "args": {
+   "path": "$OUT/c/mushroom.gif"
+  }
+ },
+ {
+  "e": "c",
+  "tool": "export_sheet",
+  "args": {
+   "path": "$OUT/c/mushroom.png"
+  }
+ },
+ {
+  "e": "c",
+  "tool": "extrude_to_3d",
+  "args": {
+   "depth": 4
+  }
+ },
+ {
+  "e": "c",
+  "tool": "export_gif",
+  "args": {
+   "path": "$OUT/c/mushroom-3d.gif",
+   "kind": "turntable",
+   "steps": 6,
+   "scale": 2
+  }
+ },
+ {
+  "new": "d"
+ },
+ {
+  "e": "d",
+  "sample": true
+ },
+ {
+  "e": "d",
+  "tool": "get_model_info",
+  "args": {}
+ },
+ {
+  "e": "d",
+  "tool": "review_model",
+  "args": {}
+ },
+ {
+  "e": "d",
+  "tool": "export_png",
+  "args": {
+   "path": "$OUT/d/island.png",
+   "scale": 6
+  }
+ },
+ {
+  "e": "d",
+  "tool": "export_vox",
+  "args": {
+   "path": "$OUT/d/island.vox"
+  }
+ },
+ {
+  "e": "d",
+  "tool": "export_html",
+  "args": {
+   "path": "$OUT/d/island.html"
+  }
+ },
+ {
+  "e": "d",
+  "tool": "ui_state",
+  "args": {},
+  "source": "person"
+ },
+ {
+  "new": "e"
+ },
+ {
+  "e": "e",
+  "open3d": true
+ },
+ {
+  "e": "e",
+  "tool": "get_history",
+  "args": {}
+ },
+ {
+  "e": "e",
+  "tool": "undo",
+  "args": {
+   "steps": 5
+  }
+ },
+ {
+  "e": "e",
+  "tool": "get_model_info",
+  "args": {}
+ }
+]
