@@ -35,11 +35,19 @@ export default function Privacy() {
             <li>No account, no sign-in, no analytics, no crash reporting, no tracking.</li>
             <li>Your sprites and models stay on your computer, in the files and folders you choose.</li>
             <li>
-              <strong>Update checks.</strong> To see whether a new version exists, the app downloads a small file from
-              OpenPixel&apos;s releases on GitHub (<code>latest-mac.yml</code> on macOS, <code>latest.yml</code> on
-              Windows, <code>latest-linux.yml</code> on Linux), and downloads the update from GitHub if you install it.
-              GitHub receives your IP address, as with any download. The app sends no other information about you or
-              your computer.
+              <strong>Update checks.</strong> Each time it starts, and when you click <em>Check for Updates…</em> or the
+              Update button, the app downloads a small file from OpenPixel&apos;s releases on GitHub
+              (<code>latest-mac.yml</code> on macOS, <code>latest.yml</code> on Windows, <code>latest-linux.yml</code>{" "}
+              on Linux); an AI agent can ask for the same check. If you install an update, the app downloads it from
+              GitHub too and compares its checksum before installing; nothing is installed until you choose{" "}
+              <em>Restart to Update</em>. GitHub receives your IP address, as with any download, and the app&apos;s
+              version (<code>User-Agent: OpenPixel/&lt;version&gt;</code>). The app sends no ID of you or your
+              installation, no language, and nothing about your files or how you use it. To skip the check at start, run
+              the app with the environment variable <code>OPENPIXEL_NO_UPDATE_CHECK=1</code>.
+            </li>
+            <li>
+              <strong>GitHub stars.</strong> The star count in the app&apos;s tab bar is read from GitHub&apos;s public API
+              at most once an hour, with no information about you.
             </li>
             <li>
               <strong>AI agents.</strong> The MCP server runs on your computer. What an agent sees and sends to its provider
