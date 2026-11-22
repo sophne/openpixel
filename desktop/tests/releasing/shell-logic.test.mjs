@@ -127,6 +127,8 @@ test('a copy that installs by itself: asked, downloaded in the background, asked
   await u.showUpdateDialog(info);
   // Set up so that nothing happens by itself.
   assert.deepEqual([auto.autoDownload, auto.autoInstallOnAppQuit, auto.disableDifferentialDownload, auto.feed], [false, false, true, null]);
+  // No ID of this installation in its requests (the staging header has the same value everywhere), nor its language.
+  assert.deepEqual(auto.requestHeaders, { 'x-user-staging-id': '00000000-0000-0000-0000-000000000000', 'accept-language': '*' });
   assert.deepEqual(shell.dialogs.map((d) => [d.message, d.buttons]), [['OpenPixel 2.0.0 is available', ['Download Update', 'Later']]]);
   assert.deepEqual(auto.calls, ['check', 'download']);
   assert.deepEqual(u.state(), { kind: 'downloading', version: '2.0.0', percent: 0 });

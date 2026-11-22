@@ -55,13 +55,13 @@ function feedFolder(name, { lie = false } = {}) {
   return folder;
 }
 
-/** Serves `folder`; every request is noted (method, path, the User-Agent, how it ended). */
+/** Serves `folder`; every request is noted (method, path, the User-Agent, all headers, how it ended). */
 function serve(folder) {
   const requests = [];
   const server = http.createServer((req, res) => {
     const name = decodeURIComponent(new URL(req.url, 'http://x').pathname).replace(/^\/+/, '');
     const file = path.join(folder, name);
-    const note = { method: req.method, path: `/${name}`, agent: req.headers['user-agent'] ?? '', status: 0 };
+    const note = { method: req.method, path: `/${name}`, agent: req.headers['user-agent'] ?? '', headers: { ...req.headers }, status: 0 };
     requests.push(note);
     if (!/^[\w.-]+$/.test(name) || !existsSync(file)) { note.status = 404; res.writeHead(404).end('not here'); return; }
     note.status = 200;
@@ -154,6 +154,22 @@ console.log(`OpenPixel ${version} (AppImage) against a local feed offering ${NEW
         assert.equal(saved.length, 1, `the download is kept in ${pending}: ${existsSync(pending) ? readdirSync(pending) : 'no such folder'}`);
         assert.equal(sha512(path.join(pending, saved[0])), sha512(path.join(root, 'feed', 'OpenPixel.AppImage')), 'what was saved is what the feed describes');
       }
+    });
+
+    await check('no request carries anything that tells this installation from another, or the person\'s language', async () => {
+      // electron-updater would send a random ID it keeps for the installation (x-user-staging-id), and Electron's
+      // network stack the app's language; the app sends the same values as everyone instead (electron/updater.ts).
+      // What each request carried is printed for RELEASING.md's account of what the app sends.
+      const seen = new Map();
+      for (const r of feed.requests) {
+        const staging = r.headers['x-user-staging-id'];
+        assert.ok(staging === undefined || staging === '00000000-0000-0000-0000-000000000000', `${r.method} ${r.path} sent x-user-staging-id: ${staging}`);
+        assert.ok([undefined, '*'].includes(r.headers['accept-language']), `${r.method} ${r.path} sent accept-language: ${r.headers['accept-language']}`);
+        const { host, ...rest } = r.headers;
+        const line = `${r.method} ${r.path}: ${Object.entries(rest).map(([k, v]) => `${k}: ${v}`).join(' | ')}`;
+        seen.set(line.replace(/bytes=[0-9-]+/, 'bytes=…'), true);
+      }
+      for (const line of seen.keys()) console.log(`        ${line}`);
     });
 
     if (!install) {

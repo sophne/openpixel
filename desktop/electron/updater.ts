@@ -35,6 +35,12 @@ export const UPDATE_FEED_ENV = 'OPENPIXEL_UPDATE_FEED';
     "Check for Updates…" and an agent's check_for_updates still ask when the person or the agent says so. */
 export const NO_UPDATE_CHECK_ENV = 'OPENPIXEL_NO_UPDATE_CHECK';
 
+/** The header electron-updater would fill with an ID of this installation, and the value it gets instead. */
+export const STAGING_ID_HEADER = 'x-user-staging-id';
+export const SAME_FOR_EVERYONE = '00000000-0000-0000-0000-000000000000';
+/** Headers electron-updater's requests get on top of its own (see `createUpdater`). */
+export const UPDATER_HEADERS: Readonly<Record<string, string>> = { [STAGING_ID_HEADER]: SAME_FOR_EVERYONE, 'accept-language': '*' };
+
 export interface UpdateFacts {
   packaged: boolean;
   /** `openpixel.selfUpdate` in the app's package.json. */
@@ -149,6 +155,12 @@ export function createUpdater(shell: UpdaterShell, settings: { feed?: string; se
     // Its notes go to the error stream; standard output stays clean.
     const say = (level: string) => (message?: unknown): void => { process.stderr.write(`[update] ${level}: ${shortReason(message)}\n`); };
     u.logger = { info: () => {}, debug: () => {}, warn: say('warning'), error: say('error') };
+    // electron-updater makes up a random ID for this installation (kept in the app's data folder, `.updaterId`, for
+    // staged roll-outs, which OpenPixel does not use) and sends it with every request for the feed as
+    // `x-user-staging-id`. Its own headers win over that one: everyone sends the same value, so nothing in these
+    // requests tells one installation from another. And Electron's network stack would add the app's language
+    // (Accept-Language): "*" says nothing, as the app's own feed check (Node's fetch) already does.
+    u.requestHeaders = { ...(u.requestHeaders ?? {}), ...UPDATER_HEADERS };
     if (settings.feed !== undefined) {
       u.forceDevUpdateConfig = true;
       u.setFeedURL({ provider: 'generic', url: settings.feed });
