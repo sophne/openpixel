@@ -5,6 +5,7 @@
    control's label appears at once and without animation. Leaving hides it at once. Titles in the markup feed it:
    write title="Undo (⌘Z)" in JSX as the old page did; the title becomes data-tip (no system tooltip) at startup or
    on first hover. Off the Mac the caps read Ctrl, Shift, Alt (lib/platform.ts). */
+import { useLayoutEffect, useRef, type RefObject } from 'react';
 import { $ } from '../lib/dom';
 import { EASE_OUT, reducedMotion } from '../lib/motion';
 import { shortcutKeys } from '../lib/platform';
@@ -33,6 +34,14 @@ export function adoptTitle(el: HTMLElement): void {
  *  Runs once after the first render, as the old page did for its static markup. */
 export function adoptTitles(root: ParentNode = document): void {
   root.querySelectorAll<HTMLElement>('[title]').forEach(adoptTitle);
+}
+/** For a title the old code wrote on every redraw (`$('#layer-del').title = …` in renderLayers): React only writes an
+ *  attribute when its value changes, so once a hover has moved the title to data-tip it would stay gone. This writes
+ *  it after every render instead, as before: <button ref={useTitle(`Delete ${name} (⌘⌫)`)}> and no title prop. */
+export function useTitle<T extends HTMLElement = HTMLElement>(title: string | null | undefined): RefObject<T | null> {
+  const ref = useRef<T | null>(null);
+  useLayoutEffect(() => { if (ref.current && title != null) ref.current.title = title; });
+  return ref;
 }
 function showTip(el: HTMLElement, instant: boolean): void {
   const { label, keys } = tipParts(el.dataset.tip || '');

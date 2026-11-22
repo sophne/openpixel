@@ -7,7 +7,7 @@ import { installModals } from './modals';
 import { installTooltips } from './tooltips';
 
 export { toast, Toast } from './toast';
-export { adoptTitle, adoptTitles, hideTip, tipParts } from './tooltips';
+export { adoptTitle, adoptTitles, hideTip, tipParts, useTitle } from './tooltips';
 export { copyButton, CopyButton } from './copy';
 export { pressable, pressableProps } from './pressable';
 export { haptic } from './haptics';
