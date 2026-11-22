@@ -31,13 +31,13 @@ export function findMcpCommand(o: Pick<AppHostOptions, 'desktopFolder' | 'packag
 }
 
 export async function createAppHost(o: AppHostOptions): Promise<Host> {
-  const node = seam.nodePlatform?.({ uiTest: o.uiTest, screenshot: o.screenshot });
+  const { socketPath = '', ...half } = seam.nodePlatform?.({ uiTest: o.uiTest, screenshot: o.screenshot }) ?? {};
   const platform = {
     os: process.platform === 'darwin' || process.platform === 'win32' ? process.platform : 'linux',
-    ...node,
+    now: () => Date.now() / 1000,
+    ...half,
     ui: o.ui,
-    now: node?.now ?? (() => Date.now() / 1000),
-    desktop: { mcpCommand: findMcpCommand(o), socketPath: node?.socketPath ?? '' },
+    desktop: { mcpCommand: findMcpCommand(o), socketPath },
   } as Platform;
   const options: HostOptions = { platform, core: undefined, uiTest: o.uiTest, screenshot: o.screenshot, open: o.open };
 

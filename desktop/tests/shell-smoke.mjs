@@ -1,13 +1,15 @@
 // Smoke test of the Electron shell alone (`npm run test:shell`): the old page from app/web in the real shell, with
 // tests/fake-host.mjs standing in for the app's logic (desktop/host) and no core. It checks the shell's side of the
 // contract: page → host messages, plain errors, host → page calls, the Platform's dialogs, clipboard, screenshot
-// and title, the menu, the navigation lock, quitting, and the --ui-test and --screenshot runs with a video.
+// and title, the menu, the navigation lock, quitting, the --ui-test (with a video) and --screenshot runs, and
+// demo recording.
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { PNG } from 'pngjs';
-import { buildShell, fakeHost, launch, needDisplay, repo, toMp4, until } from './lib.mjs';
+import { spawnSync } from 'node:child_process';
+import { buildShell, desktop, fakeHost, launch, needDisplay, repo, toMp4, until } from './lib.mjs';
 
 needDisplay();
 
@@ -67,6 +69,7 @@ console.log('\nold page (app/web), pretending to be a Mac');
     const got = all.map((o) => o.handle && (o.handle.action || o.handle.name));
     for (const want of ['tabs', 'library', 'githubStars', 'version', 'ui_state']) assert.ok(got.includes(want), `${want} missing from ${got}`);
     assert.equal(await page.evaluate(() => document.querySelector('#stars-count').textContent), '1.2K');
+    assert.ok((await app.evaluate(({ app }) => app.getPath('userData'))).includes('openpixel-test-profile-'), 'the test runs on its own profile');
     const p = await post({ kind: 'fake', do: 'platform' });
     assert.deepEqual(p.ui, ['alert', 'askToSave', 'copyText', 'openExternal', 'openPanel', 'page', 'reveal', 'savePanel', 'screenshot', 'setTitle', 'showUpdateDialog']);
     assert.ok(Math.abs(p.now - Date.now() / 1000) < 5, 'now() is seconds since 1970');
@@ -291,6 +294,57 @@ console.log('\n--screenshot run');
     const png = PNG.sync.read(readFileSync(shot));
     assert.ok(png.width >= 980 && png.height >= 620, `${png.width}×${png.height}`);
     assert.equal(lines(path.join(out, 'host-4.jsonl'))[0].created.screenshot, true);
+  });
+}
+
+// ---------------------------------------------------------------- 5. the React page
+console.log('\nReact page (desktop/dist)');
+{
+  if (!existsSync(path.join(desktop, 'dist', 'index.html'))) {
+    spawnSync(process.execPath, [path.join(desktop, 'node_modules', 'vite', 'bin', 'vite.js'), 'build'], { cwd: desktop, stdio: 'ignore' });
+  }
+  const app = await launch({ env: fake({ OPENPIXEL_PLATFORM: 'win32' }) });
+  const done = exited(app);
+  const page = await app.firstWindow();
+  await page.waitForLoadState('domcontentloaded');
+  await check('without --legacy-ui the built React page loads, with the same preload', async () => {
+    assert.equal(page.url(), new URL(`file://${path.join(desktop, 'dist', 'index.html')}`).href);
+    const seen = await page.evaluate(() => ({ keys: Object.keys(window.openpixel).sort(), platform: window.openpixel.platform,
+      shim: typeof window.webkit.messageHandlers.pc.postMessage, classes: [...document.documentElement.classList].filter((c) => /^(platform-|screenshot$)/.test(c)) }));
+    assert.deepEqual(seen, { keys: ['flags', 'platform', 'post'], platform: 'win32', shim: 'function', classes: ['platform-win32', 'screenshot'] });
+    assert.equal((await page.evaluate(() => window.openpixel.post({ kind: 'native', action: 'version' }))).version, '0.0.0-fake');
+  });
+  await app.evaluate(({ app }) => { app.quit(); });
+  await done;
+}
+
+// ---------------------------------------------------------------- 6. --record / --demo
+console.log('\ndemo recording');
+{
+  const folder = path.join(out, 'record'), config = path.join(out, 'demo.json');
+  writeFileSync(config, JSON.stringify({ name: 'Smoke', width: 16, height: 16 }));
+  const app = await launch({ args: ['--legacy-ui', '--record', folder, '--demo', config], env: fake({ OPENPIXEL_PLATFORM: 'darwin' }) });
+  const done = exited(app);
+  const page = await app.firstWindow();
+  await page.waitForFunction(() => typeof stateReady !== 'undefined' && stateReady, null, { timeout: 30_000 });
+  const demo = (action, extra = {}) => page.evaluate((m) => window.openpixel.post(m), { kind: 'demo', action, ...extra });
+  await check('--demo hands its config to the page and sizes the window for the website\'s shots', async () => {
+    assert.deepEqual(await page.evaluate(() => [window.openpixel.flags.demo, window.OPENPIXEL_DEMO]), Array(2).fill({ name: 'Smoke', width: 16, height: 16 }));
+    assert.deepEqual(await page.evaluate(() => [innerWidth, innerHeight]), [1440, 855]);
+  });
+  await check('demo record / mark / stop: frames, manifest.json and the final picture, then the app quits', async () => {
+    assert.equal(await demo('record', { fps: 10 }), true);
+    await sleep(700);
+    assert.equal(await demo('mark', { name: 'sent' }), true);
+    await sleep(300);
+    demo('stop').catch(() => {});
+    assert.equal(await done, 0);
+    const manifest = JSON.parse(readFileSync(path.join(folder, 'manifest.json'), 'utf8'));
+    assert.ok(manifest.frames.length >= 3, `${manifest.frames.length} frames`);
+    assert.deepEqual(manifest.marks.map((m) => m.name), ['sent', 'stop']);
+    for (const f of manifest.frames.slice(0, -1)) assert.ok(existsSync(path.join(folder, `f${String(f.n).padStart(6, '0')}.png`)), `frame ${f.n} missing`);
+    const png = PNG.sync.read(readFileSync(path.join(folder, 'final.png')));
+    assert.deepEqual([png.width, png.height], [1440, 855]);
   });
 }
 

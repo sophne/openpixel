@@ -1,6 +1,7 @@
 // What the test scripts share: starting the app under Playwright, a virtual screen on Linux, and video conversion.
 import { spawn, spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, mkdtempSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -33,7 +34,9 @@ export async function launch({ args = [], env = {}, recordVideo } = {}) {
   const { _electron } = await import('playwright');
   // Chromium's sandbox needs a setuid helper that containers and CI machines rarely have.
   const sandbox = process.platform === 'linux' ? ['--no-sandbox'] : [];
-  return _electron.launch({ args: [desktop, ...sandbox, ...args], cwd: desktop, env: appEnv(env), recordVideo, timeout: 60_000 });
+  // Its own browser profile, so a test never meets the person's settings or an OpenPixel that is already open.
+  const profile = `--user-data-dir=${mkdtempSync(path.join(os.tmpdir(), 'openpixel-test-profile-'))}`;
+  return _electron.launch({ args: [desktop, ...sandbox, profile, ...args], cwd: desktop, env: appEnv(env), recordVideo, timeout: 60_000 });
 }
 
 /** Bundles electron/*.ts into dist-electron/ (the app's `main`). */
